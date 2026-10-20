@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تتبع الشحنة - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+      <div class="brand-tag">Premium Store</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<section class="tracking-hero">
+  <div class="container">
+    <div class="eyebrow">Shipment Tracking</div>
+    <h1>تتبع <span>شحنتك</span> لحظة بلحظة</h1>
+    <p>أدخل رقم التتبع اللي وصلك في إيميل التأكيد لمتابعة حالة طلبك</p>
+  </div>
+</section>
+
+<div class="container">
+  <div class="tracking-input-wrap">
+    <div class="tracking-input-box">
+      <input type="text" id="trackingInput" placeholder="مثال: TRK-A1B2C3" autocomplete="off">
+      <button id="trackBtn">🔍 تتبع</button>
+    </div>
+  </div>
+
+  <div class="tracking-result" id="trackingResult"></div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+        <a href="#">إلكترونيات</a>
+        <a href="#">أزياء</a>
+        <a href="#">عطور</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="#">الاستبدال والإرجاع</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<script type="module">
+import { api, getCurrentUser, logout } from './js/api.js';
+import { showToast, formatPrice, formatDate, updateCartBadge } from './js/ui.js';
+
+const STATUS_MAP = {
+  pending:    { label: 'قيد المراجعة', cls: 'status-pending',    stepIdx: 0 },
+  processing: { label: 'قيد التجهيز',  cls: 'status-processing', stepIdx: 1 },
+  shipped:    { label: 'تم الشحن',     cls: 'status-shipped',    stepIdx: 2 },
+  delivered:  { label: 'تم التوصيل',   cls: 'status-delivered',  stepIdx: 3 },
+  cancelled:  { label: 'ملغي',          cls: 'status-cancelled',  stepIdx: -1 }
+};
+
+const TIMELINE_STAGES = [
+  { key: 'pending',    label: 'تم استلام الطلب', desc: 'تم تأكيد طلبك بنجاح' },
+  { key: 'processing', label: 'قيد التجهيز',      desc: 'جاري تجهيز المنتجات في المستودع' },
+  { key: 'shipped',    label: 'تم الشحن',         desc: 'الشحنة في الطريق إليك' },
+  { key: 'delivered',  label: 'تم التوصيل',       desc: 'تم توصيل الشحنة بنجاح' }
+];
+
+let currentUser = null;
+
+// ===========================================
+// User Area
+// ===========================================
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip">
+        <span>${user.displayName || user.email.split('@')[0]}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+// ===========================================
+// Init
+// ===========================================
+async function init() {
+  currentUser = await getCurrentUser();
+
+  // Show initial message
+  document.getElementById('trackingResult').innerHTML = `
+    <div class="tracking-message">
+      <div class="emoji">📦</div>
+      <h2>أدخل رقم التتبع</h2>
+      <p>هتلاقي رقم التتبع في إيميل التأكيد أو في صفحة طلباتي</p>
+      ${currentUser ? `<a href="orders.html" class="btn-shop" style="margin-top:8px">📋 طلباتي</a>` : `<div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong></div>`}
+    </div>`;
+
+  // Check URL param
+  const params = new URLSearchParams(window.location.search);
+  const trackParam = params.get('track');
+  if (trackParam) {
+    document.getElementById('trackingInput').value = trackParam.toUpperCase();
+    setTimeout(() => trackShipment(), 300);
+  }
+}
+
+// ===========================================
+// Track
+// ===========================================
+async function trackShipment() {
+  const input = document.getElementById('trackingInput');
+  const btn = document.getElementById('trackBtn');
+  const result = document.getElementById('trackingResult');
+  const trackingId = input.value.trim().toUpperCase();
+
+  if (!trackingId) {
+    showToast('أدخل رقم التتبع الأول', 'warning');
+    input.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري البحث...';
+  result.innerHTML = `<div class="tracking-message"><div class="emoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div><h2>جاري البحث...</h2></div>`;
+
+  try {
+    const res = await api.orders.track(trackingId);
+    renderTracking(res.data);
+  } catch (err) {
+    console.error(err);
+    result.innerHTML = `
+      <div class="tracking-message">
+        <div class="emoji">😕</div>
+        <h2>لم يتم العثور على الشحنة</h2>
+        <p>${err.message || 'تأكد من رقم التتبع وحاول مرة أخرى'}</p>
+        <div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong> ويتكون من 6 أحرف</div>
+      </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 تتبع';
+  }
+}
+
+// ===========================================
+// Render Tracking
+// ===========================================
+function renderTracking(order) {
+  const result = document.getElementById('trackingResult');
+  const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
+  const history = order.trackingHistory || [];
+  const addr = order.shippingAddress || {};
+  const currentIdx = st.stepIdx;
+
+  // Build timeline
+  const timelineHTML = TIMELINE_STAGES.map((stage, i) => {
+    const isDone = i < currentIdx;
+    const isCurrent = i === currentIdx;
+    const cls = isDone ? 'done' : isCurrent ? 'current' : '';
+    const histItem = history.find(h => h.status === stage.key);
+    return `
+      <div class="ship-step ${cls}">
+        <h4>${stage.label}</h4>
+        <p>${stage.desc}</p>
+        ${histItem && histItem.timestamp ? `<div class="time">${formatDate(histItem.timestamp)}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  result.innerHTML = `
+    <div class="ship-info-card">
+      <div class="ship-info-header">
+        <div>
+          <h3>تفاصيل الشحنة</h3>
+          <div class="order-num">${order.orderNumber || '—'}</div>
+        </div>
+        <span class="ship-status-badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="ship-info-grid">
+        <div class="ship-info-item">
+          <div class="label">رقم التتبع</div>
+          <div class="value" style="font-family:monospace;color:var(--gold-dark)">${order.trackingId}</div>
+        </div>
+        <div class="ship-info-item">
+          <div class="label">الحالة</div>
+          <div class="value">${st.label}</div>
+        </div>
+        <div class="ship-info-item">
+          <div class="label">المستلم</div>
+          <div class="value">${order.customer?.name || '—'}</div>
+        </div>
+        <div class="ship-info-item">
+          <div class="label">الوجهة</div>
+          <div class="value">${addr.city || ''}${addr.area ? `, ${addr.area}` : ''}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ship-timeline-card">
+      <h3>📊 مراحل الشحنة</h3>
+      ${order.status === 'cancelled' ? `
+        <div style="text-align:center;padding:40px;color:var(--danger)">
+          <div style="font-size:60px;margin-bottom:12px">❌</div>
+          <h3 style="font-family:'Tajawal';font-size:20px;color:var(--danger)">تم إلغاء الطلب</h3>
+          <p style="color:var(--text-muted);margin-top:6px">هذا الطلب تم إلغاؤه</p>
+        </div>` : `
+        <div class="ship-timeline">${timelineHTML}</div>
+      `}
+    </div>
+
+    ${order.items && order.items.length > 0 ? `
+      <div class="ship-items-card">
+        <h3>📦 محتويات الشحنة</h3>
+        ${order.items.map(i => `
+          <div class="ship-item-row">
+            <img src="${i.image || 'https://via.placeholder.com/56'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE'">
+            <div class="info">
+              <h5>${i.name}</h5>
+              <span>الكمية: ${i.qty}</span>
+            </div>
+            <div class="price">${formatPrice(i.price * i.qty)}</div>
+          </div>
+        `).join('')}
+      </div>` : ''}
+
+    <div class="ship-info-card">
+      <div class="ship-address-card">
+        <h4>📍 عنوان التوصيل</h4>
+        <p>
+          <strong>${addr.name || ''}</strong><br>
+          ${addr.phone || ''}<br>
+          ${addr.street || ''}${addr.building ? `, مبنى ${addr.building}` : ''}${addr.apartment ? `, شقة ${addr.apartment}` : ''}<br>
+          ${addr.area || ''}, ${addr.city || ''}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ===========================================
+// Events
+// ===========================================
+document.getElementById('trackBtn').addEventListener('click', trackShipment);
+document.getElementById('trackingInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') trackShipment();
+});
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+// Init
+renderUserArea();
+updateCartBadge();
+init();
+</script>
+
+</body>
+</html>

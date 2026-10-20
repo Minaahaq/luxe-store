@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-side">
+    <div>
+      <div class="auth-brand">LUXE</div>
+      <div class="auth-brand-tag">Premium Store</div>
+    </div>
+    <div>
+      <h2>مرحباً بعودتك<br>إلى <span>عالم الفخامة</span></h2>
+      <p>سجل دخولك واستمتع بتجربة تسوق لا تُنسى مع أفضل المنتجات والعروض الحصرية</p>
+      <div class="auth-side-features">
+        <div class="auth-side-feature"><span class="dot"></span> تتبع طلباتك لحظة بلحظة</div>
+        <div class="auth-side-feature"><span class="dot"></span> عروض حصرية للأعضاء</div>
+        <div class="auth-side-feature"><span class="dot"></span> حفظ عناوينك المفضلة</div>
+        <div class="auth-side-feature"><span class="dot"></span> سجل مشتريات كامل</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#6b7280;">© 2025 LUXE Premium Store</div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <form class="auth-form" id="loginForm" novalidate>
+      <h1>تسجيل الدخول</h1>
+      <p>أدخل بياناتك للوصول لحسابك</p>
+
+      <div class="form-group" id="fg-email">
+        <label for="email">البريد الإلكتروني <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="example@email.com" autocomplete="email">
+        <div class="form-error">البريد الإلكتروني غير صحيح</div>
+      </div>
+
+      <div class="form-group" id="fg-password">
+        <label for="password">كلمة السر <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="أدخل كلمة السر" autocomplete="current-password">
+        <div class="form-error">كلمة السر مطلوبة</div>
+      </div>
+
+      <div style="text-align:left;margin-bottom:24px">
+        <a href="#" id="forgotLink" style="font-size:13px;color:var(--gold-dark);font-weight:700">
+          نسيت كلمة السر؟
+        </a>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">
+        تسجيل الدخول
+      </button>
+
+      <div class="auth-switch">
+        معندكش حساب؟ <a href="register.html">سجل الآن</a>
+      </div>
+
+      <div class="auth-footer">
+        © 2025 LUXE Store • جميع الحقوق محفوظة
+      </div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import { loginWithEmail, getCurrentUser } from './js/api.js';
+import { showToast } from './js/ui.js';
+
+// لو مسجل دخول بالفعل، روح للرئيسية
+const existingUser = await getCurrentUser();
+if (existingUser) {
+  window.location.href = 'index.html';
+}
+
+const form = document.getElementById('loginForm');
+const submitBtn = document.getElementById('submitBtn');
+
+function setError(id) { document.getElementById('fg-' + id).classList.add('error'); }
+function clearError(id) { document.getElementById('fg-' + id).classList.remove('error'); }
+
+['email', 'password'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => clearError(id));
+});
+
+function validateForm(data) {
+  let valid = true;
+  clearError('email');
+  clearError('password');
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { setError('email'); valid = false; }
+  if (!data.password) { setError('password'); valid = false; }
+
+  return valid;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const data = {
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value
+  };
+
+  if (!validateForm(data)) {
+    showToast('من فضلك صحح الأخطاء', 'error');
+    return;
+  }
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري تسجيل الدخول...';
+
+    await loginWithEmail(data.email, data.password);
+
+    showToast('تم تسجيل الدخول بنجاح!', 'success');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+
+  } catch (err) {
+    console.error(err);
+    const msg = mapError(err.code || err.message);
+    showToast(msg, 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'تسجيل الدخول';
+  }
+});
+
+// نسيت كلمة السر
+document.getElementById('forgotLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+
+  if (!email) {
+    showToast('اكتب بريدك الأول', 'warning');
+    document.getElementById('email').focus();
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('البريد غير صحيح', 'error');
+    return;
+  }
+
+  try {
+    const { auth, sendPasswordResetEmail } = await import('./js/firebase-config.js');
+    await sendPasswordResetEmail(auth, email);
+    showToast('تم إرسال رابط الاستعادة على بريدك', 'success');
+  } catch (err) {
+    showToast('البريد غير موجود', 'error');
+  }
+});
+
+function mapError(code) {
+  const m = {
+    'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
+    'auth/wrong-password': 'كلمة السر غير صحيحة',
+    'auth/invalid-credential': 'البريد أو كلمة السر غير صحيحة',
+    'auth/too-many-requests': 'محاولات كثيرة، جرب بعد شوية',
+    'auth/network-request-failed': 'مشكلة في الاتصال',
+    'auth/invalid-email': 'البريد غير صحيح'
+  };
+  return m[code] || 'حدث خطأ، حاول مرة أخرى';
+}
+</script>
+
+</body>
+</html>

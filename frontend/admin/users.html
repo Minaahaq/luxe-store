@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة المستخدمين - LUXE Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="statusPage" class="admin-status-page">
+  <div class="admin-status-box">
+    <div class="emoji" id="statusEmoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
+    <h1 id="statusTitle">جاري التحقق...</h1>
+    <p id="statusMessage">من فضلك انتظر</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="adminLayout" style="display:none">
+
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-name">LUXE</div>
+      <div class="admin-brand-tag">Admin Panel</div>
+    </div>
+    <nav class="admin-nav">
+      <a href="dashboard.html" class="admin-nav-item"><span class="icon">📊</span><span>لوحة التحكم</span></a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">🛒</span><span>الطلبات</span></a>
+      <a href="users.html" class="admin-nav-item active"><span class="icon">👥</span><span>المستخدمين</span></a>
+      <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button class="admin-logout" id="logoutBtn"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn">☰</button>
+        <div>
+          <h1 class="admin-page-title">إدارة المستخدمين</h1>
+          <p class="admin-page-subtitle" id="usersCount">جاري التحميل...</p>
+        </div>
+      </div>
+      <div class="admin-user-badge">
+        <div class="avatar" id="adminInitial">A</div>
+        <div class="info">
+          <div class="name" id="adminName">Admin</div>
+          <div class="role">مدير</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mini-stats-row" id="miniStats">
+      <div class="mini-stat-box"><div class="num" id="statTotal">-</div><div class="lbl">إجمالي المستخدمين</div></div>
+      <div class="mini-stat-box"><div class="num" id="statAdmins">-</div><div class="lbl">أدمن</div></div>
+      <div class="mini-stat-box"><div class="num" id="statCustomers">-</div><div class="lbl">عملاء</div></div>
+    </div>
+
+    <div class="admin-toolbar">
+      <input type="text" class="search-admin-input" id="searchInput" placeholder="🔍 ابحث بالاسم، البريد، أو الموبايل...">
+      <select class="filter-select-admin" id="roleFilter">
+        <option value="">كل الأدوار</option>
+        <option value="admin">أدمن</option>
+        <option value="customer">عملاء</option>
+      </select>
+      <button class="filter-select-admin" id="refreshBtn" style="cursor:pointer">🔄 تحديث</button>
+    </div>
+
+    <div class="admin-table-wrap">
+      <div id="tableContainer">
+        <div style="padding:40px;text-align:center">
+          <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:60px;border-radius:12px"></div>
+        </div>
+      </div>
+      <div class="pagination-wrap" id="pagination" style="display:none">
+        <span id="pageInfo">-</span>
+        <div class="pagination-buttons" id="pageButtons"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- User details modal -->
+<div class="admin-modal-overlay" id="userModal">
+  <div class="admin-modal" style="max-width:560px">
+    <div class="admin-modal-header">
+      <h2 id="modalTitle">تفاصيل المستخدم</h2>
+      <button class="admin-modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="admin-modal-body" id="userDetailBody">
+      <div class="skeleton" style="height:150px;border-radius:12px"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { api, getCurrentUser, logout } from '../js/api.js';
+
+let allUsers = [];
+let filteredUsers = [];
+let currentPage = 1;
+const perPage = 8;
+let currentUserId = null;
+let currentAdminUid = null;
+
+// ===========================================
+// Helpers
+// ===========================================
+function showStatus(emoji, title, message, isLoading = false) {
+  const e = document.getElementById('statusEmoji');
+  e.textContent = emoji;
+  e.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
+  document.getElementById('statusPage').style.display = 'flex';
+  document.getElementById('adminLayout').style.display = 'none';
+}
+
+function showLayout() {
+  document.getElementById('statusPage').style.display = 'none';
+  document.getElementById('adminLayout').style.display = 'grid';
+}
+
+function showToast(message, type = 'info') {
+  let c = document.getElementById('toastContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastContainer';
+    c.className = 'toast-container';
+    document.body.appendChild(c);
+  }
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleString('ar-EG', { dateStyle: 'medium' });
+}
+
+// ===========================================
+// Access
+// ===========================================
+async function checkAdminAccess() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول');
+      setTimeout(() => window.location.href = '../login.html?redirect=admin/users.html', 1500);
+      return null;
+    }
+    const meRes = await api.auth.me();
+    const userData = meRes.user;
+    if (!userData || userData.role !== 'admin') {
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+      return null;
+    }
+    currentAdminUid = userData.uid;
+    const name = userData.name || user.displayName || 'Admin';
+    document.getElementById('adminName').textContent = name;
+    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
+    return userData;
+  } catch (err) {
+    showStatus('⚠️', 'خطأ', err.message);
+    return null;
+  }
+}
+
+// ===========================================
+// Load Users
+// ===========================================
+async function loadUsers() {
+  try {
+    const res = await api.admin.getAllUsers();
+    allUsers = res.data || [];
+    applyFilters();
+    updateStats();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('tableContainer').innerHTML = `
+      <div style="padding:60px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">خطأ في التحميل</h3>
+        <p style="color:var(--text-muted);font-size:13px">${err.message}</p>
+      </div>`;
+  }
+}
+
+function updateStats() {
+  const total = allUsers.length;
+  const admins = allUsers.filter(u => u.role === 'admin').length;
+  const customers = allUsers.filter(u => u.role !== 'admin').length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statAdmins').textContent = admins;
+  document.getElementById('statCustomers').textContent = customers;
+  document.getElementById('usersCount').textContent = `${total} مستخدم مسجل`;
+}
+
+// ===========================================
+// Filters
+// ===========================================
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const role = document.getElementById('roleFilter').value;
+
+  filteredUsers = allUsers.filter(u => {
+    if (search) {
+      const match = u.name?.toLowerCase().includes(search) ||
+                    u.email?.toLowerCase().includes(search) ||
+                    u.phone?.includes(search);
+      if (!match) return false;
+    }
+    if (role === 'admin' && u.role !== 'admin') return false;
+    if (role === 'customer' && u.role === 'admin') return false;
+    return true;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+// ===========================================
+// Render Table
+// ===========================================
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+  const total = filteredUsers.length;
+
+  if (total === 0) {
+    container.innerHTML = `
+      <div style="padding:60px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">👥</div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">لا يوجد مستخدمين</h3>
+        <p style="color:var(--text-muted);font-size:13px">
+          ${allUsers.length === 0 ? 'لسه مفيش مستخدمين مسجلين' : 'مفيش مستخدمين مطابقين للفلتر'}
+        </p>
+      </div>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  const totalPages = Math.ceil(total / perPage);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * perPage;
+  const pageItems = filteredUsers.slice(start, start + perPage);
+
+  container.innerHTML = `
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>المستخدم</th>
+          <th>الموبايل</th>
+          <th>الدور</th>
+          <th>التسجيل</th>
+          <th style="text-align:left">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pageItems.map(u => {
+          const initial = (u.name || u.email || 'U').charAt(0).toUpperCase();
+          const isAdmin = u.role === 'admin';
+          const isMe = u.uid === currentAdminUid;
+          return `
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="user-avatar-mini ${isAdmin ? 'admin' : ''}">${initial}</div>
+                  <div class="info">
+                    <div class="name">
+                      ${isMe ? '<span class="you-badge">أنت</span>' : ''}
+                      ${u.name || '—'}
+                    </div>
+                    <div class="email">${u.email || '—'}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="direction:ltr;text-align:right;font-size:12.5px;color:var(--text-muted);font-family:monospace">
+                ${u.phone || '—'}
+              </td>
+              <td>
+                <span class="role-badge ${isAdmin ? 'admin' : 'customer'}">
+                  ${isAdmin ? '👑 أدمن' : '👤 عميل'}
+                </span>
+              </td>
+              <td class="date-cell">${formatDate(u.createdAt)}</td>
+              <td>
+                <div class="actions-cell">
+                  <button class="icon-action-btn" data-view="${u.uid}" title="عرض">👁</button>
+                </div>
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  if (totalPages > 1) {
+    document.getElementById('pagination').style.display = 'flex';
+    document.getElementById('pageInfo').textContent = `عرض ${start + 1}-${Math.min(start + perPage, total)} من ${total}`;
+    const btns = document.getElementById('pageButtons');
+    let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">›</button>`;
+    btns.innerHTML = html;
+    btns.querySelectorAll('.page-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        currentPage = parseInt(b.dataset.page);
+        renderTable();
+      });
+    });
+  } else {
+    document.getElementById('pagination').style.display = 'none';
+  }
+
+  container.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => openUserModal(btn.dataset.view));
+  });
+}
+
+// ===========================================
+// User Details Modal
+// ===========================================
+function openUserModal(uid) {
+  const u = allUsers.find(x => x.uid === uid);
+  if (!u) return;
+
+  currentUserId = uid;
+  const initial = (u.name || u.email || 'U').charAt(0).toUpperCase();
+  const isAdmin = u.role === 'admin';
+  const isMe = u.uid === currentAdminUid;
+
+  document.getElementById('userDetailBody').innerHTML = `
+    <div class="user-detail-header">
+      <div class="user-detail-avatar ${isAdmin ? 'admin' : ''}">${initial}</div>
+      <div class="user-detail-info">
+        <h3>${u.name || '—'} ${isMe ? '<span class="you-badge">أنت</span>' : ''}</h3>
+        <p>${u.email || '—'}</p>
+      </div>
+    </div>
+
+    <div class="user-detail-row">
+      <span class="lbl">UID</span>
+      <span class="val" style="font-family:monospace;font-size:11px">${u.uid}</span>
+    </div>
+    <div class="user-detail-row">
+      <span class="lbl">الموبايل</span>
+      <span class="val" style="direction:ltr">${u.phone || '—'}</span>
+    </div>
+    <div class="user-detail-row">
+      <span class="lbl">الدور</span>
+      <span class="val">
+        <span class="role-badge ${isAdmin ? 'admin' : 'customer'}">
+          ${isAdmin ? '👑 أدمن' : '👤 عميل'}
+        </span>
+      </span>
+    </div>
+    <div class="user-detail-row">
+      <span class="lbl">تاريخ التسجيل</span>
+      <span class="val">${formatDate(u.createdAt)}</span>
+    </div>
+    <div class="user-detail-row">
+      <span class="lbl">العناوين المحفوظة</span>
+      <span class="val">${(u.addresses || []).length}</span>
+    </div>
+
+    <div class="role-action-box">
+      <h4>${isAdmin ? '⬇️ تخفيض الصلاحيات' : '👑 ترقية لأدمن'}</h4>
+      <p>
+        ${isMe
+          ? '⚠️ مش ممكن تغيّر دورك بنفسك عشان ما تفقدش صلاحيات الأدمن بالخطأ.'
+          : isAdmin
+            ? 'هيتحول المستخدم لعميل عادي ومش هيقدر يدخل لوحة التحكم.'
+            : 'هيتحول المستخدم لأدمن ويقدر يدخل لوحة التحكم وإدارة المتجر بالكامل.'}
+      </p>
+      <button class="btn-role ${isAdmin ? 'demote' : 'promote'}" id="roleBtn" ${isMe ? 'disabled' : ''}>
+        ${isAdmin ? '⬇️ تخفيض لعميل' : '👑 ترقية لأدمن'}
+      </button>
+    </div>
+  `;
+
+  document.getElementById('modalTitle').textContent = 'تفاصيل المستخدم';
+  document.getElementById('userModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Attach role button
+  document.getElementById('roleBtn')?.addEventListener('click', async () => {
+    const newRole = isAdmin ? 'customer' : 'admin';
+    const confirmMsg = isAdmin
+      ? `تخفيض "${u.name}" لعميل عادي؟`
+      : `ترقية "${u.name}" لأدمن؟ هيقدر يدخل لوحة التحكم بالكامل.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    const btn = document.getElementById('roleBtn');
+    btn.disabled = true;
+    btn.textContent = 'جاري التحديث...';
+
+    try {
+      await api.admin.updateUserRole(u.uid, newRole);
+      showToast(`تم ${newRole === 'admin' ? 'ترقية' : 'تخفيض'} المستخدم ✓`, 'success');
+      closeUserModal();
+      await loadUsers();
+    } catch (err) {
+      showToast(err.message || 'فشل التحديث', 'error');
+      btn.disabled = false;
+      btn.textContent = isAdmin ? '⬇️ تخفيض لعميل' : '👑 ترقية لأدمن';
+    }
+  });
+}
+
+function closeUserModal() {
+  document.getElementById('userModal').classList.remove('active');
+  document.body.style.overflow = '';
+  currentUserId = null;
+}
+
+// ===========================================
+// Events
+// ===========================================
+document.getElementById('modalCloseBtn').addEventListener('click', closeUserModal);
+document.getElementById('userModal').addEventListener('click', (e) => {
+  if (e.target.id === 'userModal') closeUserModal();
+});
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('roleFilter').addEventListener('change', applyFilters);
+
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  showToast('جاري التحديث...', 'info');
+  await loadUsers();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm('تسجيل الخروج؟')) return;
+  await logout();
+  window.location.href = '../login.html';
+});
+
+document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+});
+
+// ESC to close modal
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeUserModal();
+});
+
+// ===========================================
+// Init
+// ===========================================
+async function init() {
+  showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
+  const adminUser = await checkAdminAccess();
+  if (!adminUser) return;
+  showLayout();
+  await loadUsers();
+}
+
+init();
+</script>
+
+</body>
+</html>

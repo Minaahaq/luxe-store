@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUXE Store — متجر الفخامة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+      <div class="brand-tag">Premium Store</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">
+        🛍<span class="badge" data-cart-badge>0</span>
+      </a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-label">Premium Collection 2025</div>
+      <h1>تجربة تسوق <span>فاخرة</span><br>تليق بك</h1>
+      <p>اكتشف مجموعتنا الحصرية من المنتجات الفاخرة المختارة بعناية. جودة استثنائية، تصميم راقٍ، وتجربة تسوق لا تُنسى.</p>
+      <a href="#productsSection" class="btn-hero">تسوق الآن ←</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="section" id="productsSection">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">المجموعة الحصرية</div>
+        <h2>منتجات <span>مختارة بعناية</span></h2>
+      </div>
+    </div>
+
+    <div class="filters-wrap" id="filtersWrap"></div>
+
+    <div class="products-grid" id="productsGrid">
+      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
+      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
+      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
+      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="#" onclick="filterByCategory('الكل');return false">كل المنتجات</a>
+        <a href="#" onclick="filterByCategory('إلكترونيات');return false">إلكترونيات</a>
+        <a href="#" onclick="filterByCategory('أزياء');return false">أزياء</a>
+        <a href="#" onclick="filterByCategory('عطور');return false">عطور</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="#">الاستبدال والإرجاع</a>
+        <a href="#">الأسئلة الشائعة</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+        <a href="#">الوظائف</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<a href="cart.html" class="float-cart">
+  🛍<span class="badge" data-cart-badge>0</span>
+</a>
+
+<script type="module">
+import { api, getCurrentUser, logout } from './js/api.js';
+import { showToast, addToCart, updateCartBadge } from './js/ui.js';
+
+let allProducts = [];
+let currentCategory = 'الكل';
+let searchQuery = '';
+
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip">
+        <span>${user.displayName || user.email.split('@')[0]}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+async function loadProducts() {
+  const grid = document.getElementById('productsGrid');
+  try {
+    const res = await api.products.getAll();
+    allProducts = res.data || [];
+    renderFilters();
+    renderProducts();
+    // check URL search param
+    const urlParams = new URLSearchParams(window.location.search);
+    const s = urlParams.get('search');
+    if (s) {
+      document.getElementById('searchInput').value = s;
+      searchQuery = s;
+      renderProducts();
+    }
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = `<div class="empty-state"><div class="emoji">⚠️</div><h3>حدث خطأ في تحميل المنتجات</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderFilters() {
+  const cats = ['الكل', ...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  const wrap = document.getElementById('filtersWrap');
+  wrap.innerHTML = cats.map(cat => {
+    const count = cat === 'الكل' ? allProducts.length : allProducts.filter(p => p.category === cat).length;
+    return `<button class="filter-btn ${cat === currentCategory ? 'active' : ''}" data-cat="${cat}">${cat} <span style="opacity:.6;font-size:12px;margin-right:4px">(${count})</span></button>`;
+  }).join('');
+  wrap.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => filterByCategory(btn.dataset.cat));
+  });
+}
+
+window.filterByCategory = (cat) => {
+  currentCategory = cat;
+  renderFilters();
+  renderProducts();
+  document.getElementById('productsSection').scrollIntoView({ behavior: 'smooth' });
+};
+
+function renderProducts() {
+  let filtered = allProducts;
+  if (currentCategory !== 'الكل') filtered = filtered.filter(p => p.category === currentCategory);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.brand?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    );
+  }
+
+  const grid = document.getElementById('productsGrid');
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><h3>لا توجد منتجات مطابقة</h3><p>جرب البحث بكلمات أخرى أو اختر فئة مختلفة</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((p, i) => {
+    const img = p.thumbnail || (p.images && p.images[0]) || 'https://via.placeholder.com/400';
+    const discount = p.oldPrice && p.oldPrice > p.price ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+    const rating = p.rating || 0;
+    const fullStars = Math.round(rating);
+    const stockClass = p.stock > 10 ? 'in' : p.stock > 0 ? 'low' : 'out';
+    const stockText = p.stock > 10 ? 'متوفر' : p.stock > 0 ? `متبقي ${p.stock} فقط` : 'نفذت الكمية';
+    const isOut = p.stock <= 0;
+
+    return `
+      <div class="product-card" style="animation-delay:${i * 0.04}s">
+        <a href="product.html?id=${p.id}" style="display:block">
+          <div class="product-media">
+            <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400/f4f2ed/c9a961?text=LUXE'">
+            <div class="product-badges">
+              ${discount > 0 ? `<span class="badge-pill badge-discount">-${discount}%</span>` : ''}
+              ${p.isFeatured ? `<span class="badge-pill badge-featured">⭐ مميز</span>` : ''}
+              ${isOut ? `<span class="badge-pill badge-out">نفذ</span>` : ''}
+            </div>
+          </div>
+        </a>
+        <div class="product-body">
+          <span class="product-cat">${p.category || 'عام'}</span>
+          <h3 class="product-title"><a href="product.html?id=${p.id}" style="color:inherit">${p.name}</a></h3>
+          <div class="product-rating">
+            <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
+            <span class="rating-count">${rating.toFixed(1)} (${p.reviewsCount || 0})</span>
+          </div>
+          <div class="product-stock ${stockClass}">${stockText}</div>
+          <div class="product-footer">
+            <div>
+              <div class="price-main">${p.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
+              ${p.oldPrice ? `<div class="price-old">${p.oldPrice.toLocaleString('ar-EG')} ج.م</div>` : ''}
+            </div>
+            <button class="add-btn" data-id="${p.id}" ${isOut ? 'disabled' : ''}>${isOut ? '✕' : '+'}</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.add-btn').forEach(btn => {
+    if (btn.disabled) return;
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = btn.dataset.id;
+      const product = allProducts.find(p => p.id === id);
+      if (!product) return;
+      addToCart(product);
+      showToast(`تمت إضافة "${product.name.substring(0, 30)}..." للسلة`, 'success');
+      btn.style.background = 'var(--success)';
+      btn.textContent = '✓';
+      setTimeout(() => { btn.style.background = ''; btn.textContent = '+'; }, 1200);
+    });
+  });
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  renderProducts();
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+renderUserArea();
+updateCartBadge();
+loadProducts();
+</script>
+
+</body>
+</html>

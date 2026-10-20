@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إنشاء حساب - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-page">
+  <div class="auth-side">
+    <div>
+      <div class="auth-brand">LUXE</div>
+      <div class="auth-brand-tag">Premium Store</div>
+    </div>
+    <div>
+      <h2>ابدأ رحلتك<br>في <span>عالم الفخامة</span></h2>
+      <p>انضم لآلاف العملاء الذين يثقون في LUXE لتجربة تسوق استثنائية</p>
+      <div class="auth-side-features">
+        <div class="auth-side-feature"><span class="dot"></span> منتجات أصلية 100%</div>
+        <div class="auth-side-feature"><span class="dot"></span> شحن سريع خلال 24 ساعة</div>
+        <div class="auth-side-feature"><span class="dot"></span> إرجاع مجاني خلال 14 يوم</div>
+        <div class="auth-side-feature"><span class="dot"></span> دعم على مدار الساعة</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#6b7280;">© 2025 LUXE Premium Store</div>
+  </div>
+
+  <div class="auth-form-wrap">
+    <form class="auth-form" id="registerForm" novalidate>
+      <h1>إنشاء حساب جديد</h1>
+      <p>املأ البيانات لتبدأ التسوق</p>
+
+      <div class="form-group" id="fg-name">
+        <label for="name">الاسم بالكامل <span class="req">*</span></label>
+        <input type="text" id="name" placeholder="أدخل اسمك الكامل" autocomplete="name">
+        <div class="form-error">الاسم لازم يكون 3 أحرف على الأقل</div>
+      </div>
+
+      <div class="form-group" id="fg-email">
+        <label for="email">البريد الإلكتروني <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="example@email.com" autocomplete="email">
+        <div class="form-error">البريد الإلكتروني غير صحيح</div>
+      </div>
+
+      <div class="form-group" id="fg-phone">
+        <label for="phone">رقم الموبايل</label>
+        <input type="tel" id="phone" placeholder="01xxxxxxxxx" autocomplete="tel">
+        <div class="form-error">رقم الموبايل لازم 11 رقم يبدأ بـ 01</div>
+      </div>
+
+      <div class="form-group" id="fg-password">
+        <label for="password">كلمة السر <span class="req">*</span></label>
+        <input type="password" id="password" placeholder="6 أحرف على الأقل" autocomplete="new-password">
+        <div class="form-error">كلمة السر لازم 6 أحرف على الأقل</div>
+      </div>
+
+      <div class="form-group" id="fg-confirm">
+        <label for="confirm">تأكيد كلمة السر <span class="req">*</span></label>
+        <input type="password" id="confirm" placeholder="أعد كتابة كلمة السر" autocomplete="new-password">
+        <div class="form-error">كلمات السر غير متطابقة</div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submitBtn">إنشاء الحساب</button>
+
+      <div class="auth-switch">عندك حساب بالفعل؟ <a href="login.html">سجل دخول</a></div>
+      <div class="auth-footer">© 2025 LUXE Store • جميع الحقوق محفوظة</div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import { registerWithEmail, api } from './js/api.js';
+import { showToast } from './js/ui.js';
+
+const form = document.getElementById('registerForm');
+const submitBtn = document.getElementById('submitBtn');
+
+function setError(id) { document.getElementById('fg-' + id).classList.add('error'); }
+function clearError(id) { document.getElementById('fg-' + id).classList.remove('error'); }
+
+['name', 'email', 'phone', 'password', 'confirm'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => clearError(id));
+});
+
+function validateForm(data) {
+  let valid = true;
+  ['name', 'email', 'phone', 'password', 'confirm'].forEach(clearError);
+
+  if (!data.name || data.name.trim().length < 3) { setError('name'); valid = false; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { setError('email'); valid = false; }
+  if (data.phone && !/^01[0-9]{9}$/.test(data.phone)) { setError('phone'); valid = false; }
+  if (!data.password || data.password.length < 6) { setError('password'); valid = false; }
+  if (data.password !== data.confirm) { setError('confirm'); valid = false; }
+
+  return valid;
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    password: document.getElementById('password').value,
+    confirm: document.getElementById('confirm').value
+  };
+
+  if (!validateForm(data)) {
+    showToast('من فضلك صحح الأخطاء', 'error');
+    return;
+  }
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'جاري إنشاء الحساب...';
+
+    await registerWithEmail(data.email, data.password, data.name);
+
+    try {
+      await api.auth.updateProfile({ name: data.name, phone: data.phone });
+    } catch (err) {
+      console.warn('Profile update failed:', err.message);
+    }
+
+    showToast('تم إنشاء الحساب بنجاح! جاري التحويل...', 'success');
+    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+
+  } catch (err) {
+    console.error(err);
+    const msg = mapError(err.code || err.message);
+    showToast(msg, 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'إنشاء الحساب';
+  }
+});
+
+function mapError(code) {
+  const m = {
+    'auth/email-already-in-use': 'هذا البريد مستخدم بالفعل',
+    'auth/invalid-email': 'البريد الإلكتروني غير صحيح',
+    'auth/weak-password': 'كلمة السر ضعيفة',
+    'auth/network-request-failed': 'مشكلة في الاتصال'
+  };
+  return m[code] || 'حدث خطأ، حاول مرة أخرى';
+}
+</script>
+
+</body>
+</html>

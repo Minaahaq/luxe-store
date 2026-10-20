@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حسابي - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+      <div class="brand-tag">Premium Store</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<div class="container page-title-bar">
+  <h1>حسابي</h1>
+  <p>إدارة بياناتك وعناوينك وإعداداتك</p>
+</div>
+
+<div class="container profile-layout" id="profileLayout">
+  <div class="profile-sidebar">
+    <div class="skeleton" style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px"></div>
+    <div class="skeleton" style="height:20px;margin-bottom:8px"></div>
+    <div class="skeleton" style="height:14px;width:70%;margin:0 auto 24px"></div>
+    <div class="skeleton" style="height:300px;border-radius:14px"></div>
+  </div>
+  <div class="profile-content">
+    <div class="skeleton" style="height:400px;border-radius:14px"></div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+        <a href="#">إلكترونيات</a>
+        <a href="#">أزياء</a>
+        <a href="#">عطور</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="#">الاستبدال والإرجاع</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<script type="module">
+import { api, getCurrentUser, logout } from './js/api.js';
+import { showToast, getCart, updateCartBadge } from './js/ui.js';
+
+let currentUser = null;
+let userData = null;
+let ordersCount = 0;
+let cartCount = 0;
+let activeTab = 'overview';
+
+// ===========================================
+// User Area (Header)
+// ===========================================
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  try {
+    const user = await getCurrentUser();
+    if (user) {
+      const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+      userArea.innerHTML = `
+        <a href="profile.html" class="user-chip" style="text-decoration:none">
+          <span>${user.displayName || user.email.split('@')[0]}</span>
+          <div class="user-avatar">${initial}</div>
+        </a>`;
+    } else {
+      userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    }
+  } catch {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+// ===========================================
+// Init (with error handling)
+// ===========================================
+async function init() {
+  try {
+    currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      showToast('لازم تسجل دخول الأول', 'warning');
+      setTimeout(() => {
+        window.location.href = 'login.html?redirect=profile.html';
+      }, 1000);
+      return;
+    }
+
+    await Promise.all([loadUserData(), loadOrdersCount()]);
+    cartCount = getCart().length;
+
+    renderLayout();
+  } catch (err) {
+    console.error('Init error:', err);
+    document.getElementById('profileLayout').innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;background:#fff;border-radius:24px;border:1px solid var(--line)">
+        <div style="font-size:64px;margin-bottom:16px">⚠️</div>
+        <h2 style="font-size:22px;font-weight:900;margin-bottom:10px">حدث خطأ في التحميل</h2>
+        <p style="color:var(--text-muted);margin-bottom:24px">${err.message || 'تعذّر تحميل البيانات'}</p>
+        <button class="btn-shop" onclick="location.reload()">إعادة المحاولة</button>
+      </div>`;
+  }
+}
+
+// ===========================================
+// Load user data (safe)
+// ===========================================
+async function loadUserData() {
+  try {
+    const res = await api.auth.me();
+    if (res && res.user) {
+      userData = res.user;
+    } else {
+      throw new Error('لم يتم استرجاع بيانات المستخدم');
+    }
+  } catch (err) {
+    console.error('loadUserData error:', err);
+    // Fallback آمن
+    userData = {
+      uid: currentUser.uid,
+      name: currentUser.displayName || currentUser.email?.split('@')[0] || 'مستخدم',
+      email: currentUser.email || '',
+      phone: '',
+      addresses: []
+    };
+  }
+}
+
+// ===========================================
+// Load orders count
+// ===========================================
+async function loadOrdersCount() {
+  try {
+    const res = await api.orders.getMyOrders();
+    ordersCount = (res.data || []).length;
+  } catch {
+    ordersCount = 0;
+  }
+}
+
+// ===========================================
+// Render Layout
+// ===========================================
+function renderLayout() {
+  if (!userData) {
+    console.error('renderLayout: userData is missing');
+    return;
+  }
+
+  const layout = document.getElementById('profileLayout');
+  const name = userData.name || 'مستخدم';
+  const email = userData.email || currentUser?.email || '—';
+  const initial = name.charAt(0).toUpperCase();
+
+  layout.innerHTML = `
+    <aside class="profile-sidebar">
+      <div class="profile-avatar-big">${initial}</div>
+      <div class="profile-name">${name}</div>
+      <div class="profile-email">${email}</div>
+
+      <nav class="profile-nav">
+        <button class="profile-nav-item ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">نظرة عامة</span>
+        </button>
+        <button class="profile-nav-item ${activeTab === 'info' ? 'active' : ''}" data-tab="info">
+          <span class="nav-icon">👤</span>
+          <span class="nav-text">البيانات الشخصية</span>
+        </button>
+        <button class="profile-nav-item ${activeTab === 'addresses' ? 'active' : ''}" data-tab="addresses">
+          <span class="nav-icon">📍</span>
+          <span class="nav-text">العناوين</span>
+        </button>
+        <button class="profile-nav-item ${activeTab === 'security' ? 'active' : ''}" data-tab="security">
+          <span class="nav-icon">🔒</span>
+          <span class="nav-text">الأمان</span>
+        </button>
+        <button class="profile-nav-item logout" id="logoutBtn">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-text">تسجيل الخروج</span>
+        </button>
+      </nav>
+    </aside>
+
+    <div class="profile-content" id="profileContent"></div>
+  `;
+
+  layout.querySelectorAll('.profile-nav-item[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      renderLayout();
+    });
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+  renderContent();
+}
+
+// ===========================================
+// Render Content
+// ===========================================
+function renderContent() {
+  const content = document.getElementById('profileContent');
+  if (!content) return;
+
+  if (activeTab === 'overview') content.innerHTML = renderOverview();
+  else if (activeTab === 'info') content.innerHTML = renderInfo();
+  else if (activeTab === 'addresses') content.innerHTML = renderAddresses();
+  else if (activeTab === 'security') content.innerHTML = renderSecurity();
+
+  attachContentHandlers();
+}
+
+// ---------- Overview ----------
+function renderOverview() {
+  return `
+    <div class="profile-section">
+      <h2>📊 نظرة عامة</h2>
+      <p class="subtitle">ملخص سريع لحسابك ونشاطك</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="num">${ordersCount}</div>
+          <div class="lbl">طلباتي</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${cartCount}</div>
+          <div class="lbl">في السلة</div>
+        </div>
+        <div class="stat-card">
+          <div class="num">${(userData.addresses || []).length}</div>
+          <div class="lbl">العناوين</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+        <a href="orders.html" class="btn-shop" style="padding:12px 24px">📋 طلباتي</a>
+        <a href="cart.html" class="btn-shop" style="padding:12px 24px;background:var(--paper-2);color:var(--ink);box-shadow:none">🛒 السلة</a>
+        <a href="index.html" class="btn-shop" style="padding:12px 24px;background:var(--paper-2);color:var(--ink);box-shadow:none">🛍 تسوق</a>
+      </div>
+    </div>`;
+}
+
+// ---------- Info ----------
+function renderInfo() {
+  return `
+    <div class="profile-section">
+      <h2>👤 البيانات الشخصية</h2>
+      <p class="subtitle">عدّل بياناتك الأساسية</p>
+
+      <form class="profile-form" id="infoForm">
+        <div class="form-group" id="fg-name">
+          <label>الاسم بالكامل</label>
+          <input type="text" id="p-name" value="${userData.name || ''}">
+          <div class="form-error">الاسم لازم 3 أحرف على الأقل</div>
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني</label>
+          <input type="email" value="${userData.email || ''}" disabled style="background:var(--paper-2);cursor:not-allowed">
+        </div>
+        <div class="form-group" id="fg-phone">
+          <label>رقم الموبايل</label>
+          <input type="tel" id="p-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx">
+          <div class="form-error">رقم غير صحيح (11 رقم يبدأ بـ 01)</div>
+        </div>
+
+        <button type="submit" class="btn-save" id="saveInfoBtn">💾 حفظ التعديلات</button>
+      </form>
+    </div>`;
+}
+
+// ---------- Addresses ----------
+function renderAddresses() {
+  const addresses = userData.addresses || [];
+
+  const listHTML = addresses.length === 0 ? `
+    <div class="empty-addr">
+      <div class="emoji">📍</div>
+      <div>مفيش عناوين محفوظة بعد</div>
+    </div>` : `
+    <div class="addresses-list">
+      ${addresses.map(a => `
+        <div class="address-card">
+          <div class="address-info">
+            ${a.isDefault ? `<span class="label-badge">الافتراضي</span>` : ''}
+            <p>
+              <strong>${a.name || userData.name || ''}</strong><br>
+              ${a.street || ''}${a.building ? `, مبنى ${a.building}` : ''}${a.apartment ? `, شقة ${a.apartment}` : ''}<br>
+              ${a.area || ''}, ${a.city || ''}
+            </p>
+          </div>
+          <button class="delete-addr-btn" data-addr-id="${a.id}" title="حذف">🗑</button>
+        </div>
+      `).join('')}
+    </div>`;
+
+  return `
+    <div class="profile-section">
+      <h2>📍 العناوين</h2>
+      <p class="subtitle">أضف عناوينك لتسريع عملية الشراء</p>
+
+      ${listHTML}
+
+      <div class="add-address-box">
+        <h4>➕ إضافة عنوان جديد</h4>
+        <form id="addrForm">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>الاسم المستلم</label>
+              <input type="text" id="a-name" value="${userData.name || ''}" placeholder="اسم المستلم">
+            </div>
+            <div class="form-group">
+              <label>الموبايل</label>
+              <input type="tel" id="a-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx">
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>المحافظة</label>
+              <select id="a-city">
+                <option value="">اختر</option>
+                ${['القاهرة','الجيزة','الإسكندرية','المنصورة','أسيوط','المنيا','طنطا','بورسعيد','السويس','أسوان','الأقصر'].map(c => `<option>${c}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>المنطقة</label>
+              <input type="text" id="a-area" placeholder="مثال: مدينة نصر">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>الشارع</label>
+            <input type="text" id="a-street" placeholder="اسم الشارع">
+          </div>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label>رقم المبنى</label>
+              <input type="text" id="a-building" placeholder="12">
+            </div>
+            <div class="form-group">
+              <label>الشقة / الطابق</label>
+              <input type="text" id="a-apartment" placeholder="3">
+            </div>
+          </div>
+          <button type="submit" class="btn-save" id="saveAddrBtn">➕ إضافة العنوان</button>
+        </form>
+      </div>
+    </div>`;
+}
+
+// ---------- Security ----------
+function renderSecurity() {
+  return `
+    <div class="profile-section">
+      <h2>🔒 الأمان</h2>
+      <p class="subtitle">إدارة كلمة السر وأمان حسابك</p>
+
+      <div class="password-change-note">
+        🔐 لتغيير كلمة السر، هيتبعتلك رابط على بريدك الإلكتروني (<strong>${userData.email || currentUser?.email || ''}</strong>)
+      </div>
+
+      <button class="btn-save" id="resetPassBtn">📧 إرسال رابط تغيير كلمة السر</button>
+    </div>`;
+}
+
+// ===========================================
+// Content Handlers
+// ===========================================
+function attachContentHandlers() {
+  // Info form
+  document.getElementById('infoForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('p-name').value.trim();
+    const phone = document.getElementById('p-phone').value.trim();
+    const btn = document.getElementById('saveInfoBtn');
+
+    document.getElementById('fg-name').classList.remove('error');
+    document.getElementById('fg-phone').classList.remove('error');
+
+    let valid = true;
+    if (!name || name.length < 3) { document.getElementById('fg-name').classList.add('error'); valid = false; }
+    if (phone && !/^01[0-9]{9}$/.test(phone)) { document.getElementById('fg-phone').classList.add('error'); valid = false; }
+    if (!valid) return showToast('صحح الأخطاء', 'error');
+
+    btn.disabled = true;
+    btn.textContent = 'جاري الحفظ...';
+
+    try {
+      await api.auth.updateProfile({ name, phone });
+      userData.name = name;
+      userData.phone = phone;
+      showToast('تم حفظ التعديلات ✓', 'success');
+      setTimeout(() => renderLayout(), 400);
+    } catch (err) {
+      showToast(err.message || 'فشل الحفظ', 'error');
+      btn.disabled = false;
+      btn.textContent = '💾 حفظ التعديلات';
+    }
+  });
+
+  // Add address
+  document.getElementById('addrForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const addr = {
+      id: 'addr_' + Date.now(),
+      name: document.getElementById('a-name').value.trim(),
+      phone: document.getElementById('a-phone').value.trim(),
+      city: document.getElementById('a-city').value,
+      area: document.getElementById('a-area').value.trim(),
+      street: document.getElementById('a-street').value.trim(),
+      building: document.getElementById('a-building').value.trim(),
+      apartment: document.getElementById('a-apartment').value.trim(),
+      isDefault: (userData.addresses || []).length === 0
+    };
+
+    if (!addr.city || !addr.area || !addr.street) {
+      showToast('أكمل المدينة والمنطقة والشارع', 'error');
+      return;
+    }
+
+    const newAddresses = [...(userData.addresses || []), addr];
+    const btn = document.getElementById('saveAddrBtn');
+    btn.disabled = true;
+    btn.textContent = 'جاري الإضافة...';
+
+    try {
+      await api.auth.updateProfile({ addresses: newAddresses });
+      userData.addresses = newAddresses;
+      showToast('تمت إضافة العنوان ✓', 'success');
+      setTimeout(() => renderContent(), 400);
+    } catch (err) {
+      showToast(err.message || 'فشل الإضافة', 'error');
+      btn.disabled = false;
+      btn.textContent = '➕ إضافة العنوان';
+    }
+  });
+
+  // Delete address
+  document.querySelectorAll('.delete-addr-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('حذف هذا العنوان؟')) return;
+      const addrId = btn.dataset.addrId;
+      const newAddresses = (userData.addresses || []).filter(a => a.id !== addrId);
+
+      try {
+        await api.auth.updateProfile({ addresses: newAddresses });
+        userData.addresses = newAddresses;
+        showToast('تم حذف العنوان', 'info');
+        renderContent();
+      } catch (err) {
+        showToast(err.message || 'فشل الحذف', 'error');
+      }
+    });
+  });
+
+  // Reset password
+  document.getElementById('resetPassBtn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('resetPassBtn');
+    btn.disabled = true;
+    btn.textContent = 'جاري الإرسال...';
+
+    try {
+      const { auth, sendPasswordResetEmail } = await import('./js/firebase-config.js');
+      await sendPasswordResetEmail(auth, userData.email || currentUser.email);
+      showToast('تم إرسال الرابط على بريدك ✓', 'success');
+    } catch (err) {
+      showToast('فشل الإرسال', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📧 إرسال رابط تغيير كلمة السر';
+    }
+  });
+}
+
+// ===========================================
+// Logout
+// ===========================================
+async function handleLogout() {
+  if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+  try {
+    await logout();
+    showToast('تم تسجيل الخروج', 'info');
+    setTimeout(() => window.location.href = 'index.html', 700);
+  } catch {
+    showToast('فشل تسجيل الخروج', 'error');
+  }
+}
+
+// ===========================================
+// Search
+// ===========================================
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+// ===========================================
+// Init
+// ===========================================
+renderUserArea();
+updateCartBadge();
+init();
+</script>
+
+</body>
+</html>

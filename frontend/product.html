@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفاصيل المنتج - LUXE Store</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <header class="main-header" id="mainHeader">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-name">LUXE</div>
+        <div class="brand-tag">Premium Store</div>
+      </a>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      </div>
+      <div class="header-actions">
+        <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+        <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+        <div id="userArea"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="index.html">الرئيسية</a>
+      <span class="sep">/</span>
+      <span class="current">جاري التحميل...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="product-detail" id="productDetail">
+      <div class="skeleton" style="aspect-ratio:1;border-radius:var(--radius-lg)"></div>
+      <div>
+        <div class="skeleton" style="height:20px;width:80px;margin-bottom:16px"></div>
+        <div class="skeleton" style="height:32px;margin-bottom:12px"></div>
+        <div class="skeleton" style="height:20px;width:60%;margin-bottom:24px"></div>
+        <div class="skeleton" style="height:80px;border-radius:14px;margin-bottom:24px"></div>
+        <div class="skeleton" style="height:60px"></div>
+      </div>
+    </div>
+
+    <section class="related-section" id="relatedSection" style="display:none">
+      <h3>منتجات <span style="color:var(--gold-dark)">مشابهة</span></h3>
+      <div class="products-grid" id="relatedGrid"></div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-brand-name">LUXE</div>
+          <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+        </div>
+        <div class="footer-col">
+          <h4>تسوق</h4>
+          <a href="index.html">كل المنتجات</a>
+          <a href="#">إلكترونيات</a>
+          <a href="#">أزياء</a>
+          <a href="#">عطور</a>
+        </div>
+        <div class="footer-col">
+          <h4>خدمة العملاء</h4>
+          <a href="tracking.html">تتبع الشحنة</a>
+          <a href="#">الاستبدال والإرجاع</a>
+          <a href="#">اتصل بنا</a>
+        </div>
+        <div class="footer-col">
+          <h4>الشركة</h4>
+          <a href="#">من نحن</a>
+          <a href="#">الخصوصية</a>
+          <a href="#">الشروط</a>
+        </div>
+      </div>
+      <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <a href="cart.html" class="float-cart">🛍<span class="badge" data-cart-badge>0</span></a>
+
+  <script type="module">
+    import { api, getCurrentUser, logout } from './js/api.js';
+    import { showToast, addToCart, updateCartBadge } from './js/ui.js';
+
+    let product = null;
+    let currentQty = 1;
+
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+
+    if (!productId) {
+      document.getElementById('productDetail').innerHTML = `
+    <div class="empty-state" style="grid-column:1/-1">
+      <div class="emoji">❌</div>
+      <h3>المنتج غير موجود</h3>
+      <p>لم يتم تحديد منتج</p>
+      <a href="index.html" class="btn-hero" style="margin-top:20px">العودة للرئيسية</a>
+    </div>`;
+    } else {
+      loadProduct();
+    }
+
+    async function renderUserArea() {
+      const userArea = document.getElementById('userArea');
+      const user = await getCurrentUser();
+      if (user) {
+        const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+        userArea.innerHTML = `
+      <button class="user-chip" id="userChip">
+        <span>${user.displayName || user.email.split('@')[0]}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+        document.getElementById('userChip').addEventListener('click', () => {
+          if (confirm('هل تريد تسجيل الخروج؟')) {
+            logout().then(() => {
+              showToast('تم تسجيل الخروج', 'info');
+              setTimeout(() => location.reload(), 800);
+            });
+          }
+        });
+      } else {
+        userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+      }
+    }
+
+    async function loadProduct() {
+      try {
+        const res = await api.products.getById(productId);
+        product = res.data;
+        renderProduct();
+        renderBreadcrumb();
+        loadRelated();
+        document.title = `${product.name} - LUXE Store`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('productDetail').innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="emoji">😕</div>
+        <h3>المنتج غير موجود</h3>
+        <p>${err.message}</p>
+        <a href="index.html" class="btn-hero" style="margin-top:20px">العودة للرئيسية</a>
+      </div>`;
+      }
+    }
+
+    function renderBreadcrumb() {
+      document.getElementById('breadcrumb').innerHTML = `
+    <a href="index.html">الرئيسية</a>
+    <span class="sep">/</span>
+    <a href="index.html">${product.category || 'المنتجات'}</a>
+    <span class="sep">/</span>
+    <span class="current">${product.name}</span>`;
+    }
+
+    function renderProduct() {
+      const detail = document.getElementById('productDetail');
+      const images = (product.images && product.images.length > 0)
+        ? product.images
+        : [product.thumbnail || 'https://via.placeholder.com/600/f4f2ed/c9a961?text=LUXE'];
+
+      const discount = product.oldPrice && product.oldPrice > product.price
+        ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
+      const stockClass = product.stock > 10 ? 'in' : product.stock > 0 ? 'low' : 'out';
+      const stockText = product.stock > 10 ? 'متوفر في المخزون' : product.stock > 0 ? `متبقي ${product.stock} فقط - اطلب سريعاً!` : 'نفذت الكمية';
+      const isOut = product.stock <= 0;
+      const rating = product.rating || 0;
+      const fullStars = Math.round(rating);
+
+      const specs = product.specs || {};
+      const specsHTML = Object.keys(specs).length > 0 ? `
+    <ul class="specs-list">
+      ${Object.entries(specs).map(([k, v]) => `<li class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></li>`).join('')}
+    </ul>` : '';
+
+      const maxQty = Math.max(1, product.stock);
+
+      detail.innerHTML = `
+    <div class="gallery">
+      <div class="gallery-main">
+        <img src="${images[0]}" alt="${product.name}" id="mainImage" onerror="this.src='https://via.placeholder.com/600/f4f2ed/c9a961?text=LUXE'">
+      </div>
+      ${images.length > 1 ? `
+        <div class="gallery-thumbs">
+          ${images.map((img, i) => `<div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-img="${img}"><img src="${img}" alt="صورة ${i + 1}"></div>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div class="product-info">
+      <span class="product-cat-tag">${product.category || 'عام'}</span>
+      <h1>${product.name}</h1>
+
+      <div class="product-meta-row">
+        <div class="rating-block">
+          <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
+          <span>${rating.toFixed(1)}</span>
+          <span>(${product.reviewsCount || 0} تقييم)</span>
+        </div>
+        <span class="divider">|</span>
+        <span>SKU: ${product.sku || '—'}</span>
+        ${product.brand ? `<span class="divider">|</span><span>${product.brand}</span>` : ''}
+      </div>
+
+      <div class="product-price-block">
+        <div class="big-price">${product.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
+        ${product.oldPrice ? `<div class="big-old">${product.oldPrice.toLocaleString('ar-EG')} ج.م</div>` : ''}
+        ${discount > 0 ? `<div class="big-discount">-${discount}%</div>` : ''}
+      </div>
+
+      <div class="stock-indicator ${stockClass}">${stockText}</div>
+
+      ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+
+      ${specsHTML}
+
+      <div class="qty-and-actions">
+        <div class="qty-selector">
+          <button id="qtyMinus" ${isOut ? 'disabled' : ''}>−</button>
+          <input type="number" id="qtyInput" value="1" min="1" max="${maxQty}" ${isOut ? 'disabled' : ''}>
+          <button id="qtyPlus" ${isOut ? 'disabled' : ''}>+</button>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-add-cart" id="addToCartBtn" ${isOut ? 'disabled' : ''}>🛍 ${isOut ? 'نفذت الكمية' : 'أضف للسلة'}</button>
+          <button class="btn-buy-now" id="buyNowBtn" ${isOut ? 'disabled' : ''}>⚡ اشتري الآن</button>
+        </div>
+      </div>
+
+      <div class="trust-mini">
+        <div class="trust-mini-item"><span>🚚</span><span>شحن سريع خلال 24-48 ساعة</span></div>
+        <div class="trust-mini-item"><span>↩️</span><span>إرجاع مجاني خلال 14 يوم</span></div>
+        <div class="trust-mini-item"><span>🛡️</span><span>ضمان الجودة والأصالة</span></div>
+        <div class="trust-mini-item"><span>💳</span><span>دفع آمن 100%</span></div>
+      </div>
+    </div>`;
+
+      document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+        thumb.addEventListener('click', () => {
+          document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+          document.getElementById('mainImage').src = thumb.dataset.img;
+        });
+      });
+
+      const qtyInput = document.getElementById('qtyInput');
+      document.getElementById('qtyMinus')?.addEventListener('click', () => {
+        if (currentQty > 1) { currentQty--; qtyInput.value = currentQty; }
+      });
+      document.getElementById('qtyPlus')?.addEventListener('click', () => {
+        if (currentQty < product.stock) { currentQty++; qtyInput.value = currentQty; }
+        else showToast('وصلت للحد الأقصى', 'warning');
+      });
+      qtyInput?.addEventListener('change', () => {
+        let v = parseInt(qtyInput.value) || 1;
+        v = Math.max(1, Math.min(product.stock, v));
+        currentQty = v;
+        qtyInput.value = v;
+      });
+
+      document.getElementById('addToCartBtn')?.addEventListener('click', () => {
+        addToCart(product, currentQty);
+        showToast(`تمت إضافة ${currentQty} للسلة ✓`, 'success');
+        updateCartBadge();
+      });
+
+      document.getElementById('buyNowBtn')?.addEventListener('click', () => {
+        addToCart(product, currentQty);
+        updateCartBadge();
+        window.location.href = 'cart.html';
+      });
+    }
+
+    async function loadRelated() {
+      try {
+        const res = await api.products.getAll();
+        const related = (res.data || []).filter(p => p.id !== productId && p.category === product.category).slice(0, 4);
+        if (related.length === 0) return;
+
+        document.getElementById('relatedSection').style.display = 'block';
+        document.getElementById('relatedGrid').innerHTML = related.map(p => {
+          const img = p.thumbnail || (p.images && p.images[0]) || 'https://via.placeholder.com/400';
+          const discount = p.oldPrice && p.oldPrice > p.price ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
+          const rating = p.rating || 0;
+          const fullStars = Math.round(rating);
+          const isOut = p.stock <= 0;
+          return `
+        <div class="product-card">
+          <a href="product.html?id=${p.id}" style="display:block">
+            <div class="product-media">
+              <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400/f4f2ed/c9a961?text=LUXE'">
+              <div class="product-badges">
+                ${discount > 0 ? `<span class="badge-pill badge-discount">-${discount}%</span>` : ''}
+                ${isOut ? `<span class="badge-pill badge-out">نفذ</span>` : ''}
+              </div>
+            </div>
+            <div class="product-body">
+              <span class="product-cat">${p.category || 'عام'}</span>
+              <h3 class="product-title">${p.name}</h3>
+              <div class="product-rating">
+                <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
+                <span class="rating-count">${rating.toFixed(1)}</span>
+              </div>
+              <div class="product-footer">
+                <div class="price-main">${p.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
+              </div>
+            </div>
+          </a>
+        </div>`;
+        }).join('');
+      } catch (err) { console.error('Related error:', err); }
+    }
+
+    document.getElementById('searchInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+    });
+
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('mainHeader');
+      if (window.scrollY > 30) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    });
+
+    renderUserArea();
+    updateCartBadge();
+  </script>
+
+</body>
+
+</html>

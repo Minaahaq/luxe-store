@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة الطلبات - LUXE Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="statusPage" class="admin-status-page">
+  <div class="admin-status-box">
+    <div class="emoji" id="statusEmoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
+    <h1 id="statusTitle">جاري التحقق...</h1>
+    <p id="statusMessage">من فضلك انتظر</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="adminLayout" style="display:none">
+
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-name">LUXE</div>
+      <div class="admin-brand-tag">Admin Panel</div>
+    </div>
+    <nav class="admin-nav">
+      <a href="dashboard.html" class="admin-nav-item"><span class="icon">📊</span><span>لوحة التحكم</span></a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
+      <a href="orders.html" class="admin-nav-item active"><span class="icon">🛒</span><span>الطلبات</span></a>
+      <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
+      <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button class="admin-logout" id="logoutBtn"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn">☰</button>
+        <div>
+          <h1 class="admin-page-title">إدارة الطلبات</h1>
+          <p class="admin-page-subtitle" id="ordersCount">جاري التحميل...</p>
+        </div>
+      </div>
+      <div class="admin-user-badge">
+        <div class="avatar" id="adminInitial">A</div>
+        <div class="info">
+          <div class="name" id="adminName">Admin</div>
+          <div class="role">مدير</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini stats -->
+    <div class="mini-stats-row" id="miniStats">
+      <div class="mini-stat-box"><div class="num" id="statTotal">-</div><div class="lbl">إجمالي الطلبات</div></div>
+      <div class="mini-stat-box"><div class="num" id="statPending">-</div><div class="lbl">قيد المراجعة</div></div>
+      <div class="mini-stat-box"><div class="num" id="statProcessing">-</div><div class="lbl">قيد التجهيز</div></div>
+      <div class="mini-stat-box"><div class="num" id="statShipped">-</div><div class="lbl">تم الشحن</div></div>
+      <div class="mini-stat-box"><div class="num" id="statDelivered">-</div><div class="lbl">تم التوصيل</div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="admin-toolbar">
+      <input type="text" class="search-admin-input" id="searchInput" placeholder="🔍 ابحث برقم الطلب، اسم العميل، أو رقم التتبع...">
+      <select class="filter-select-admin" id="statusFilter">
+        <option value="">كل الحالات</option>
+        <option value="pending">قيد المراجعة</option>
+        <option value="processing">قيد التجهيز</option>
+        <option value="shipped">تم الشحن</option>
+        <option value="delivered">تم التوصيل</option>
+        <option value="cancelled">ملغي</option>
+      </select>
+      <button class="filter-select-admin" id="refreshBtn" style="cursor:pointer">🔄 تحديث</button>
+    </div>
+
+    <!-- Table -->
+    <div class="admin-table-wrap">
+      <div id="tableContainer">
+        <div style="padding:40px;text-align:center">
+          <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:60px;border-radius:12px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:60px;border-radius:12px"></div>
+        </div>
+      </div>
+      <div class="pagination-wrap" id="pagination" style="display:none">
+        <span id="pageInfo">-</span>
+        <div class="pagination-buttons" id="pageButtons"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Order details modal -->
+<div class="admin-modal-overlay" id="orderModal">
+  <div class="admin-modal" style="max-width:720px">
+    <div class="admin-modal-header">
+      <h2 id="modalTitle">تفاصيل الطلب</h2>
+      <button class="admin-modal-close" id="modalCloseBtn">✕</button>
+    </div>
+    <div class="admin-modal-body" id="orderDetailBody">
+      <div class="skeleton" style="height:200px;border-radius:12px"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { api, getCurrentUser, logout } from '../js/api.js';
+
+const STATUS_MAP = {
+  pending:    { label: 'قيد المراجعة', cls: 'status-pending',    color: '#f59e0b' },
+  processing: { label: 'قيد التجهيز',  cls: 'status-processing', color: '#8b5cf6' },
+  shipped:    { label: 'تم الشحن',     cls: 'status-shipped',    color: '#3b82f6' },
+  delivered:  { label: 'تم التوصيل',   cls: 'status-delivered',  color: '#10b981' },
+  cancelled:  { label: 'ملغي',          cls: 'status-cancelled',  color: '#ef4444' }
+};
+
+const PAYMENT_LABELS = {
+  cod: 'الدفع عند الاستلام',
+  card: 'بطاقة ائتمانية',
+  wallet: 'محفظة إلكترونية'
+};
+
+let allOrders = [];
+let filteredOrders = [];
+let currentPage = 1;
+const perPage = 8;
+let currentOrderId = null;
+
+// ===========================================
+// Status helpers
+// ===========================================
+function showStatus(emoji, title, message, isLoading = false) {
+  const e = document.getElementById('statusEmoji');
+  e.textContent = emoji;
+  e.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
+  document.getElementById('statusPage').style.display = 'flex';
+  document.getElementById('adminLayout').style.display = 'none';
+}
+
+function showLayout() {
+  document.getElementById('statusPage').style.display = 'none';
+  document.getElementById('adminLayout').style.display = 'grid';
+}
+
+function showToast(message, type = 'info') {
+  let c = document.getElementById('toastContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastContainer';
+    c.className = 'toast-container';
+    document.body.appendChild(c);
+  }
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const date = ts.toDate ? ts.toDate() : new Date(ts);
+  if (isNaN(date.getTime())) return '—';
+  return date.toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function formatPrice(amount) {
+  return (amount || 0).toLocaleString('ar-EG') + ' ج.م';
+}
+
+// ===========================================
+// Access
+// ===========================================
+async function checkAdminAccess() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول');
+      setTimeout(() => window.location.href = '../login.html?redirect=admin/orders.html', 1500);
+      return null;
+    }
+    const meRes = await api.auth.me();
+    const userData = meRes.user;
+    if (!userData || userData.role !== 'admin') {
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+      return null;
+    }
+    const name = userData.name || user.displayName || 'Admin';
+    document.getElementById('adminName').textContent = name;
+    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
+    return userData;
+  } catch (err) {
+    showStatus('⚠️', 'خطأ', err.message);
+    return null;
+  }
+}
+
+// ===========================================
+// Load Orders
+// ===========================================
+async function loadOrders() {
+  try {
+    const res = await api.admin.getAllOrders();
+    allOrders = res.data || [];
+    applyFilters();
+    updateStats();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('tableContainer').innerHTML = `
+      <div style="padding:60px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">خطأ في التحميل</h3>
+        <p style="color:var(--text-muted);font-size:13px">${err.message}</p>
+      </div>`;
+  }
+}
+
+function updateStats() {
+  const total = allOrders.length;
+  const pending = allOrders.filter(o => o.status === 'pending').length;
+  const processing = allOrders.filter(o => o.status === 'processing').length;
+  const shipped = allOrders.filter(o => o.status === 'shipped').length;
+  const delivered = allOrders.filter(o => o.status === 'delivered').length;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statProcessing').textContent = processing;
+  document.getElementById('statShipped').textContent = shipped;
+  document.getElementById('statDelivered').textContent = delivered;
+  document.getElementById('ordersCount').textContent = `${total} طلب إجمالي`;
+}
+
+// ===========================================
+// Filters
+// ===========================================
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+
+  filteredOrders = allOrders.filter(o => {
+    if (search) {
+      const match = o.orderNumber?.toLowerCase().includes(search) ||
+                    o.trackingId?.toLowerCase().includes(search) ||
+                    o.customer?.name?.toLowerCase().includes(search) ||
+                    o.customer?.phone?.includes(search);
+      if (!match) return false;
+    }
+    if (status && o.status !== status) return false;
+    return true;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+// ===========================================
+// Render Table
+// ===========================================
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+  const total = filteredOrders.length;
+
+  if (total === 0) {
+    container.innerHTML = `
+      <div style="padding:60px 20px;text-align:center">
+        <div style="font-size:48px;margin-bottom:12px">📭</div>
+        <h3 style="font-size:16px;font-weight:700;margin-bottom:6px">لا يوجد طلبات</h3>
+        <p style="color:var(--text-muted);font-size:13px">
+          ${allOrders.length === 0 ? 'لسه مفيش طلبات في المتجر' : 'مفيش طلبات مطابقة للفلتر'}
+        </p>
+      </div>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  const totalPages = Math.ceil(total / perPage);
+  if (currentPage > totalPages) currentPage = totalPages;
+  const start = (currentPage - 1) * perPage;
+  const pageItems = filteredOrders.slice(start, start + perPage);
+
+  container.innerHTML = `
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>رقم الطلب</th>
+          <th>العميل</th>
+          <th>التاريخ</th>
+          <th>الإجمالي</th>
+          <th>الحالة</th>
+          <th style="text-align:left">تفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pageItems.map(o => {
+          const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+          return `
+            <tr class="order-row-clickable" data-order-id="${o.id}">
+              <td>
+                <div class="order-num-cell">${o.orderNumber || '—'}</div>
+                <div style="font-size:10.5px;color:var(--text-muted);font-family:monospace;margin-top:2px">${o.trackingId || ''}</div>
+              </td>
+              <td>
+                <div class="customer-cell">
+                  <div class="name">${o.customer?.name || '—'}</div>
+                  <div class="phone">${o.customer?.phone || ''}</div>
+                </div>
+              </td>
+              <td class="date-cell">${formatDate(o.createdAt)}</td>
+              <td class="total-cell">${(o.total || 0).toLocaleString('ar-EG')} <span class="currency">ج.م</span></td>
+              <td><span class="status-pill ${st.cls}">${st.label}</span></td>
+              <td>
+                <div class="actions-cell">
+                  <button class="icon-action-btn" data-view="${o.id}" title="عرض">👁</button>
+                </div>
+              </td>
+            </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  // Pagination
+  if (totalPages > 1) {
+    document.getElementById('pagination').style.display = 'flex';
+    document.getElementById('pageInfo').textContent = `عرض ${start + 1}-${Math.min(start + perPage, total)} من ${total}`;
+    const btns = document.getElementById('pageButtons');
+    let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}">‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} data-page="${currentPage + 1}">›</button>`;
+    btns.innerHTML = html;
+    btns.querySelectorAll('.page-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        currentPage = parseInt(b.dataset.page);
+        renderTable();
+      });
+    });
+  } else {
+    document.getElementById('pagination').style.display = 'none';
+  }
+
+  // Click handlers
+  container.querySelectorAll('[data-order-id]').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('[data-view]')) return;
+      openOrderModal(row.dataset.orderId);
+    });
+  });
+  container.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openOrderModal(btn.dataset.view);
+    });
+  });
+}
+
+// ===========================================
+// Order Details Modal
+// ===========================================
+async function openOrderModal(orderId) {
+  currentOrderId = orderId;
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) return;
+
+  document.getElementById('orderModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('orderDetailBody').innerHTML = `<div class="skeleton" style="height:200px;border-radius:12px"></div>`;
+
+  renderOrderDetails(order);
+}
+
+function renderOrderDetails(order) {
+  const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
+  const items = order.items || [];
+  const addr = order.shippingAddress || {};
+  const history = order.trackingHistory || [];
+
+  // Timeline
+  const stages = ['pending', 'processing', 'shipped', 'delivered'];
+  const stageLabels = { pending: 'استلام الطلب', processing: 'قيد التجهيز', shipped: 'تم الشحن', delivered: 'تم التوصيل' };
+  const currentIdx = stages.indexOf(order.status);
+
+  let timelineHTML = '';
+  if (order.status !== 'cancelled') {
+    timelineHTML = `
+      <div class="order-detail-section">
+        <h4>📊 مسار الشحنة</h4>
+        <div class="admin-order-timeline">
+          ${stages.map((s, i) => {
+            const isDone = i < currentIdx;
+            const isCur = i === currentIdx;
+            const cls = isDone ? 'done' : isCur ? 'current' : '';
+            const h = history.find(x => x.status === s);
+            return `
+              <div class="admin-timeline-step ${cls}">
+                <h5>${stageLabels[s]}</h5>
+                <p>${h ? formatDate(h.timestamp) : (i <= currentIdx ? '—' : 'بانتظار')}</p>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('orderDetailBody').innerHTML = `
+    <div class="order-detail-section" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">رقم الطلب</div>
+        <strong style="font-family:monospace;font-size:14px">${order.orderNumber}</strong>
+      </div>
+      <span class="status-pill ${st.cls}">${st.label}</span>
+    </div>
+
+    <div class="order-detail-section">
+      <h4>🔍 رقم التتبع</h4>
+      <p style="font-family:monospace;font-weight:800;color:var(--gold-dark);font-size:15px">${order.trackingId || '—'}</p>
+    </div>
+
+    ${timelineHTML}
+
+    <div class="order-detail-section">
+      <h4>👤 بيانات العميل</h4>
+      <p>
+        <strong>${order.customer?.name || '—'}</strong><br>
+        ${order.customer?.phone || ''}<br>
+        ${order.customer?.email || ''}
+      </p>
+    </div>
+
+    <div class="order-detail-section">
+      <h4>📍 عنوان الشحن</h4>
+      <p>
+        ${addr.street || ''}${addr.building ? `, مبنى ${addr.building}` : ''}${addr.apartment ? `, شقة ${addr.apartment}` : ''}<br>
+        ${addr.area || ''}, ${addr.city || ''}
+      </p>
+    </div>
+
+    <div class="order-detail-section">
+      <h4>📦 المنتجات (${items.length})</h4>
+      ${items.map(i => `
+        <div class="order-detail-item">
+          <img src="${i.image || 'https://via.placeholder.com/50'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/50/f4f2ed/c9a961?text=LX'">
+          <div class="info">
+            <h5>${i.name}</h5>
+            <span>${i.qty} × ${formatPrice(i.price)}</span>
+          </div>
+          <div class="price">${formatPrice(i.price * i.qty)}</div>
+        </div>
+      `).join('')}
+      <div class="order-detail-totals">
+        <div class="row"><span>المجموع الفرعي</span><span class="val">${formatPrice(order.subtotal)}</span></div>
+        <div class="row"><span>الشحن</span><span class="val">${order.shipping === 0 ? 'مجاني' : formatPrice(order.shipping)}</span></div>
+        <div class="row total"><span>الإجمالي</span><span class="val">${formatPrice(order.total)}</span></div>
+      </div>
+    </div>
+
+    <div class="order-detail-section">
+      <h4>💳 الدفع</h4>
+      <p>${PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod || '—'}</p>
+    </div>
+
+    ${order.notes ? `
+      <div class="order-detail-section">
+        <h4>📝 ملاحظات</h4>
+        <p>${order.notes}</p>
+      </div>` : ''}
+
+    <div class="status-update-section">
+      <h4>🔄 تحديث حالة الطلب</h4>
+      <div class="status-buttons-grid">
+        ${Object.entries(STATUS_MAP).map(([key, val]) => `
+          <button class="status-update-btn ${key}-btn ${order.status === key ? 'current' : ''}" data-status="${key}" ${order.status === key ? 'disabled' : ''}>
+            ${val.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // Attach status update buttons
+  document.getElementById('orderDetailBody').querySelectorAll('[data-status]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const newStatus = btn.dataset.status;
+      if (!confirm(`تغيير الحالة إلى "${STATUS_MAP[newStatus].label}"؟`)) return;
+
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        await api.admin.updateOrderStatus(order.id, { status: newStatus });
+        showToast('تم تحديث الحالة ✓', 'success');
+        closeOrderModal();
+        await loadOrders();
+      } catch (err) {
+        showToast(err.message || 'فشل التحديث', 'error');
+        btn.disabled = false;
+        btn.textContent = STATUS_MAP[newStatus].label;
+      }
+    });
+  });
+}
+
+function closeOrderModal() {
+  document.getElementById('orderModal').classList.remove('active');
+  document.body.style.overflow = '';
+  currentOrderId = null;
+}
+
+// ===========================================
+// Events
+// ===========================================
+document.getElementById('modalCloseBtn').addEventListener('click', closeOrderModal);
+document.getElementById('orderModal').addEventListener('click', (e) => {
+  if (e.target.id === 'orderModal') closeOrderModal();
+});
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  showToast('جاري التحديث...', 'info');
+  await loadOrders();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm('تسجيل الخروج؟')) return;
+  await logout();
+  window.location.href = '../login.html';
+});
+
+document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+});
+
+// ===========================================
+// Init
+// ===========================================
+async function init() {
+  showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
+  const adminUser = await checkAdminAccess();
+  if (!adminUser) return;
+  showLayout();
+  await loadOrders();
+}
+
+init();
+</script>
+
+</body>
+</html>

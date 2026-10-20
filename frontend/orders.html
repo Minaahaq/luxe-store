@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طلباتي - LUXE Store</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <header class="main-header" id="mainHeader">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-name">LUXE</div>
+        <div class="brand-tag">Premium Store</div>
+      </a>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      </div>
+      <div class="header-actions">
+        <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+        <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+        <div id="userArea"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container page-title-bar">
+    <h1>طلباتي</h1>
+    <p id="subText">جاري التحميل...</p>
+  </div>
+
+  <div class="container orders-container">
+    <div class="orders-filters" id="filtersBar"></div>
+    <div id="ordersList">
+      <div class="skeleton" style="height:140px;border-radius:24px;margin-bottom:16px"></div>
+      <div class="skeleton" style="height:140px;border-radius:24px"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-brand-name">LUXE</div>
+          <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+        </div>
+        <div class="footer-col">
+          <h4>تسوق</h4>
+          <a href="index.html">كل المنتجات</a>
+          <a href="#">إلكترونيات</a>
+          <a href="#">أزياء</a>
+          <a href="#">عطور</a>
+        </div>
+        <div class="footer-col">
+          <h4>خدمة العملاء</h4>
+          <a href="tracking.html">تتبع الشحنة</a>
+          <a href="#">الاستبدال والإرجاع</a>
+          <a href="#">اتصل بنا</a>
+        </div>
+        <div class="footer-col">
+          <h4>الشركة</h4>
+          <a href="#">من نحن</a>
+          <a href="#">الخصوصية</a>
+          <a href="#">الشروط</a>
+        </div>
+      </div>
+      <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"
+    style="display:none;position:fixed;inset:0;background:rgba(10,14,23,.7);backdrop-filter:blur(8px);z-index:3000;align-items:center;justify-content:center;padding:20px;overflow-y:auto">
+    <div id="modalContent"
+      style="background:var(--paper);border-radius:var(--radius-lg);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg)">
+    </div>
+  </div>
+
+  <script type="module">
+    import { api, getCurrentUser, logout } from './js/api.js';
+    import { showToast, formatPrice, formatDate, updateCartBadge } from './js/ui.js';
+
+    const STATUS_MAP = {
+      pending: { label: 'قيد المراجعة', cls: 'status-pending', icon: '⏳' },
+      processing: { label: 'قيد التجهيز', cls: 'status-processing', icon: '⚙️' },
+      shipped: { label: 'تم الشحن', cls: 'status-shipped', icon: '🚚' },
+      delivered: { label: 'تم التوصيل', cls: 'status-delivered', icon: '✅' },
+      cancelled: { label: 'ملغي', cls: 'status-cancelled', icon: '❌' }
+    };
+
+    const PAYMENT_LABELS = {
+      cod: 'الدفع عند الاستلام',
+      card: 'بطاقة ائتمانية',
+      wallet: 'محفظة إلكترونية'
+    };
+
+    let allOrders = [];
+    let currentFilter = 'all';
+    let currentUser = null;
+
+    // ===========================================
+    // User Area
+    // ===========================================
+    async function renderUserArea() {
+      const userArea = document.getElementById('userArea');
+      const user = await getCurrentUser();
+      if (user) {
+        const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+        userArea.innerHTML = `
+      <button class="user-chip" id="userChip">
+        <span>${user.displayName || user.email.split('@')[0]}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+        document.getElementById('userChip').addEventListener('click', () => {
+          if (confirm('هل تريد تسجيل الخروج؟')) {
+            logout().then(() => {
+              showToast('تم تسجيل الخروج', 'info');
+              setTimeout(() => location.reload(), 800);
+            });
+          }
+        });
+      } else {
+        userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+      }
+    }
+
+    // ===========================================
+    // Init
+    // ===========================================
+    async function init() {
+      currentUser = await getCurrentUser();
+
+      if (!currentUser) {
+        showToast('لازم تسجل دخول الأول', 'warning');
+        setTimeout(() => {
+          window.location.href = 'login.html?redirect=orders.html';
+        }, 1000);
+        return;
+      }
+
+      await loadOrders();
+    }
+
+    // ===========================================
+    // Load Orders
+    // ===========================================
+    async function loadOrders() {
+      const list = document.getElementById('ordersList');
+      try {
+        const res = await api.orders.getMyOrders();
+        allOrders = res.data || [];
+        renderFilters();
+        renderOrders();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('subText').textContent = '';
+        list.innerHTML = `
+      <div class="empty-cart">
+        <div class="emoji">⚠️</div>
+        <h2>حدث خطأ في تحميل الطلبات</h2>
+        <p>${err.message}</p>
+        <button class="btn-shop" onclick="location.reload()">إعادة المحاولة</button>
+      </div>`;
+      }
+    }
+
+    // ===========================================
+    // Filters
+    // ===========================================
+    function renderFilters() {
+      const statuses = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+      const labels = {
+        all: 'الكل',
+        pending: 'قيد المراجعة',
+        processing: 'قيد التجهيز',
+        shipped: 'تم الشحن',
+        delivered: 'تم التوصيل',
+        cancelled: 'ملغي'
+      };
+
+      const bar = document.getElementById('filtersBar');
+      bar.innerHTML = statuses.map(s => {
+        const count = s === 'all' ? allOrders.length : allOrders.filter(o => o.status === s).length;
+        return `<button class="order-filter-btn ${currentFilter === s ? 'active' : ''}" data-filter="${s}">
+      ${labels[s]} <span class="count">(${count})</span>
+    </button>`;
+      }).join('');
+
+      bar.querySelectorAll('.order-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentFilter = btn.dataset.filter;
+          renderFilters();
+          renderOrders();
+        });
+      });
+    }
+
+    // ===========================================
+    // Render Orders
+    // ===========================================
+    function renderOrders() {
+      const list = document.getElementById('ordersList');
+      const filtered = currentFilter === 'all'
+        ? allOrders
+        : allOrders.filter(o => o.status === currentFilter);
+
+      document.getElementById('subText').textContent = `${allOrders.length} طلب إجمالي`;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+      <div class="empty-cart">
+        <div class="emoji">📭</div>
+        <h2>${allOrders.length === 0 ? 'لا يوجد طلبات بعد' : 'لا يوجد طلبات بهذه الحالة'}</h2>
+        <p>${allOrders.length === 0 ? 'ابدأ التسوق واطلب منتجاتك المفضلة' : 'جرب فلتر آخر'}</p>
+        <a href="index.html" class="btn-shop">تصفح المنتجات ←</a>
+      </div>`;
+        return;
+      }
+
+      list.innerHTML = filtered.map(o => {
+        const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+        const items = o.items || [];
+        const previewItems = items.slice(0, 4);
+        const moreCount = items.length - 4;
+
+        return `
+      <div class="order-card">
+        <div class="order-header">
+          <div class="order-header-left">
+            <div class="order-number">${o.orderNumber}</div>
+            <div class="order-date">📅 ${formatDate(o.createdAt)}</div>
+          </div>
+          <span class="order-status-badge ${st.cls}">${st.label}</span>
+        </div>
+
+        <div class="order-items-preview">
+          ${previewItems.map(i => `
+            <div class="order-item-thumb">
+              <img src="${i.image || 'https://via.placeholder.com/60'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/60/f4f2ed/c9a961?text=LUXE'">
+              <span class="qty-badge">${i.qty}</span>
+            </div>
+          `).join('')}
+          ${moreCount > 0 ? `<div class="order-more-items">+${moreCount}</div>` : ''}
+        </div>
+
+        <div class="order-footer">
+          <div class="order-total">${(o.total || 0).toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
+          <div class="order-actions">
+            <button class="order-btn" data-action="details" data-id="${o.id}">📋 التفاصيل</button>
+            <button class="order-btn primary" data-action="track" data-tracking="${o.trackingId}">🔍 تتبع</button>
+            ${o.status === 'pending' ? `<button class="order-btn danger" data-action="cancel" data-id="${o.id}">❌ إلغاء</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+      }).join('');
+
+      // Attach handlers
+      list.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          if (action === 'details') showDetails(btn.dataset.id);
+          else if (action === 'track') window.location.href = `tracking.html?track=${btn.dataset.tracking}`;
+          else if (action === 'cancel') cancelOrder(btn.dataset.id);
+        });
+      });
+    }
+
+    // ===========================================
+    // Show Order Details Modal
+    // ===========================================
+    function showDetails(orderId) {
+      const order = allOrders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
+      const items = order.items || [];
+      const addr = order.shippingAddress || {};
+      const history = order.trackingHistory || [];
+
+      // Build timeline
+      const timelineStages = ['pending', 'processing', 'shipped', 'delivered'];
+      const currentIdx = timelineStages.indexOf(order.status);
+      const stageLabels = {
+        pending: 'تم استلام الطلب',
+        processing: 'قيد التجهيز',
+        shipped: 'تم الشحن',
+        delivered: 'تم التوصيل'
+      };
+
+      let timelineHTML = '';
+      if (order.status !== 'cancelled') {
+        timelineHTML = `
+      <div class="detail-section">
+        <h4>📊 حالة الطلب</h4>
+        <div class="order-timeline">
+          ${timelineStages.map((stage, i) => {
+          const isDone = i < currentIdx;
+          const isCurrent = i === currentIdx;
+          const cls = isDone ? 'done' : isCurrent ? 'current' : '';
+          const histItem = history.find(h => h.status === stage);
+          return `
+              <div class="timeline-step ${cls}">
+                <h5>${stageLabels[stage]}</h5>
+                <p>${histItem ? formatDate(histItem.timestamp) : (i <= currentIdx ? '—' : 'بانتظار')}</p>
+              </div>`;
+        }).join('')}
+        </div>
+      </div>`;
+      }
+
+      const modalContent = document.getElementById('modalContent');
+      modalContent.innerHTML = `
+    <div class="modal-custom-head">
+      <h2>📋 تفاصيل الطلب</h2>
+      <button class="modal-custom-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-custom-body">
+      <div class="detail-section" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">رقم الطلب</div>
+          <strong style="font-family:monospace;font-size:14px">${order.orderNumber}</strong>
+        </div>
+        <span class="order-status-badge ${st.cls}">${st.label}</span>
+      </div>
+
+      <div class="detail-section">
+        <h4>🔍 رقم التتبع</h4>
+        <p style="font-family:monospace;font-weight:800;color:var(--gold-dark);font-size:16px">${order.trackingId}</p>
+      </div>
+
+      ${timelineHTML}
+
+      <div class="detail-section">
+        <h4>📦 المنتجات (${items.length})</h4>
+        ${items.map(i => `
+          <div class="detail-item">
+            <img src="${i.image || 'https://via.placeholder.com/56'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE'">
+            <div class="detail-item-info">
+              <h5>${i.name}</h5>
+              <span>${i.qty} × ${formatPrice(i.price)}</span>
+            </div>
+            <div class="detail-item-price">${formatPrice(i.price * i.qty)}</div>
+          </div>
+        `).join('')}
+        <div class="detail-totals">
+          <div class="row"><span>المجموع الفرعي</span><span class="val">${formatPrice(order.subtotal || 0)}</span></div>
+          <div class="row"><span>الشحن</span><span class="val">${order.shipping === 0 ? 'مجاني' : formatPrice(order.shipping || 0)}</span></div>
+          <div class="row total"><span>الإجمالي</span><span class="val">${formatPrice(order.total || 0)}</span></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h4>📍 عنوان الشحن</h4>
+        <p>
+          <strong>${addr.name || order.customer?.name || '—'}</strong><br>
+          ${addr.phone || order.customer?.phone || ''}<br>
+          ${addr.street || ''}${addr.building ? `, مبنى ${addr.building}` : ''}${addr.apartment ? `, شقة ${addr.apartment}` : ''}<br>
+          ${addr.area || ''}, ${addr.city || ''}
+        </p>
+      </div>
+
+      <div class="detail-section">
+        <h4>💳 طريقة الدفع</h4>
+        <p>${PAYMENT_LABELS[order.paymentMethod] || order.paymentMethod || '—'}</p>
+      </div>
+
+      ${order.notes ? `
+        <div class="detail-section">
+          <h4>📝 ملاحظات</h4>
+          <p>${order.notes}</p>
+        </div>` : ''}
+
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="order-btn" style="flex:1;padding:14px" onclick="window.location.href='tracking.html?track=${order.trackingId}'">🔍 تتبع الشحنة</button>
+        <button class="order-btn primary" style="flex:1;padding:14px" onclick="closeModal()">إغلاق</button>
+      </div>
+    </div>`;
+
+      document.getElementById('modalOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    // ===========================================
+    // Cancel Order
+    // ===========================================
+    async function cancelOrder(orderId) {
+      if (!confirm('هل أنت متأكد من إلغاء هذا الطلب؟')) return;
+
+      try {
+        await api.orders.cancel(orderId);
+        showToast('تم إلغاء الطلب', 'success');
+        await loadOrders();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'فشل الإلغاء', 'error');
+      }
+    }
+
+    // ===========================================
+    // Modal close
+    // ===========================================
+    window.closeModal = function () {
+      document.getElementById('modalOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.closeModal();
+    });
+
+    // ===========================================
+    // Search
+    // ===========================================
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+    });
+
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('mainHeader');
+      if (window.scrollY > 30) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    });
+
+    // Init
+    renderUserArea();
+    updateCartBadge();
+    init();
+  </script>
+
+</body>
+
+</html>
+
