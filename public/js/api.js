@@ -2,7 +2,7 @@
 // API Client - LUXE Store Backend
 // ===========================================
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://luxe-store-1uof.vercel.app/api';
 
 async function getToken() {
   const { auth } = await import('./firebase-config.js');
