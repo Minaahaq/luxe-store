@@ -23,7 +23,7 @@ app.use(cors({
     'http://127.0.0.1:3000',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
-    'https://luxe-store.vercel.app'
+    'https://luxe-store-1uof.vercel.app'
   ],
   credentials: true
 }));
