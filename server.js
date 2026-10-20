@@ -6,6 +6,8 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/auth.routes');
 const productRoutes = require('./routes/product.routes');
@@ -14,8 +16,19 @@ const adminRoutes = require('./routes/admin.routes');
 
 const app = express();
 
+// Vercel بيشتغل خلف proxy
+app.set('trust proxy', 1);
+
 // ===========================================
-// Middleware
+// Security Headers (Helmet)
+// ===========================================
+app.use(helmet({
+  contentSecurityPolicy: false,          // هنعتمد على الفرونت
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+// ===========================================
+// CORS
 // ===========================================
 app.use(cors({
   origin: [
@@ -27,15 +40,50 @@ app.use(cors({
   ],
   credentials: true
 }));
+
+// ===========================================
+// Body Parsers
+// ===========================================
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve LUXE Store frontend
+// ===========================================
+// Serve frontend (لو موجود في public/)
+// ===========================================
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ===========================================
+// Rate Limiting
+// ===========================================
+// عام — لكل الـ API
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 دقيقة
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'محاولات كثيرة، جرب بعد شوية' }
+});
+
+// صارم — للـ auth فقط
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'محاولات دخول كثيرة، جرب بعد 15 دقيقة' }
+});
+
+app.use('/api/', generalLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// ===========================================
 // Logging
+// ===========================================
 app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleTimeString('ar-EG')}] ${req.method} ${req.path}`);
+  const t = new Date().toLocaleTimeString('ar-EG');
+  console.log(`[${t}] ${req.method} ${req.path}`);
   next();
 });
 
@@ -72,9 +120,11 @@ app.use((req, res) => {
 // Error Handler
 // ===========================================
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err);
+  console.error('❌ Error:', err.message);
+
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(err.status || 500).json({
-    error: err.message || 'حدث خطأ في السيرفر'
+    error: isProd ? 'حدث خطأ' : (err.message || 'حدث خطأ في السيرفر')
   });
 });
 
@@ -92,6 +142,7 @@ if (process.env.NODE_ENV !== 'production') {
     console.log('  🔥 ========================================');
     console.log(`  🚀 السيرفر شغال على: http://localhost:${PORT}`);
     console.log(`  🌍 البيئة: ${process.env.NODE_ENV || 'development'}`);
+    console.log('  🔒 Helmet + Rate Limiting ✅');
     console.log('  🔥 ========================================');
     console.log('');
   });
