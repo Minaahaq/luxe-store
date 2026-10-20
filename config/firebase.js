@@ -1,13 +1,19 @@
 // ===========================================
-// Firebase Admin Initialization (v12.x)
+// Firebase Admin Initialization
 // ===========================================
 
 const admin = require('firebase-admin');
 const path = require('path');
 
-const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+// على Vercel: نقرأ من Environment Variable
+// محلياً: نقرأ من الملف
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+}
 
-// Initialize
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

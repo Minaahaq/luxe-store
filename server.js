@@ -6,7 +6,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
-// Import routes
 const authRoutes = require('./routes/auth.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
@@ -18,7 +17,13 @@ const app = express();
 // Middleware
 // ===========================================
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5500', 'http://127.0.0.1:5500'],
+  origin: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'https://luxe-store.vercel.app'
+  ],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -70,16 +75,20 @@ app.use((err, req, res, next) => {
 });
 
 // ===========================================
-// Start Server
+// Vercel + Local
 // ===========================================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log('');
-  console.log('  🔥 ========================================');
-  console.log('  🔥  LUXE Store API Server');
-  console.log('  🔥 ========================================');
-  console.log(`  🚀 السيرفر شغال على: http://localhost:${PORT}`);
-  console.log(`  🌍 البيئة: ${process.env.NODE_ENV}`);
-  console.log('  🔥 ========================================');
-  console.log('');
-});
+module.exports = app;
+
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log('');
+    console.log('  🔥 ========================================');
+    console.log('  🔥  LUXE Store API Server');
+    console.log('  🔥 ========================================');
+    console.log(`  🚀 السيرفر شغال على: http://localhost:${PORT}`);
+    console.log(`  🌍 البيئة: ${process.env.NODE_ENV || 'development'}`);
+    console.log('  🔥 ========================================');
+    console.log('');
+  });
+}
