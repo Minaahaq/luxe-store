@@ -1,139 +1,130 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>السلة - LUXE Store</title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
-  <header class="main-header" id="mainHeader">
-    <div class="container header-inner">
-      <a href="index.html" class="brand">
-        <div class="brand-name">LUXE</div>
-        <div class="brand-tag">Premium Store</div>
-      </a>
-      <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
-      </div>
-      <div class="header-actions">
-        <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-        <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
-        <div id="userArea"></div>
-      </div>
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+      <div class="brand-tag">Premium Store</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
     </div>
-  </header>
-
-  <div class="container page-title-bar">
-    <h1>سلة المشتريات</h1>
-    <p id="cartCountText">جاري التحميل...</p>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
   </div>
+</header>
 
+<div class="container page-title-bar">
+  <h1>سلة المشتريات</h1>
+  <p id="cartCountText">جاري التحميل...</p>
+</div>
+
+<div class="container">
+  <div class="cart-layout" id="cartLayout">
+    <div class="cart-items-wrap">
+      <div style="padding:30px"><div class="skeleton" style="height:100px;border-radius:14px"></div></div>
+    </div>
+    <div class="cart-summary">
+      <div class="skeleton" style="height:200px;border-radius:14px"></div>
+    </div>
+  </div>
+</div>
+
+<footer>
   <div class="container">
-    <div class="cart-layout" id="cartLayout">
-      <!-- Loading -->
-      <div class="cart-items-wrap">
-        <div style="padding:30px">
-          <div class="skeleton" style="height:100px;border-radius:14px"></div>
-        </div>
-        <div style="padding:30px">
-          <div class="skeleton" style="height:100px;border-radius:14px"></div>
-        </div>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
       </div>
-      <div class="cart-summary">
-        <div class="skeleton" style="height:200px;border-radius:14px"></div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
       </div>
     </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
   </div>
+</footer>
 
-  <footer>
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="footer-brand-name">LUXE</div>
-          <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
-        </div>
-        <div class="footer-col">
-          <h4>تسوق</h4>
-          <a href="index.html">كل المنتجات</a>
-          <a href="#">إلكترونيات</a>
-          <a href="#">أزياء</a>
-          <a href="#">عطور</a>
-        </div>
-        <div class="footer-col">
-          <h4>خدمة العملاء</h4>
-          <a href="tracking.html">تتبع الشحنة</a>
-          <a href="#">الاستبدال والإرجاع</a>
-          <a href="#">اتصل بنا</a>
-        </div>
-        <div class="footer-col">
-          <h4>الشركة</h4>
-          <a href="#">من نحن</a>
-          <a href="#">الخصوصية</a>
-          <a href="#">الشروط</a>
-        </div>
-      </div>
-      <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
-    </div>
-  </footer>
+<script type="module">
+import { getCurrentUser, logout } from './js/api.js';
+import { getCart, removeFromCart, updateCartQty, getCartTotal, getCartCount, updateCartBadge, showToast, formatPrice } from './js/ui.js';
 
-  <script type="module">
-    import { getCurrentUser, logout } from './js/api.js';
-    import { getCart, saveCart, removeFromCart, updateCartQty, getCartTotal, getCartCount, updateCartBadge, showToast, formatPrice } from './js/ui.js';
+// ===========================================
+// Configuration
+// ===========================================
+const SHIPPING_COST = 200;
 
-    const FREE_SHIPPING_THRESHOLD = 2000;
-    const SHIPPING_COST = 50;
-
-    async function renderUserArea() {
-      const userArea = document.getElementById('userArea');
-      const user = await getCurrentUser();
-      if (user) {
-        const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
-        userArea.innerHTML = `
+// ===========================================
+// User Area
+// ===========================================
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    userArea.innerHTML = `
       <button class="user-chip" id="userChip">
         <span>${user.displayName || user.email.split('@')[0]}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
-        document.getElementById('userChip').addEventListener('click', () => {
-          if (confirm('هل تريد تسجيل الخروج؟')) {
-            logout().then(() => {
-              showToast('تم تسجيل الخروج', 'info');
-              setTimeout(() => location.reload(), 800);
-            });
-          }
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
         });
-      } else {
-        userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
       }
-    }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
 
-    function renderCart() {
-      const cart = getCart();
-      const layout = document.getElementById('cartLayout');
-      const countText = document.getElementById('cartCountText');
+// ===========================================
+// Render Cart
+// ===========================================
+function renderCart() {
+  const cart = getCart();
+  const layout = document.getElementById('cartLayout');
+  const countText = document.getElementById('cartCountText');
 
-      if (cart.length === 0) {
-        countText.textContent = 'السلة فاضية';
-        layout.innerHTML = `
+  if (cart.length === 0) {
+    countText.textContent = 'السلة فاضية';
+    layout.innerHTML = `
       <div class="empty-cart">
         <div class="emoji">🛒</div>
         <h2>سلة المشتريات فاضية</h2>
         <p>ابدأ التسوق واكتشف منتجاتنا الفاخرة</p>
         <a href="index.html" class="btn-shop">تصفح المنتجات ←</a>
       </div>`;
-        return;
-      }
+    return;
+  }
 
-      const totalItems = getCartCount();
-      countText.textContent = `${totalItems} منتج في السلة`;
+  const totalItems = getCartCount();
+  countText.textContent = `${totalItems} منتج في السلة`;
 
-      const itemsHTML = cart.map(item => `
+  const itemsHTML = cart.map(item => `
     <div class="cart-item" data-id="${item.id}">
       <a href="product.html?id=${item.id}" class="cart-item-img">
         <img src="${item.image || 'https://via.placeholder.com/100/f4f2ed/c9a961?text=LUXE'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100/f4f2ed/c9a961?text=LUXE'">
@@ -155,77 +146,81 @@
     </div>
   `).join('');
 
-      const subtotal = getCartTotal();
-      const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-      const total = subtotal + shipping;
-      const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const subtotal = getCartTotal();
+  const shipping = SHIPPING_COST;
+  const total = subtotal + shipping;
 
-      layout.innerHTML = `
+  layout.innerHTML = `
     <div class="cart-items-wrap">${itemsHTML}</div>
     <div class="cart-summary">
       <h3>ملخص الطلب</h3>
-      <div class="summary-row"><span>المجموع الفرعي</span><span class="val">${formatPrice(subtotal)}</span></div>
-      <div class="summary-row"><span>الشحن</span><span class="val">${shipping === 0 ? 'مجاني 🎉' : formatPrice(shipping)}</span></div>
-      ${remaining > 0 ? `<div class="free-ship-note">🚚 أضف ${formatPrice(remaining)} للحصول على شحن مجاني</div>` : `<div class="free-ship-note">✓ حصلت على شحن مجاني!</div>`}
+      <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
+      <div class="summary-row"><span>الشحن</span><span class="val">${formatPrice(shipping)}</span></div>
+      <div class="free-ship-note">🚚 مصاريف الشحن: ${formatPrice(shipping)} (مدفوعة قبل الشحن)</div>
       <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
+      
+      <div style="margin-top:16px; padding:12px; background:rgba(201,169,97,.08); border:1px solid rgba(201,169,97,.2); border-radius:10px; font-size:12px; color:var(--text-muted); line-height:1.7;">
+        <strong style="color:var(--gold-dark);">💡 ملاحظة:</strong><br>
+        هتدفع ${formatPrice(shipping)} شحن قبل تأكيد الطلب.<br>
+        سعر المنتجات (${formatPrice(subtotal)}) عند الاستلام.
+      </div>
+      
       <button class="checkout-btn" id="checkoutBtn">إتمام الشراء →</button>
       <a href="index.html" class="continue-link">← متابعة التسوق</a>
     </div>
   `;
 
-      // Attach handlers
-      layout.querySelectorAll('.cart-item').forEach(row => {
-        const id = row.dataset.id;
-        const item = cart.find(c => c.id === id);
+  // Attach handlers
+  layout.querySelectorAll('.cart-item').forEach(row => {
+    const id = row.dataset.id;
+    const item = cart.find(c => c.id === id);
 
-        row.querySelector('[data-action="minus"]')?.addEventListener('click', () => {
-          if (item.qty > 1) {
-            updateCartQty(id, item.qty - 1);
-            renderCart();
-          }
-        });
-        row.querySelector('[data-action="plus"]')?.addEventListener('click', () => {
-          updateCartQty(id, item.qty + 1);
-          renderCart();
-        });
-        row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
-          if (confirm(`حذف "${item.name}" من السلة؟`)) {
-            removeFromCart(id);
-            showToast('تم حذف المنتج', 'info');
-            renderCart();
-          }
-        });
-      });
+    row.querySelector('[data-action="minus"]')?.addEventListener('click', () => {
+      if (item.qty > 1) {
+        updateCartQty(id, item.qty - 1);
+        renderCart();
+      }
+    });
+    row.querySelector('[data-action="plus"]')?.addEventListener('click', () => {
+      updateCartQty(id, item.qty + 1);
+      renderCart();
+    });
+    row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
+      if (confirm(`حذف "${item.name}" من السلة؟`)) {
+        removeFromCart(id);
+        showToast('تم حذف المنتج', 'info');
+        renderCart();
+      }
+    });
+  });
 
-      document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
-        const user = await getCurrentUser();
-        if (!user) {
-          showToast('لازم تسجل دخول الأول', 'warning');
-          setTimeout(() => {
-            window.location.href = 'login.html?redirect=checkout.html';
-          }, 1000);
-          return;
-        }
-        window.location.href = 'checkout.html';
-      });
+  document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
+    const user = await getCurrentUser();
+    if (!user) {
+      showToast('لازم تسجل دخول الأول', 'warning');
+      setTimeout(() => {
+        window.location.href = 'login.html?redirect=checkout.html';
+      }, 1000);
+      return;
     }
+    window.location.href = 'checkout.html';
+  });
+}
 
-    document.getElementById('searchInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
-    });
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
 
-    window.addEventListener('scroll', () => {
-      const header = document.getElementById('mainHeader');
-      if (window.scrollY > 30) header.classList.add('scrolled');
-      else header.classList.remove('scrolled');
-    });
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
 
-    renderUserArea();
-    updateCartBadge();
-    renderCart();
-  </script>
+renderUserArea();
+updateCartBadge();
+renderCart();
+</script>
 
 </body>
-
 </html>
-
