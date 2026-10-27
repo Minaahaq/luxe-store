@@ -2,35 +2,92 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>إتمام الطلب - LUXE Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
       <div class="brand-tag">Premium Store</div>
     </a>
+
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
+
     <div class="header-actions">
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+        🛍<span class="badge" data-cart-badge>0</span>
+      </a>
       <div id="userArea"></div>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
   </div>
 </header>
 
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:22px;letter-spacing:5px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="mobile-drawer-nav">
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="index.html#productsSection">📦 كل المنتجات</a>
+    <a href="orders.html">🧾 طلباتي</a>
+    <a href="tracking.html">🚚 تتبع الشحنة</a>
+    <a href="profile.html">👤 حسابي</a>
+  </div>
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      🛍 السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     PAGE TITLE
+============================================ -->
 <div class="container page-title-bar">
-  <h1>إتمام الطلب</h1>
-  <p id="subText">جاري التحقق...</p>
+  <div class="title-row">
+    <div>
+      <h1>إتمام الطلب</h1>
+      <p id="subText">جاري التحقق...</p>
+    </div>
+    <a href="cart.html" class="edit-cart-link" id="editCartLink">
+      ✏️ تعديل السلة
+    </a>
+  </div>
 </div>
 
+<!-- ============================================
+     CHECKOUT
+============================================ -->
 <div class="container" id="checkoutContainer">
   <div class="checkout-layout">
     <div class="checkout-main">
@@ -42,6 +99,22 @@
   </div>
 </div>
 
+<!-- ============================================
+     STICKY SUMMARY BAR (MOBILE)
+============================================ -->
+<div class="sticky-checkout-bar" id="stickySummaryBar" style="display:none">
+  <div class="sticky-checkout-info">
+    <div class="sticky-checkout-label">الإجمالي</div>
+    <div class="sticky-checkout-total" id="stickyTotal">— ج.م</div>
+  </div>
+  <button class="sticky-checkout-btn" id="stickyActionBtn" type="button">
+    التالي ←
+  </button>
+</div>
+
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -70,15 +143,16 @@
 import { api, getCurrentUser, logout } from './js/api.js';
 import { getCart, getCartTotal, updateCartBadge, showToast, formatPrice } from './js/ui.js';
 
-// ===========================================
-// Configuration
-// ===========================================
+/* ============================================
+   CONFIG
+============================================ */
 const SHIPPING_COST = 200;
 const VODAFONE_CASH_NUMBER = '01001257486';
+const DRAFT_KEY = 'luxe_checkout_draft';
 
-// ===========================================
-// State
-// ===========================================
+/* ============================================
+   STATE
+============================================ */
 let currentUser = null;
 let currentStep = 1;
 let checkoutData = {
@@ -87,19 +161,24 @@ let checkoutData = {
   notes: ''
 };
 
-// ===========================================
-// User Area
-// ===========================================
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   const user = await getCurrentUser();
+
   if (user) {
-    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+
     userArea.innerHTML = `
-      <button class="user-chip" id="userChip">
-        <span>${user.displayName || user.email.split('@')[0]}</span>
+      <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
+        <span>${displayName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
+
     document.getElementById('userChip').addEventListener('click', () => {
       if (confirm('هل تريد تسجيل الخروج؟')) {
         logout().then(() => {
@@ -108,14 +187,113 @@ async function renderUserArea() {
         });
       }
     });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${displayName}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
   } else {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
   }
 }
 
-// ===========================================
-// Init
-// ===========================================
+/* ============================================
+   MOBILE NAV / SEARCH
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+
+  const goSearch = (val) => {
+    if (val && val.trim()) window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+  };
+  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+  desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+}
+
+/* ============================================
+   DRAFT SAVE / LOAD
+============================================ */
+function saveDraft() {
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(checkoutData));
+  } catch (e) { /* ignore */ }
+}
+
+function loadDraft() {
+  try {
+    const saved = sessionStorage.getItem(DRAFT_KEY);
+    if (saved) {
+      const d = JSON.parse(saved);
+      checkoutData = {
+        ...checkoutData,
+        ...d,
+        shippingAddress: { ...checkoutData.shippingAddress, ...(d.shippingAddress || {}) }
+      };
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function clearDraft() {
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
+}
+
+/* ============================================
+   INIT
+============================================ */
 async function initCheckout() {
   currentUser = await getCurrentUser();
 
@@ -140,31 +318,32 @@ async function initCheckout() {
     return;
   }
 
-  // جلب بيانات المستخدم
+  // Load saved draft
+  loadDraft();
+
+  // Fetch user data
   try {
     const meRes = await api.auth.me();
     if (meRes.user) {
       const u = meRes.user;
       checkoutData.shippingAddress = {
-        name: u.name || currentUser.displayName || '',
-        phone: u.phone || '',
-        city: '',
-        area: '',
-        street: '',
-        building: '',
-        apartment: ''
+        ...checkoutData.shippingAddress,
+        name: checkoutData.shippingAddress.name || u.name || currentUser.displayName || '',
+        phone: checkoutData.shippingAddress.phone || u.phone || ''
       };
     }
   } catch (err) {
-    checkoutData.shippingAddress.name = currentUser.displayName || '';
+    if (!checkoutData.shippingAddress.name) {
+      checkoutData.shippingAddress.name = currentUser.displayName || '';
+    }
   }
 
   renderCheckout();
 }
 
-// ===========================================
-// Render Checkout
-// ===========================================
+/* ============================================
+   RENDER CHECKOUT
+============================================ */
 function renderCheckout() {
   document.getElementById('subText').textContent = `خطوة ${currentStep} من 3`;
 
@@ -192,6 +371,7 @@ function renderCheckout() {
     </div>`;
 
   let stepHTML = '';
+  let stickyText = 'التالي ←';
 
   // ============ STEP 1: Address ============
   if (currentStep === 1) {
@@ -203,12 +383,12 @@ function renderCheckout() {
           <div class="form-row-2">
             <div class="form-group" id="fg-name">
               <label>الاسم بالكامل <span class="req">*</span></label>
-              <input type="text" id="f-name" value="${d.name || ''}" placeholder="أدخل اسمك">
-              <div class="form-error">الاسم مطلوب</div>
+              <input type="text" id="f-name" value="${d.name || ''}" placeholder="أدخل اسمك" autocomplete="name">
+              <div class="form-error">الاسم مطلوب (3 أحرف على الأقل)</div>
             </div>
             <div class="form-group" id="fg-phone">
               <label>رقم الموبايل <span class="req">*</span></label>
-              <input type="tel" id="f-phone" value="${d.phone || ''}" placeholder="01xxxxxxxxx">
+              <input type="tel" id="f-phone" value="${d.phone || ''}" placeholder="01xxxxxxxxx" inputmode="numeric" autocomplete="tel" maxlength="11">
               <div class="form-error">رقم غير صحيح (11 رقم يبدأ بـ 01)</div>
             </div>
           </div>
@@ -252,82 +432,91 @@ function renderCheckout() {
           </div>
         </div>
 
-        <div class="checkout-actions">
-          <button class="btn-next" id="nextBtn">التالي: دفع الشحن ←</button>
+        <div class="checkout-actions desktop-only">
+          <button class="btn-next" id="nextBtn" type="button">التالي: دفع الشحن ←</button>
         </div>
       </div>`;
   }
 
-  // ============ STEP 2: Payment (Shipping only) ============
+  // ============ STEP 2: Payment ============
   else if (currentStep === 2) {
+    stickyText = 'التالي: المراجعة ←';
     stepHTML = `
       <div class="step-content">
         <h2>💳 دفع مصاريف الشحن</h2>
-        
-        <div style="background:#fff3cd; border:2px solid #f59e0b; padding:20px; border-radius:14px; margin-bottom:24px;">
-          <div style="font-size:14px; font-weight:900; color:#92400e; margin-bottom:8px;">
-            ⚠️ مهم جداً — اقرأ بعناية
-          </div>
-          <p style="font-size:13.5px; line-height:1.8; color:#78350f;">
-            لازم تحوّل <strong style="font-size:18px;">${formatPrice(SHIPPING_COST)}</strong> 
-            (مصاريف الشحن) على فودافون كاش قبل تأكيد الطلب.<br><br>
+
+        <div class="payment-warning">
+          <div class="warn-title">⚠️ مهم جداً — اقرأ بعناية</div>
+          <p>
+            لازم تحوّل <strong>${formatPrice(SHIPPING_COST)}</strong> (مصاريف الشحن) على فودافون كاش قبل تأكيد الطلب.<br><br>
             <strong>سعر المنتجات (${formatPrice(subtotal)}) هيتدفع عند الاستلام.</strong>
           </p>
         </div>
-        
-        <div style="background:linear-gradient(135deg, #0a0e17, #1c2233); color:#fff; padding:24px; border-radius:14px; margin-bottom:20px;">
-          <div style="color:#c9a961; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px;">
-            💰 بيانات التحويل
-          </div>
-          
-          <div style="margin-bottom:16px;">
-            <div style="font-size:11px; color:#a0a5b5; margin-bottom:4px;">📱 فودافون كاش</div>
-            <div style="font-size:24px; font-weight:900; color:#c9a961; font-family:monospace; letter-spacing:2px;">
-              ${VODAFONE_CASH_NUMBER}
+
+        <div class="payment-card">
+          <div class="payment-card-label">💰 بيانات التحويل</div>
+
+          <div class="payment-number-block">
+            <div class="payment-method-label">📱 فودافون كاش</div>
+            <div class="payment-number-row">
+              <div class="payment-number">${VODAFONE_CASH_NUMBER}</div>
+              <button class="copy-btn" id="copyNumberBtn" type="button" aria-label="نسخ الرقم">
+                📋 نسخ
+              </button>
             </div>
           </div>
-          
-          <div style="padding:14px; background:rgba(201,169,97,.1); border:1px solid rgba(201,169,97,.3); border-radius:10px;">
-            <div style="font-size:12px; color:#a0a5b5; margin-bottom:4px;">المبلغ المطلوب تحويله:</div>
-            <div style="font-size:28px; font-weight:900; color:#c9a961;">
-              ${formatPrice(SHIPPING_COST)}
-            </div>
+
+          <div class="payment-amount-box">
+            <div class="payment-amount-label">المبلغ المطلوب تحويله:</div>
+            <div class="payment-amount">${formatPrice(SHIPPING_COST)}</div>
           </div>
         </div>
-        
-        <div style="padding:16px; background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.25); border-radius:12px; font-size:13px; color:#1e40af; line-height:1.8; margin-bottom:20px;">
-          <strong>📝 خطوات التحويل:</strong><br>
-          1. افتح تطبيق فودافون كاش<br>
-          2. اختار "تحويل" → أدخل الرقم ${VODAFONE_CASH_NUMBER}<br>
-          3. أدخل المبلغ ${formatPrice(SHIPPING_COST)}<br>
-          4. بعد التحويل، هتوصلك رسالة SMS فيها رقم العملية<br>
-          5. اكتب رقم العملية في المكان ده تحت
+
+        <div class="payment-steps-box">
+          <strong>📝 خطوات التحويل:</strong>
+          <ol>
+            <li>افتح تطبيق فودافون كاش</li>
+            <li>اختار "تحويل" → أدخل الرقم <strong>${VODAFONE_CASH_NUMBER}</strong></li>
+            <li>أدخل المبلغ <strong>${formatPrice(SHIPPING_COST)}</strong></li>
+            <li>بعد التحويل، هتوصلك رسالة SMS فيها رقم العملية</li>
+            <li>اكتب رقم العملية في المكان ده تحت</li>
+          </ol>
         </div>
-        
+
         <div class="checkout-form">
           <div class="form-group" id="fg-ref">
             <label>رقم عملية التحويل <span class="req">*</span></label>
-            <input type="text" id="f-ref" placeholder="مثال: 9876543210" value="${checkoutData.paymentRefNumber || ''}" maxlength="30">
+            <input type="text" id="f-ref" placeholder="مثال: 9876543210" value="${checkoutData.paymentRefNumber || ''}" maxlength="30" inputmode="numeric">
             <div class="form-error">رقم عملية التحويل مطلوب (من 6 لـ 30 حرف/رقم)</div>
           </div>
         </div>
-        
-        <div class="checkout-actions">
-          <button class="btn-back" id="backBtn">→ السابق</button>
-          <button class="btn-next" id="nextBtn">التالي: المراجعة ←</button>
+
+        <div class="trust-badges">
+          <div class="trust-badge-item">🔒 دفع آمن 100%</div>
+          <div class="trust-badge-item">🛡️ بياناتك محمية</div>
+          <div class="trust-badge-item">✓ مراجعة يدوية</div>
+        </div>
+
+        <div class="checkout-actions desktop-only">
+          <button class="btn-back" id="backBtn" type="button">→ السابق</button>
+          <button class="btn-next" id="nextBtn" type="button">التالي: المراجعة ←</button>
         </div>
       </div>`;
   }
 
   // ============ STEP 3: Review ============
   else if (currentStep === 3) {
+    stickyText = '🎉 تأكيد الطلب';
     const d = checkoutData.shippingAddress;
     stepHTML = `
       <div class="step-content">
         <h2>✓ مراجعة الطلب</h2>
 
         <div class="review-box">
-          <h4>📍 عنوان الشحن <a id="editAddress">تعديل</a></h4>
+          <h4>
+            <span>📍 عنوان الشحن</span>
+            <button class="edit-btn" id="editAddress" type="button">تعديل</button>
+          </h4>
           <p>
             <strong>${d.name}</strong><br>
             ${d.phone}<br>
@@ -337,15 +526,18 @@ function renderCheckout() {
         </div>
 
         <div class="review-box">
-          <h4>💳 دفع الشحن <a id="editPayment">تعديل</a></h4>
+          <h4>
+            <span>💳 دفع الشحن</span>
+            <button class="edit-btn" id="editPayment" type="button">تعديل</button>
+          </h4>
           <p>
-            رقم العملية: <strong style="font-family:monospace; color:var(--gold-dark); font-size:15px;">${checkoutData.paymentRefNumber}</strong><br>
-            <span style="color:var(--success); font-weight:700;">✓ ${formatPrice(SHIPPING_COST)} — هيتأكد من الأدمن</span>
+            رقم العملية: <strong class="mono-val">${checkoutData.paymentRefNumber}</strong><br>
+            <span class="success-text">✓ ${formatPrice(SHIPPING_COST)} — هيتأكد من الأدمن</span>
           </p>
         </div>
 
         <div class="review-items">
-          <h4 style="font-size:13px;color:var(--gold-dark);margin-bottom:12px;letter-spacing:1.5px;text-transform:uppercase">📦 المنتجات (${cart.length})</h4>
+          <h4 class="review-items-title">📦 المنتجات (${cart.length})</h4>
           ${cart.map(i => `
             <div class="review-item-row">
               <img src="${i.image || 'https://via.placeholder.com/48'}" alt="${i.name}">
@@ -358,20 +550,20 @@ function renderCheckout() {
           `).join('')}
         </div>
 
-        <div style="padding:20px; background:rgba(16,185,129,.08); border:2px solid rgba(16,185,129,.3); border-radius:14px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
-            <span style="color:var(--text-muted);">💳 مدفوع الآن (شحن)</span>
-            <strong style="color:var(--success); font-size:18px;">${formatPrice(SHIPPING_COST)}</strong>
+        <div class="payment-split-box">
+          <div class="split-row">
+            <span class="split-label">💳 مدفوع الآن (شحن)</span>
+            <strong class="split-val success">${formatPrice(SHIPPING_COST)}</strong>
           </div>
-          <div style="display:flex; justify-content:space-between; padding-top:10px; border-top:1px dashed var(--line);">
-            <span style="color:var(--text-muted);">💰 متبقي (عند الاستلام)</span>
-            <strong style="color:var(--gold-dark); font-size:20px;">${formatPrice(subtotal)}</strong>
+          <div class="split-row total">
+            <span class="split-label">💰 متبقي (عند الاستلام)</span>
+            <strong class="split-val gold">${formatPrice(subtotal)}</strong>
           </div>
         </div>
 
-        <div class="checkout-actions">
-          <button class="btn-back" id="backBtn">→ السابق</button>
-          <button class="btn-place-order" id="placeOrderBtn">🎉 تأكيد الطلب</button>
+        <div class="checkout-actions desktop-only">
+          <button class="btn-back" id="backBtn" type="button">→ السابق</button>
+          <button class="btn-place-order" id="placeOrderBtn" type="button">🎉 تأكيد الطلب</button>
         </div>
       </div>`;
   }
@@ -390,7 +582,7 @@ function renderCheckout() {
           <div class="price">${formatPrice(i.price * i.qty)}</div>
         </div>
       `).join('')}
-      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:16px">
+      <div class="summary-divider">
         <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
         <div class="summary-row"><span>الشحن (مدفوع)</span><span class="val" style="color:var(--success)">${formatPrice(shipping)}</span></div>
         <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
@@ -403,48 +595,112 @@ function renderCheckout() {
       ${sidebarHTML}
     </div>`;
 
+  // Update sticky bar
+  document.getElementById('stickyTotal').textContent = formatPrice(total);
+  document.getElementById('stickyActionBtn').textContent = stickyText;
+
   attachHandlers();
 }
 
-// ===========================================
-// Handlers
-// ===========================================
+/* ============================================
+   HANDLERS
+============================================ */
 function attachHandlers() {
-  document.getElementById('nextBtn')?.addEventListener('click', () => {
-    if (currentStep === 1) {
-      if (!validateAddress()) return;
-      saveAddress();
+  // Next / Back (desktop)
+  document.getElementById('nextBtn')?.addEventListener('click', goNext);
+  document.getElementById('backBtn')?.addEventListener('click', goBack);
+
+  // Sticky actions (mobile)
+  document.getElementById('stickyActionBtn')?.addEventListener('click', () => {
+    if (currentStep === 3) {
+      placeOrder();
+    } else {
+      goNext();
     }
-    if (currentStep === 2) {
-      if (!validatePayment()) return;
-      savePayment();
-    }
-    currentStep++;
-    renderCheckout();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  document.getElementById('backBtn')?.addEventListener('click', () => {
-    currentStep--;
-    renderCheckout();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
+  // Edit buttons
   document.getElementById('editAddress')?.addEventListener('click', () => {
     currentStep = 1;
     renderCheckout();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   document.getElementById('editPayment')?.addEventListener('click', () => {
     currentStep = 2;
     renderCheckout();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
+  // Place order
   document.getElementById('placeOrderBtn')?.addEventListener('click', placeOrder);
+
+  // Copy Vodafone number
+  document.getElementById('copyNumberBtn')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(VODAFONE_CASH_NUMBER);
+      showToast('تم نسخ الرقم ✓', 'success');
+    } catch (e) {
+      showToast('تعذر النسخ — انسخه يدويًا', 'warning');
+    }
+  });
+
+  // Live validation
+  setupLiveValidation();
 }
 
-// ===========================================
-// Validation
-// ===========================================
+function goNext() {
+  if (currentStep === 1) {
+    if (!validateAddress()) return;
+    saveAddress();
+    saveDraft();
+  }
+  if (currentStep === 2) {
+    if (!validatePayment()) return;
+    savePayment();
+    saveDraft();
+  }
+  currentStep++;
+  renderCheckout();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  currentStep--;
+  renderCheckout();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================
+   LIVE VALIDATION
+============================================ */
+function setupLiveValidation() {
+  const bind = (id, fieldKey, validator) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', () => {
+      const fg = document.getElementById('fg-' + fieldKey);
+      if (!fg) return;
+      if (el.value.trim() && !validator(el.value.trim())) {
+        fg.classList.add('error');
+      } else {
+        fg.classList.remove('error');
+      }
+    });
+    el.addEventListener('input', () => {
+      const fg = document.getElementById('fg-' + fieldKey);
+      fg?.classList.remove('error');
+    });
+  };
+
+  bind('f-name', 'name', v => v.length >= 3);
+  bind('f-phone', 'phone', v => /^01[0-9]{9}$/.test(v));
+  bind('f-area', 'area', v => v.length > 0);
+  bind('f-street', 'street', v => v.length > 0);
+}
+
+/* ============================================
+   VALIDATION
+============================================ */
 function validateAddress() {
   const fields = {
     name: document.getElementById('f-name')?.value.trim(),
@@ -456,14 +712,14 @@ function validateAddress() {
 
   let valid = true;
   ['name', 'phone', 'city', 'area', 'street'].forEach(k => {
-    document.getElementById('fg-' + k).classList.remove('error');
+    document.getElementById('fg-' + k)?.classList.remove('error');
   });
 
-  if (!fields.name || fields.name.length < 3) { document.getElementById('fg-name').classList.add('error'); valid = false; }
-  if (!/^01[0-9]{9}$/.test(fields.phone)) { document.getElementById('fg-phone').classList.add('error'); valid = false; }
-  if (!fields.city) { document.getElementById('fg-city').classList.add('error'); valid = false; }
-  if (!fields.area) { document.getElementById('fg-area').classList.add('error'); valid = false; }
-  if (!fields.street) { document.getElementById('fg-street').classList.add('error'); valid = false; }
+  if (!fields.name || fields.name.length < 3) { document.getElementById('fg-name')?.classList.add('error'); valid = false; }
+  if (!/^01[0-9]{9}$/.test(fields.phone || '')) { document.getElementById('fg-phone')?.classList.add('error'); valid = false; }
+  if (!fields.city) { document.getElementById('fg-city')?.classList.add('error'); valid = false; }
+  if (!fields.area) { document.getElementById('fg-area')?.classList.add('error'); valid = false; }
+  if (!fields.street) { document.getElementById('fg-street')?.classList.add('error'); valid = false; }
 
   if (!valid) showToast('من فضلك أكمل البيانات المطلوبة', 'error');
   return valid;
@@ -484,14 +740,12 @@ function saveAddress() {
 
 function validatePayment() {
   const ref = document.getElementById('f-ref')?.value.trim();
-  document.getElementById('fg-ref').classList.remove('error');
-
+  document.getElementById('fg-ref')?.classList.remove('error');
   if (!ref || ref.length < 6) {
-    document.getElementById('fg-ref').classList.add('error');
+    document.getElementById('fg-ref')?.classList.add('error');
     showToast('رقم عملية التحويل مطلوب (6 أحرف على الأقل)', 'error');
     return false;
   }
-
   return true;
 }
 
@@ -499,13 +753,25 @@ function savePayment() {
   checkoutData.paymentRefNumber = document.getElementById('f-ref').value.trim();
 }
 
-// ===========================================
-// Place Order
-// ===========================================
+/* ============================================
+   PLACE ORDER
+============================================ */
+let isPlacingOrder = false;
+
 async function placeOrder() {
-  const btn = document.getElementById('placeOrderBtn');
-  btn.disabled = true;
-  btn.textContent = 'جاري إرسال الطلب...';
+  if (isPlacingOrder) return;
+  isPlacingOrder = true;
+
+  const btns = [
+    document.getElementById('placeOrderBtn'),
+    document.getElementById('stickyActionBtn')
+  ].filter(Boolean);
+
+  btns.forEach(b => {
+    b.disabled = true;
+    b.dataset.originalText = b.textContent;
+    b.innerHTML = '<span class="loading-spinner"></span> جاري إرسال الطلب...';
+  });
 
   const cart = getCart();
   const items = cart.map(i => ({ productId: i.id, qty: i.qty }));
@@ -519,27 +785,31 @@ async function placeOrder() {
       notes: checkoutData.notes
     });
 
-    // Clear cart
+    // Clear cart & draft
     localStorage.removeItem('luxe_cart');
+    clearDraft();
     updateCartBadge();
 
-    // Show success
     showSuccessPage(res, cart);
   } catch (err) {
     console.error(err);
     showToast(err.message || 'حدث خطأ في إرسال الطلب', 'error');
-    btn.disabled = false;
-    btn.textContent = '🎉 تأكيد الطلب';
+    isPlacingOrder = false;
+    btns.forEach(b => {
+      b.disabled = false;
+      b.textContent = b.dataset.originalText;
+    });
   }
 }
 
-// ===========================================
-// Success Page
-// ===========================================
+/* ============================================
+   SUCCESS PAGE
+============================================ */
 function showSuccessPage(res, cart) {
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
   document.getElementById('subText').textContent = '';
+  document.getElementById('stickySummaryBar').style.display = 'none';
   document.getElementById('checkoutContainer').innerHTML = `
     <div class="success-page">
       <div class="success-icon">✓</div>
@@ -565,42 +835,45 @@ function showSuccessPage(res, cart) {
         </div>
         <div class="order-info-row">
           <span class="label">رقم عملية التحويل</span>
-          <strong style="font-family:monospace">${checkoutData.paymentRefNumber}</strong>
+          <strong class="mono-val">${checkoutData.paymentRefNumber}</strong>
         </div>
       </div>
 
-      <div style="padding:16px; background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.3); border-radius:12px; margin-bottom:24px; text-align:right;">
-        <strong style="color:#92400e;">⏳ الخطوة الجاية:</strong>
-        <p style="font-size:13px; color:#78350f; margin-top:8px; line-height:1.7;">
-          فريقنا هيراجع عملية التحويل وبيأكد الطلب خلال ساعات قليلة. هتستلم إشعار بالتحديث.
-        </p>
+      <div class="info-note">
+        <strong>⏳ الخطوة الجاية:</strong>
+        <p>فريقنا هيراجع عملية التحويل وبيأكد الطلب خلال ساعات قليلة. هتستلم إشعار بالتحديث.</p>
       </div>
 
       <div class="success-actions">
-        <button class="btn-track" onclick="window.location.href='tracking.html?track=${res.trackingId}'">📦 تتبع الطلب</button>
-        <button class="btn-home" onclick="window.location.href='orders.html'">📋 طلباتي</button>
-        <button class="btn-home" onclick="window.location.href='index.html'">🏠 الرئيسية</button>
+        <button class="btn-track" type="button" onclick="window.location.href='tracking.html?track=${res.trackingId}'">📦 تتبع الطلب</button>
+        <button class="btn-home" type="button" onclick="window.location.href='orders.html'">📋 طلباتي</button>
+        <button class="btn-home" type="button" onclick="window.location.href='index.html'">🏠 الرئيسية</button>
       </div>
     </div>`;
 }
 
-// ===========================================
-// Events
-// ===========================================
-document.getElementById('searchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
-});
-
+/* ============================================
+   HEADER SCROLL
+============================================ */
 window.addEventListener('scroll', () => {
   const header = document.getElementById('mainHeader');
   if (window.scrollY > 30) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
-});
+}, { passive: true });
 
-// Init
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
 initCheckout();
+setupMobileNav();
+setupMobileSearch();
+
+// Show sticky bar on mobile
+if (window.matchMedia('(max-width: 768px)').matches) {
+  document.getElementById('stickySummaryBar').style.display = 'flex';
+}
 </script>
 
 </body>
