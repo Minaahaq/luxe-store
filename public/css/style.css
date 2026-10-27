@@ -3766,3 +3766,130 @@ footer {
 
   footer { margin-bottom: 0; }
 }
+
+
+/* ===========================================
+   PRODUCT DETAIL — ADDITIONS
+   =========================================== */
+
+/* Product head row (cat tag + share) */
+.product-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  transition: .2s;
+  min-height: 38px;
+}
+
+.share-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-dark);
+}
+
+/* Gallery nav arrows + counter */
+.gallery-main {
+  position: relative;
+}
+
+.gallery-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: .2s;
+  z-index: 2;
+  opacity: 0;
+}
+
+.gallery-main:hover .gallery-nav { opacity: 1; }
+
+.gallery-nav:hover {
+  background: var(--ink);
+  color: var(--gold);
+  border-color: var(--ink);
+}
+
+.gallery-nav.prev { right: 12px; }
+.gallery-nav.next { left: 12px; }
+
+.gallery-counter {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  padding: 5px 12px;
+  background: rgba(10, 14, 23, .7);
+  color: #fff;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Related section head */
+.related-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.related-head h3 {
+  font-family: 'Tajawal', sans-serif;
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 900;
+  margin: 0;
+}
+
+.related-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  white-space: nowrap;
+}
+
+.related-link:hover { color: var(--gold); }
+
+/* Breadcrumb — clamp long names */
+.breadcrumb .current {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===========================================
+   STICKY ACTION BAR (MOBILE ONLY)
+   =========================================== */
+.sticky-action-bar {
+  display: none;
