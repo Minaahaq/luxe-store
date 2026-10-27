@@ -2,30 +2,78 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>تتبع الشحنة - LUXE Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
       <div class="brand-tag">Premium Store</div>
     </a>
+
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
+
     <div class="header-actions">
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+        🛍<span class="badge" data-cart-badge>0</span>
+      </a>
       <div id="userArea"></div>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
   </div>
 </header>
 
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:22px;letter-spacing:5px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="mobile-drawer-nav">
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="index.html#productsSection">📦 كل المنتجات</a>
+    <a href="orders.html">🧾 طلباتي</a>
+    <a href="tracking.html">🚚 تتبع الشحنة</a>
+    <a href="profile.html">👤 حسابي</a>
+  </div>
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      🛍 السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     HERO
+============================================ -->
 <section class="tracking-hero">
   <div class="container">
     <div class="eyebrow">Shipment Tracking</div>
@@ -34,17 +82,43 @@
   </div>
 </section>
 
+<!-- ============================================
+     TRACKING INPUT
+============================================ -->
 <div class="container">
   <div class="tracking-input-wrap">
     <div class="tracking-input-box">
-      <input type="text" id="trackingInput" placeholder="مثال: TRK-A1B2C3" autocomplete="off">
-      <button id="trackBtn">🔍 تتبع</button>
+      <input
+        type="text"
+        id="trackingInput"
+        placeholder="مثال: TRK-A1B2C3"
+        autocomplete="off"
+        spellcheck="false"
+        maxlength="20"
+        dir="ltr"
+      >
+      <button id="trackBtn" type="button">
+        <span class="btn-text">🔍 تتبع</span>
+        <span class="btn-loading" style="display:none">
+          <span class="loading-spinner"></span> جاري البحث...
+        </span>
+      </button>
+    </div>
+
+    <div class="tracking-help">
+      <div class="recent-tracks" id="recentTracks"></div>
+      <div class="tracking-tip">
+        💡 رقم التتبع يبدأ بـ <strong>TRK-</strong> — هتلاقيه في إيميل التأكيد أو <a href="orders.html">صفحة طلباتي</a>
+      </div>
     </div>
   </div>
 
   <div class="tracking-result" id="trackingResult"></div>
 </div>
 
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -80,6 +154,9 @@
 import { api, getCurrentUser, logout } from './js/api.js';
 import { showToast, formatPrice, formatDate, updateCartBadge } from './js/ui.js';
 
+/* ============================================
+   CONFIG
+============================================ */
 const STATUS_MAP = {
   pending:    { label: 'قيد المراجعة', cls: 'status-pending',    stepIdx: 0 },
   processing: { label: 'قيد التجهيز',  cls: 'status-processing', stepIdx: 1 },
@@ -95,21 +172,33 @@ const TIMELINE_STAGES = [
   { key: 'delivered',  label: 'تم التوصيل',       desc: 'تم توصيل الشحنة بنجاح' }
 ];
 
-let currentUser = null;
+const RECENT_KEY = 'luxe_recent_tracks';
+const MAX_RECENT = 5;
 
-// ===========================================
-// User Area
-// ===========================================
+/* ============================================
+   STATE
+============================================ */
+let currentUser = null;
+let currentOrder = null;
+
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   const user = await getCurrentUser();
+
   if (user) {
-    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+
     userArea.innerHTML = `
-      <button class="user-chip" id="userChip">
-        <span>${user.displayName || user.email.split('@')[0]}</span>
+      <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
+        <span>${displayName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
+
     document.getElementById('userChip').addEventListener('click', () => {
       if (confirm('هل تريد تسجيل الخروج؟')) {
         logout().then(() => {
@@ -118,14 +207,135 @@ async function renderUserArea() {
         });
       }
     });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${displayName}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
   } else {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
   }
 }
 
-// ===========================================
-// Init
-// ===========================================
+/* ============================================
+   MOBILE NAV / SEARCH
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+
+  const goSearch = (val) => {
+    if (val && val.trim()) window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+  };
+  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+  desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+}
+
+/* ============================================
+   RECENT TRACKS (localStorage)
+============================================ */
+function getRecentTracks() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  } catch (e) { return []; }
+}
+
+function addRecentTrack(trackingId) {
+  try {
+    let recent = getRecentTracks();
+    recent = recent.filter(id => id !== trackingId);
+    recent.unshift(trackingId);
+    recent = recent.slice(0, MAX_RECENT);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    renderRecentTracks();
+  } catch (e) { /* ignore */ }
+}
+
+function renderRecentTracks() {
+  const wrap = document.getElementById('recentTracks');
+  const recent = getRecentTracks();
+
+  if (recent.length === 0) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="recent-tracks-label">🕐 آخر عمليات تتبع:</div>
+    <div class="recent-tracks-list">
+      ${recent.map(id => `
+        <button class="recent-track-chip" data-id="${id}" type="button">
+          <span class="mono">${id}</span>
+          <span class="chip-arrow">→</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+
+  wrap.querySelectorAll('.recent-track-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('trackingInput').value = btn.dataset.id;
+      trackShipment();
+    });
+  });
+}
+
+/* ============================================
+   INIT
+============================================ */
 async function init() {
   currentUser = await getCurrentUser();
 
@@ -135,26 +345,66 @@ async function init() {
       <div class="emoji">📦</div>
       <h2>أدخل رقم التتبع</h2>
       <p>هتلاقي رقم التتبع في إيميل التأكيد أو في صفحة طلباتي</p>
-      ${currentUser ? `<a href="orders.html" class="btn-shop" style="margin-top:8px">📋 طلباتي</a>` : `<div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong></div>`}
+      ${currentUser
+        ? `<a href="orders.html" class="btn-shop" style="margin-top:16px">📋 اذهب لطلباتي</a>`
+        : `<div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong></div>`
+      }
     </div>`;
+
+  // Render recent
+  renderRecentTracks();
 
   // Check URL param
   const params = new URLSearchParams(window.location.search);
   const trackParam = params.get('track');
   if (trackParam) {
-    document.getElementById('trackingInput').value = trackParam.toUpperCase();
+    document.getElementById('trackingInput').value = formatTrackingInput(trackParam);
     setTimeout(() => trackShipment(), 300);
   }
+
+  // Auto-format input
+  const input = document.getElementById('trackingInput');
+  input.addEventListener('input', (e) => {
+    const cursorPos = e.target.selectionStart;
+    const oldVal = e.target.value;
+    const newVal = formatTrackingInput(oldVal);
+    if (newVal !== oldVal) {
+      e.target.value = newVal;
+      // Keep cursor position stable
+      const diff = newVal.length - oldVal.length;
+      try {
+        e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
+      } catch (err) { /* ignore */ }
+    }
+  });
 }
 
-// ===========================================
-// Track
-// ===========================================
+/* ============================================
+   FORMAT TRACKING
+============================================ */
+function formatTrackingInput(val) {
+  let v = val.trim().toUpperCase().replace(/\s+/g, '');
+  // If starts with TRK- keep as is
+  if (v.startsWith('TRK-')) return v;
+  // If starts with TRK without dash
+  if (v.startsWith('TRK') && v.length > 3) return 'TRK-' + v.slice(3);
+  // If user just types letters/digits, add prefix when length > 3 and not empty
+  if (v.length > 3 && /^[A-Z0-9]+$/.test(v)) {
+    return 'TRK-' + v;
+  }
+  return v;
+}
+
+/* ============================================
+   TRACK
+============================================ */
 async function trackShipment() {
   const input = document.getElementById('trackingInput');
   const btn = document.getElementById('trackBtn');
+  const btnText = btn.querySelector('.btn-text');
+  const btnLoading = btn.querySelector('.btn-loading');
   const result = document.getElementById('trackingResult');
-  const trackingId = input.value.trim().toUpperCase();
+  let trackingId = formatTrackingInput(input.value);
 
   if (!trackingId) {
     showToast('أدخل رقم التتبع الأول', 'warning');
@@ -162,12 +412,32 @@ async function trackShipment() {
     return;
   }
 
+  // Validate format
+  if (!/^TRK-[A-Z0-9]{4,}$/.test(trackingId)) {
+    showToast('رقم التتبع غير صحيح — يبدأ بـ TRK- ويتكون من 4 أحرف على الأقل', 'warning');
+    input.focus();
+    return;
+  }
+
+  // Update URL
+  const url = new URL(window.location);
+  url.searchParams.set('track', trackingId);
+  window.history.replaceState({}, '', url);
+
+  // Update UI
   btn.disabled = true;
-  btn.textContent = 'جاري البحث...';
-  result.innerHTML = `<div class="tracking-message"><div class="emoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div><h2>جاري البحث...</h2></div>`;
+  btnText.style.display = 'none';
+  btnLoading.style.display = 'inline-flex';
+  result.innerHTML = `
+    <div class="tracking-message">
+      <div class="emoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
+      <h2>جاري البحث...</h2>
+    </div>`;
 
   try {
     const res = await api.orders.track(trackingId);
+    currentOrder = res.data;
+    addRecentTrack(trackingId);
     renderTracking(res.data);
   } catch (err) {
     console.error(err);
@@ -177,22 +447,46 @@ async function trackShipment() {
         <h2>لم يتم العثور على الشحنة</h2>
         <p>${err.message || 'تأكد من رقم التتبع وحاول مرة أخرى'}</p>
         <div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong> ويتكون من 6 أحرف</div>
+        ${getRecentTracks().length > 0 ? `
+          <div style="margin-top:16px">
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">جرب أرقامك السابقة:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+              ${getRecentTracks().map(id => `<button class="recent-track-chip" data-id="${id}" type="button"><span class="mono">${id}</span></button>`).join('')}
+            </div>
+          </div>` : ''}
       </div>`;
+
+    // Attach handlers to retry buttons
+    result.querySelectorAll('.recent-track-chip').forEach(b => {
+      b.addEventListener('click', () => {
+        input.value = b.dataset.id;
+        trackShipment();
+      });
+    });
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔍 تتبع';
+    btnText.style.display = 'inline';
+    btnLoading.style.display = 'none';
   }
 }
 
-// ===========================================
-// Render Tracking
-// ===========================================
+/* ============================================
+   RENDER TRACKING
+============================================ */
 function renderTracking(order) {
   const result = document.getElementById('trackingResult');
   const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
   const history = order.trackingHistory || [];
   const addr = order.shippingAddress || {};
   const currentIdx = st.stepIdx;
+
+  // Estimated delivery (mock: 3 days from order date)
+  let estimatedDelivery = '';
+  if (order.status !== 'delivered' && order.status !== 'cancelled' && order.createdAt) {
+    const orderDate = new Date(order.createdAt);
+    const estDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+    estimatedDelivery = formatDate(estDate);
+  }
 
   // Build timeline
   const timelineHTML = TIMELINE_STAGES.map((stage, i) => {
@@ -217,10 +511,21 @@ function renderTracking(order) {
         </div>
         <span class="ship-status-badge ${st.cls}">${st.label}</span>
       </div>
+
+      ${estimatedDelivery ? `
+        <div class="estimated-delivery">
+          <div class="est-label">📅 التوصيل المتوقع</div>
+          <div class="est-date">${estimatedDelivery}</div>
+        </div>
+      ` : ''}
+
       <div class="ship-info-grid">
         <div class="ship-info-item">
           <div class="label">رقم التتبع</div>
-          <div class="value" style="font-family:monospace;color:var(--gold-dark)">${order.trackingId}</div>
+          <div class="value tracking-id-val">
+            <span class="mono">${order.trackingId}</span>
+            <button class="copy-mini-btn" data-copy="${order.trackingId}" type="button" aria-label="نسخ">📋</button>
+          </div>
         </div>
         <div class="ship-info-item">
           <div class="label">الحالة</div>
@@ -235,15 +540,20 @@ function renderTracking(order) {
           <div class="value">${addr.city || ''}${addr.area ? `, ${addr.area}` : ''}</div>
         </div>
       </div>
+
+      <div class="ship-actions-row">
+        <button class="ship-action-btn" id="refreshTrackBtn" type="button">🔄 تحديث</button>
+        <button class="ship-action-btn" id="shareTrackBtn" type="button">🔗 مشاركة</button>
+      </div>
     </div>
 
     <div class="ship-timeline-card">
       <h3>📊 مراحل الشحنة</h3>
       ${order.status === 'cancelled' ? `
-        <div style="text-align:center;padding:40px;color:var(--danger)">
-          <div style="font-size:60px;margin-bottom:12px">❌</div>
-          <h3 style="font-family:'Tajawal';font-size:20px;color:var(--danger)">تم إلغاء الطلب</h3>
-          <p style="color:var(--text-muted);margin-top:6px">هذا الطلب تم إلغاؤه</p>
+        <div class="cancelled-box">
+          <div class="cancelled-emoji">❌</div>
+          <h3>تم إلغاء الطلب</h3>
+          <p>هذا الطلب تم إلغاؤه — لو دفعت الشحن مسبقًا، هيرجعلك خلال 3-5 أيام عمل</p>
         </div>` : `
         <div class="ship-timeline">${timelineHTML}</div>
       `}
@@ -254,7 +564,7 @@ function renderTracking(order) {
         <h3>📦 محتويات الشحنة</h3>
         ${order.items.map(i => `
           <div class="ship-item-row">
-            <img src="${i.image || 'https://via.placeholder.com/56'}" alt="${i.name}" onerror="this.src='https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE'">
+            <img src="${i.image || 'https://via.placeholder.com/56'}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE'">
             <div class="info">
               <h5>${i.name}</h5>
               <span>الكمية: ${i.qty}</span>
@@ -276,29 +586,67 @@ function renderTracking(order) {
       </div>
     </div>
   `;
+
+  // Attach handlers
+  result.querySelectorAll('.copy-mini-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copy);
+        showToast('تم نسخ رقم التتبع ✓', 'success');
+      } catch (e) {
+        showToast('تعذر النسخ', 'error');
+      }
+    });
+  });
+
+  document.getElementById('refreshTrackBtn')?.addEventListener('click', () => trackShipment());
+  document.getElementById('shareTrackBtn')?.addEventListener('click', shareTracking);
 }
 
-// ===========================================
-// Events
-// ===========================================
+/* ============================================
+   SHARE
+============================================ */
+async function shareTracking() {
+  const url = window.location.href;
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: 'تتبع الشحنة - LUXE Store',
+        text: `تتبع شحنتك على LUXE Store`,
+        url
+      });
+    } else {
+      await navigator.clipboard.writeText(url);
+      showToast('تم نسخ رابط التتبع ✓', 'success');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      showToast('تعذر المشاركة', 'error');
+    }
+  }
+}
+
+/* ============================================
+   EVENTS
+============================================ */
 document.getElementById('trackBtn').addEventListener('click', trackShipment);
 document.getElementById('trackingInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') trackShipment();
-});
-
-document.getElementById('searchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
 });
 
 window.addEventListener('scroll', () => {
   const header = document.getElementById('mainHeader');
   if (window.scrollY > 30) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
-});
+}, { passive: true });
 
-// Init
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
+setupMobileNav();
+setupMobileSearch();
 init();
 </script>
 
