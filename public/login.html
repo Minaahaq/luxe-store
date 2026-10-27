@@ -7,107 +7,1078 @@
   <title>تسجيل الدخول - LUXE Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;700;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       LUXE LOGIN — PREMIUM DESIGN
+    ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --gold: #c9a961;
+      --gold-light: #e8d5a3;
+      --gold-dark: #a8894a;
+      --ink: #0a0e17;
+      --ink-2: #131826;
+      --ink-3: #1c2233;
+      --paper: #faf9f6;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --line: #e5e3dd;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 14px;
+      --shadow-gold: 0 8px 30px rgba(201, 169, 97, .35);
+    }
+
+    html, body {
+      height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      touch-action: manipulation;
+    }
+
+    input {
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    img { max-width: 100%; display: block; }
+
+    /* ============================================
+       ANIMATED BACKGROUND
+    ============================================ */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(201, 169, 97, .18), transparent 55%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, .12), transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, .05), transparent 60%),
+        linear-gradient(135deg, #0a0e17 0%, #131826 50%, #0a0e17 100%);
+    }
+
+    /* Grid lines overlay */
+    .bg-canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201, 169, 97, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 97, .04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .5;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(201, 169, 97, .5), transparent 70%);
+      top: -100px;
+      right: -100px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139, 92, 246, .35), transparent 70%);
+      bottom: -200px;
+      left: -150px;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(59, 130, 246, .25), transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -14s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(30px, -40px) scale(1.1); }
+      66%      { transform: translate(-20px, 30px) scale(.95); }
+    }
+
+    /* ============================================
+       LAYOUT
+    ============================================ */
+    .login-page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 24px;
+      gap: 0;
+    }
+
+    /* ============================================
+       LEFT PANEL — BRAND SHOWCASE
+    ============================================ */
+    .login-showcase {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 48px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(201, 169, 97, .15), transparent 60%),
+        radial-gradient(circle at 70% 80%, rgba(139, 92, 246, .1), transparent 60%),
+        linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      border: 1px solid rgba(201, 169, 97, .15);
+      box-shadow:
+        0 40px 100px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    .login-showcase::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201, 169, 97, .03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 97, .03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+      mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+      pointer-events: none;
+    }
+
+    .login-showcase::after {
+      content: '';
+      position: absolute;
+      top: 20%;
+      right: 10%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(201, 169, 97, .3), transparent 70%);
+      border-radius: 50%;
+      filter: blur(60px);
+      animation: pulse-glow 4s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: .5; transform: scale(1); }
+      50%      { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Brand */
+    .showcase-brand {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .showcase-brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 8px 24px rgba(201, 169, 97, .4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .showcase-brand-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, .4) 50%, transparent 60%);
+      animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+      0%   { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(200%) rotate(45deg); }
+    }
+
+    .showcase-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .showcase-brand-name {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .showcase-brand-tag {
+      font-size: 9.5px;
+      letter-spacing: 3px;
+      color: rgba(201, 169, 97, .6);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    /* Middle content */
+    .showcase-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .showcase-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: rgba(201, 169, 97, .1);
+      border: 1px solid rgba(201, 169, 97, .3);
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .showcase-eyebrow::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: .3; }
+    }
+
+    .showcase-headline {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      color: #fff;
+    }
+
+    .showcase-headline em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      position: relative;
+      padding: 0 4px;
+    }
+
+    .showcase-headline em::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: .5;
+    }
+
+    .showcase-subtitle {
+      font-size: 16px;
+      color: #a0a5b5;
+      line-height: 1.8;
+      max-width: 460px;
+    }
+
+    /* Stats */
+    .showcase-stats {
+      display: flex;
+      gap: 28px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .showcase-stat {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .showcase-stat:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -14px;
+      top: 6px;
+      bottom: 6px;
+      width: 1px;
+      background: rgba(201, 169, 97, .2);
+    }
+
+    .showcase-stat-value {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .showcase-stat-label {
+      font-size: 11px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+    }
+
+    /* Footer features */
+    .showcase-features {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(201, 169, 97, .15);
+    }
+
+    .showcase-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13.5px;
+      color: #a0a5b5;
+    }
+
+    .showcase-feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(201, 169, 97, .12);
+      border: 1px solid rgba(201, 169, 97, .25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    /* ============================================
+       RIGHT PANEL — FORM
+    ============================================ */
+    .login-form-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(250, 249, 246, .96);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 28px;
+      padding: 48px 40px;
+      border: 1px solid rgba(201, 169, 97, .2);
+      box-shadow:
+        0 40px 100px rgba(0, 0, 0, .4),
+        inset 0 1px 0 rgba(255, 255, 255, .5);
+      position: relative;
+      overflow: hidden;
+      animation: card-in .7s cubic-bezier(.2, .9, .3, 1.1);
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(30px) scale(.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      animation: slide-border 3s infinite;
+    }
+
+    @keyframes slide-border {
+      0%, 100% { transform: translateX(-100%); }
+      50%      { transform: translateX(100%); }
+    }
+
+    /* Mobile brand (hidden on desktop) */
+    .login-mobile-brand {
+      display: none;
+      text-align: center;
+      margin-bottom: 28px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid rgba(201, 169, 97, .15);
+    }
+
+    .login-mobile-brand .showcase-brand-name {
+      color: var(--gold-dark);
+      font-size: 24px;
+      letter-spacing: 5px;
+    }
+
+    .login-mobile-brand .showcase-brand-tag {
+      color: var(--gold-dark);
+    }
+
+    /* Head */
+    .login-head {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-head-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 12px 32px rgba(201, 169, 97, .4);
+      animation: icon-float 3s infinite ease-in-out;
+    }
+
+    @keyframes icon-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    .login-head h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--ink);
+      margin-bottom: 6px;
+      letter-spacing: -.5px;
+    }
+
+    .login-head p {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    /* Form groups */
+    .form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: .3px;
+    }
+
+    .form-group label .req {
+      color: var(--danger);
+      margin-right: 2px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: var(--gold-dark);
+      pointer-events: none;
+      transition: .2s;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 15px 48px 15px 48px;
+      border: 1.5px solid #e5e3dd;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--ink);
+      background: #fff;
+      transition: all .25s;
+    }
+
+    .form-group input::placeholder {
+      color: #b8b8b8;
+    }
+
+    .form-group input:focus {
+      border-color: var(--gold);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(201, 169, 97, .12);
+    }
+
+    .form-group input:focus ~ .input-icon {
+      color: var(--gold);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .toggle-password-btn {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #6b7280;
+      background: transparent;
+      transition: .2s;
+    }
+
+    .toggle-password-btn:hover {
+      background: rgba(201, 169, 97, .1);
+      color: var(--gold-dark);
+    }
+
+    .form-error {
+      color: var(--danger);
+      font-size: 11.5px;
+      margin-top: 6px;
+      font-weight: 600;
+      display: none;
+      padding-right: 4px;
+    }
+
+    .form-group.error input {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, .02);
+      animation: shake .35s;
+    }
+
+    .form-group.error .form-error {
+      display: block;
+    }
+
+    .form-group.error .input-icon {
+      color: var(--danger);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+
+    .caps-lock-warning {
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: rgba(245, 158, 11, .12);
+      border: 1px solid rgba(245, 158, 11, .3);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #92400e;
+      display: inline-block;
+    }
+
+    /* Options row */
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .remember-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .remember-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--gold-dark);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .forgot-link {
+      font-size: 13px;
+      color: var(--gold-dark);
+      font-weight: 700;
+      transition: .2s;
+      background: none;
+      padding: 0;
+    }
+
+    .forgot-link:hover {
+      color: var(--gold);
+      text-decoration: underline;
+    }
+
+    /* Submit button */
+    .btn-login {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--ink) 0%, var(--ink-3) 100%);
+      color: var(--gold);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 54px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      opacity: 0;
+      transition: opacity .3s;
+      z-index: -1;
+    }
+
+    .btn-login:hover:not(:disabled) {
+      color: var(--ink);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .btn-login:hover:not(:disabled)::before {
+      opacity: 1;
+    }
+
+    .btn-login:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      color: #9a9a9a;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* Social buttons */
+    .social-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      transition: .2s;
+      min-height: 48px;
+    }
+
+    .social-btn:hover {
+      border-color: var(--gold);
+      background: rgba(201, 169, 97, .04);
+      transform: translateY(-1px);
+    }
+
+    .social-icon {
+      font-size: 16px;
+    }
+
+    /* Switch */
+    .auth-switch {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13.5px;
+      color: #6b7280;
+    }
+
+    .auth-switch a {
+      color: var(--gold-dark);
+      font-weight: 800;
+      transition: .2s;
+    }
+
+    .auth-switch a:hover {
+      color: var(--gold);
+    }
+
+    /* Footer */
+    .auth-footer {
+      text-align: center;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(201, 169, 97, .1);
+      font-size: 11px;
+      color: #9a9a9a;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(201, 169, 97, .3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 1024px) {
+      .login-page {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .login-showcase {
+        display: none;
+      }
+
+      .login-mobile-brand {
+        display: block;
+      }
+
+      .login-form-panel {
+        padding: 0;
+        min-height: calc(100vh - 40px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .login-page {
+        padding: 0;
+      }
+
+      .login-form-panel {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 24px 16px max(24px, env(safe-area-inset-bottom, 0px));
+        align-items: flex-start;
+        padding-top: 32px;
+      }
+
+      .login-card {
+        max-width: 100%;
+        padding: 32px 24px;
+        border-radius: 24px;
+      }
+
+      .login-head h1 {
+        font-size: 24px;
+      }
+
+      .login-head p {
+        font-size: 13px;
+      }
+
+      .login-head-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+        margin-bottom: 14px;
+      }
+
+      .form-group input {
+        padding: 14px 44px 14px 44px;
+        font-size: 15px;
+      }
+
+      .form-group input::placeholder {
+        font-size: 13px;
+      }
+
+      .social-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .login-options {
+        font-size: 13px;
+      }
+
+      .remember-label input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .login-card {
+        padding: 24px 18px;
+      }
+
+      .login-head h1 {
+        font-size: 22px;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="auth-page">
+<!-- ============================================
+     ANIMATED BACKGROUND
+============================================ -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
 
-  <!-- ============================================
-       SIDE PANEL (HIDDEN ON MOBILE)
-  ============================================ -->
-  <div class="auth-side">
-    <div>
-      <div class="auth-brand">LUXE</div>
-      <div class="auth-brand-tag">Premium Store</div>
-    </div>
-    <div>
-      <h2>مرحباً بعودتك<br>إلى <span>عالم الفخامة</span></h2>
-      <p>سجل دخولك واستمتع بتجربة تسوق لا تُنسى مع أفضل المنتجات والعروض الحصرية</p>
-      <div class="auth-side-features">
-        <div class="auth-side-feature"><span class="dot"></span> تتبع طلباتك لحظة بلحظة</div>
-        <div class="auth-side-feature"><span class="dot"></span> عروض حصرية للأعضاء</div>
-        <div class="auth-side-feature"><span class="dot"></span> حفظ عناوينك المفضلة</div>
-        <div class="auth-side-feature"><span class="dot"></span> سجل مشتريات كامل</div>
+<!-- ============================================
+     LOGIN PAGE
+============================================ -->
+<div class="login-page">
+
+  <!-- LEFT — Brand Showcase -->
+  <aside class="login-showcase">
+    <div class="showcase-brand">
+      <div class="showcase-brand-icon">✦</div>
+      <div class="showcase-brand-text">
+        <div class="showcase-brand-name">LUXE</div>
+        <div class="showcase-brand-tag">Premium Store</div>
       </div>
     </div>
-    <div style="font-size:12px;color:#6b7280;">© 2025 LUXE Premium Store</div>
-  </div>
 
-  <!-- ============================================
-       FORM PANEL
-  ============================================ -->
-  <div class="auth-form-wrap">
-    <!-- Mobile brand header -->
-    <div class="auth-mobile-brand">
-      <div class="auth-brand" style="font-size:24px;letter-spacing:5px">LUXE</div>
-      <div class="auth-brand-tag">Premium Store</div>
-    </div>
+    <div class="showcase-content">
+      <div class="showcase-eyebrow">Members Only</div>
+      <h2 class="showcase-headline">
+        تجربة تسوق<br>
+        <em>فاخرة</em> تليق بك
+      </h2>
+      <p class="showcase-subtitle">
+        سجل دخولك واستمتع بعالم من المنتجات الحصرية، العروض الخاصة، وتجربة تسوق مصممة خصيصاً لتناسب ذوقك الرفيع.
+      </p>
 
-    <form class="auth-form" id="loginForm" novalidate>
-      <h1>تسجيل الدخول</h1>
-      <p>أدخل بياناتك للوصول لحسابك</p>
-
-      <div class="form-group" id="fg-email">
-        <label for="email">البريد الإلكتروني <span class="req">*</span></label>
-        <input
-          type="email"
-          id="email"
-          placeholder="example@email.com"
-          autocomplete="email"
-          inputmode="email"
-          autocapitalize="none"
-          spellcheck="false"
-          autofocus
-        >
-        <div class="form-error">البريد الإلكتروني غير صحيح</div>
-      </div>
-
-      <div class="form-group" id="fg-password">
-        <label for="password">كلمة السر <span class="req">*</span></label>
-        <div class="password-input-wrap">
-          <input
-            type="password"
-            id="password"
-            placeholder="أدخل كلمة السر"
-            autocomplete="current-password"
-          >
-          <button
-            type="button"
-            class="toggle-password-btn"
-            id="togglePasswordBtn"
-            aria-label="إظهار كلمة السر"
-          >👁️</button>
+      <div class="showcase-stats">
+        <div class="showcase-stat">
+          <div class="showcase-stat-value">50K+</div>
+          <div class="showcase-stat-label">عميل سعيد</div>
         </div>
-        <div class="form-error">كلمة السر مطلوبة</div>
-        <div class="caps-lock-warning" id="capsWarning" style="display:none">
-          ⚠️ Caps Lock مفعّل
+        <div class="showcase-stat">
+          <div class="showcase-stat-value">4.9</div>
+          <div class="showcase-stat-label">تقييم العملاء</div>
+        </div>
+        <div class="showcase-stat">
+          <div class="showcase-stat-value">24/7</div>
+          <div class="showcase-stat-label">دعم فوري</div>
         </div>
       </div>
+    </div>
 
-      <div class="login-options-row">
-        <label class="remember-me-label">
-          <input type="checkbox" id="rememberMe">
-          <span>تذكرني</span>
-        </label>
-        <a href="#" id="forgotLink" class="forgot-link">
-          نسيت كلمة السر؟
-        </a>
+    <div class="showcase-features">
+      <div class="showcase-feature">
+        <div class="showcase-feature-icon">🚚</div>
+        <span>تتبع طلباتك لحظة بلحظة</span>
+      </div>
+      <div class="showcase-feature">
+        <div class="showcase-feature-icon">🎁</div>
+        <span>عروض حصرية للأعضاء</span>
+      </div>
+      <div class="showcase-feature">
+        <div class="showcase-feature-icon">🔒</div>
+        <span>حماية بياناتك بأعلى معايير الأمان</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT — Form -->
+  <main class="login-form-panel">
+    <div class="login-card">
+
+      <div class="login-mobile-brand">
+        <div class="showcase-brand-name">LUXE</div>
+        <div class="showcase-brand-tag">Premium Store</div>
       </div>
 
-      <button type="submit" class="btn-primary" id="submitBtn">
-        <span class="btn-text">تسجيل الدخول</span>
-        <span class="btn-loading" style="display:none">
-          <span class="loading-spinner"></span> جاري تسجيل الدخول...
-        </span>
-      </button>
-
-      <div class="auth-divider">
-        <span>أو</span>
+      <div class="login-head">
+        <div class="login-head-icon">👑</div>
+        <h1>مرحباً بعودتك</h1>
+        <p>أدخل بياناتك للمتابعة إلى حسابك</p>
       </div>
 
-      <div class="social-login-row">
+      <form id="loginForm" novalidate>
+        <div class="form-group" id="fg-email">
+          <label for="email">البريد الإلكتروني <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="email"
+              id="email"
+              placeholder="example@email.com"
+              autocomplete="email"
+              inputmode="email"
+              autocapitalize="none"
+              spellcheck="false"
+              autofocus
+            >
+            <span class="input-icon">✉</span>
+          </div>
+          <div class="form-error">البريد الإلكتروني غير صحيح</div>
+        </div>
+
+        <div class="form-group" id="fg-password">
+          <label for="password">كلمة السر <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              placeholder="أدخل كلمة السر"
+              autocomplete="current-password"
+            >
+            <span class="input-icon">🔒</span>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              id="togglePasswordBtn"
+              aria-label="إظهار كلمة السر"
+            >👁️</button>
+          </div>
+          <div class="form-error">كلمة السر مطلوبة</div>
+          <div class="caps-lock-warning" id="capsWarning" style="display:none">
+            ⚠️ Caps Lock مفعّل
+          </div>
+        </div>
+
+        <div class="login-options">
+          <label class="remember-label">
+            <input type="checkbox" id="rememberMe">
+            <span>تذكرني</span>
+          </label>
+          <button type="button" id="forgotLink" class="forgot-link">
+            نسيت كلمة السر؟
+          </button>
+        </div>
+
+        <button type="submit" class="btn-login" id="submitBtn">
+          <span class="btn-text">دخول إلى حسابك</span>
+          <span class="btn-loading" style="display:none">
+            <span class="loading-spinner"></span> جاري الدخول...
+          </span>
+        </button>
+      </form>
+
+      <div class="auth-divider"><span>أو</span></div>
+
+      <div class="social-row">
         <button type="button" class="social-btn" id="googleLoginBtn">
           <span class="social-icon">🔵</span>
           <span>Google</span>
@@ -125,8 +1096,8 @@
       <div class="auth-footer">
         © 2025 LUXE Store • جميع الحقوق محفوظة
       </div>
-    </form>
-  </div>
+    </div>
+  </main>
 </div>
 
 <script type="module">
@@ -162,7 +1133,7 @@ const rememberMe = document.getElementById('rememberMe');
 const capsWarning = document.getElementById('capsWarning');
 
 /* ============================================
-   ERROR HELPERS
+   HELPERS
 ============================================ */
 function setError(id) {
   document.getElementById('fg-' + id)?.classList.add('error');
@@ -176,7 +1147,7 @@ function clearError(id) {
 });
 
 /* ============================================
-   REMEMBER ME — Load saved email
+   REMEMBER ME
 ============================================ */
 try {
   const savedEmail = localStorage.getItem(REMEMBER_KEY);
@@ -188,7 +1159,7 @@ try {
 } catch (e) { /* ignore */ }
 
 /* ============================================
-   TOGGLE PASSWORD VISIBILITY
+   TOGGLE PASSWORD
 ============================================ */
 togglePasswordBtn.addEventListener('click', () => {
   const isPassword = passwordInput.type === 'password';
@@ -198,7 +1169,7 @@ togglePasswordBtn.addEventListener('click', () => {
 });
 
 /* ============================================
-   CAPS LOCK DETECTION
+   CAPS LOCK
 ============================================ */
 passwordInput.addEventListener('keydown', (e) => {
   if (typeof e.getModifierState === 'function') {
@@ -210,7 +1181,7 @@ passwordInput.addEventListener('blur', () => {
 });
 
 /* ============================================
-   VALIDATE FORM
+   VALIDATE
 ============================================ */
 function validateForm(data) {
   let valid = true;
@@ -225,7 +1196,6 @@ function validateForm(data) {
     setError('password');
     valid = false;
   }
-
   return valid;
 }
 
@@ -246,7 +1216,6 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  // Loading state
   submitBtn.disabled = true;
   btnText.style.display = 'none';
   btnLoading.style.display = 'inline-flex';
@@ -254,7 +1223,6 @@ form.addEventListener('submit', async (e) => {
   try {
     await loginWithEmail(data.email, data.password);
 
-    // Save email if "remember me"
     try {
       if (rememberMe.checked) {
         localStorage.setItem(REMEMBER_KEY, data.email);
@@ -267,7 +1235,6 @@ form.addEventListener('submit', async (e) => {
 
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get('redirect') || 'index.html';
-
     setTimeout(() => { window.location.href = redirect; }, 900);
   } catch (err) {
     console.error(err);
@@ -293,7 +1260,6 @@ document.getElementById('forgotLink').addEventListener('click', async (e) => {
     emailInput.focus();
     return;
   }
-
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast('البريد غير صحيح', 'error');
     emailInput.focus();
