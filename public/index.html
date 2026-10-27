@@ -2,34 +2,87 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="description" content="LUXE Store — متجر الفخامة الأول. اكتشف مجموعتنا الحصرية من المنتجات الفاخرة المختارة بعناية.">
   <title>LUXE Store — متجر الفخامة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
       <div class="brand-tag">Premium Store</div>
     </a>
+
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
+
     <div class="header-actions">
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة">
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
         🛍<span class="badge" data-cart-badge>0</span>
       </a>
       <div id="userArea"></div>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile search overlay -->
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
   </div>
 </header>
 
-<!-- HERO -->
+<!-- ============================================
+     MOBILE NAV DRAWER
+============================================ -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:22px;letter-spacing:5px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+
+  <div class="mobile-drawer-nav">
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="products.html">📦 كل المنتجات</a>
+    <a href="index.html#productsSection" onclick="filterByCategory('إلكترونيات');return false;">💻 إلكترونيات</a>
+    <a href="index.html#productsSection" onclick="filterByCategory('أزياء');return false;">👔 أزياء</a>
+    <a href="index.html#productsSection" onclick="filterByCategory('عطور');return false;">🌸 عطور</a>
+    <a href="orders.html">🧾 طلباتي</a>
+    <a href="tracking.html">🚚 تتبع الشحنة</a>
+    <a href="profile.html">👤 حسابي</a>
+  </div>
+
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      🛍 السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     HERO
+============================================ -->
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-grid-lines"></div>
@@ -43,7 +96,9 @@
   </div>
 </section>
 
-<!-- PRODUCTS -->
+<!-- ============================================
+     PRODUCTS
+============================================ -->
 <section class="section" id="productsSection">
   <div class="container">
     <div class="section-head">
@@ -56,15 +111,46 @@
     <div class="filters-wrap" id="filtersWrap"></div>
 
     <div class="products-grid" id="productsGrid">
-      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
-      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
-      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
-      <div class="product-card"><div class="skeleton" style="height:240px"></div><div style="padding:20px"><div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div><div class="skeleton" style="height:16px;margin-bottom:10px"></div><div class="skeleton" style="height:20px;width:40%"></div></div></div>
+      <!-- Skeleton — aspect-ratio 1:1 -->
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -98,7 +184,7 @@
   </div>
 </footer>
 
-<a href="cart.html" class="float-cart">
+<a href="cart.html" class="float-cart" aria-label="السلة">
   🛍<span class="badge" data-cart-badge>0</span>
 </a>
 
@@ -110,16 +196,24 @@ let allProducts = [];
 let currentCategory = 'الكل';
 let searchQuery = '';
 
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   const user = await getCurrentUser();
+
   if (user) {
-    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+
     userArea.innerHTML = `
-      <button class="user-chip" id="userChip">
-        <span>${user.displayName || user.email.split('@')[0]}</span>
+      <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
+        <span>${displayName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
+
     document.getElementById('userChip').addEventListener('click', () => {
       if (confirm('هل تريد تسجيل الخروج؟')) {
         logout().then(() => {
@@ -128,11 +222,101 @@ async function renderUserArea() {
         });
       }
     });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${displayName}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
   } else {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
   }
 }
 
+/* ============================================
+   MOBILE NAV
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+
+  drawer.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', close);
+  });
+
+  // ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+/* ============================================
+   MOBILE SEARCH
+============================================ */
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    input.value = '';
+    searchQuery = '';
+    renderProducts();
+  });
+
+  input?.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    desktopInput.value = val;
+    searchQuery = val;
+    renderProducts();
+  });
+}
+
+/* ============================================
+   PRODUCTS
+============================================ */
 async function loadProducts() {
   const grid = document.getElementById('productsGrid');
   try {
@@ -140,7 +324,7 @@ async function loadProducts() {
     allProducts = res.data || [];
     renderFilters();
     renderProducts();
-    // check URL search param
+
     const urlParams = new URLSearchParams(window.location.search);
     const s = urlParams.get('search');
     if (s) {
@@ -225,7 +409,7 @@ function renderProducts() {
               <div class="price-main">${p.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
               ${p.oldPrice ? `<div class="price-old">${p.oldPrice.toLocaleString('ar-EG')} ج.م</div>` : ''}
             </div>
-            <button class="add-btn" data-id="${p.id}" ${isOut ? 'disabled' : ''}>${isOut ? '✕' : '+'}</button>
+            <button class="add-btn" data-id="${p.id}" ${isOut ? 'disabled' : ''} aria-label="أضف للسلة">${isOut ? '✕' : '+'}</button>
           </div>
         </div>
       </div>`;
@@ -247,20 +431,31 @@ function renderProducts() {
   });
 }
 
+/* ============================================
+   SEARCH (desktop)
+============================================ */
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
   renderProducts();
 });
 
+/* ============================================
+   HEADER SCROLL
+============================================ */
 window.addEventListener('scroll', () => {
   const header = document.getElementById('mainHeader');
   if (window.scrollY > 30) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
-});
+}, { passive: true });
 
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
 loadProducts();
+setupMobileNav();
+setupMobileSearch();
 </script>
 
 </body>
