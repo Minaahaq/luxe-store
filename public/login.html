@@ -2,14 +2,21 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>تسجيل الدخول - LUXE Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="auth-page">
+
+  <!-- ============================================
+       SIDE PANEL (HIDDEN ON MOBILE)
+  ============================================ -->
   <div class="auth-side">
     <div>
       <div class="auth-brand">LUXE</div>
@@ -28,32 +35,88 @@
     <div style="font-size:12px;color:#6b7280;">© 2025 LUXE Premium Store</div>
   </div>
 
+  <!-- ============================================
+       FORM PANEL
+  ============================================ -->
   <div class="auth-form-wrap">
+    <!-- Mobile brand header -->
+    <div class="auth-mobile-brand">
+      <div class="auth-brand" style="font-size:24px;letter-spacing:5px">LUXE</div>
+      <div class="auth-brand-tag">Premium Store</div>
+    </div>
+
     <form class="auth-form" id="loginForm" novalidate>
       <h1>تسجيل الدخول</h1>
       <p>أدخل بياناتك للوصول لحسابك</p>
 
       <div class="form-group" id="fg-email">
         <label for="email">البريد الإلكتروني <span class="req">*</span></label>
-        <input type="email" id="email" placeholder="example@email.com" autocomplete="email">
+        <input
+          type="email"
+          id="email"
+          placeholder="example@email.com"
+          autocomplete="email"
+          inputmode="email"
+          autocapitalize="none"
+          spellcheck="false"
+          autofocus
+        >
         <div class="form-error">البريد الإلكتروني غير صحيح</div>
       </div>
 
       <div class="form-group" id="fg-password">
         <label for="password">كلمة السر <span class="req">*</span></label>
-        <input type="password" id="password" placeholder="أدخل كلمة السر" autocomplete="current-password">
+        <div class="password-input-wrap">
+          <input
+            type="password"
+            id="password"
+            placeholder="أدخل كلمة السر"
+            autocomplete="current-password"
+          >
+          <button
+            type="button"
+            class="toggle-password-btn"
+            id="togglePasswordBtn"
+            aria-label="إظهار كلمة السر"
+          >👁️</button>
+        </div>
         <div class="form-error">كلمة السر مطلوبة</div>
+        <div class="caps-lock-warning" id="capsWarning" style="display:none">
+          ⚠️ Caps Lock مفعّل
+        </div>
       </div>
 
-      <div style="text-align:left;margin-bottom:24px">
-        <a href="#" id="forgotLink" style="font-size:13px;color:var(--gold-dark);font-weight:700">
+      <div class="login-options-row">
+        <label class="remember-me-label">
+          <input type="checkbox" id="rememberMe">
+          <span>تذكرني</span>
+        </label>
+        <a href="#" id="forgotLink" class="forgot-link">
           نسيت كلمة السر؟
         </a>
       </div>
 
       <button type="submit" class="btn-primary" id="submitBtn">
-        تسجيل الدخول
+        <span class="btn-text">تسجيل الدخول</span>
+        <span class="btn-loading" style="display:none">
+          <span class="loading-spinner"></span> جاري تسجيل الدخول...
+        </span>
       </button>
+
+      <div class="auth-divider">
+        <span>أو</span>
+      </div>
+
+      <div class="social-login-row">
+        <button type="button" class="social-btn" id="googleLoginBtn">
+          <span class="social-icon">🔵</span>
+          <span>Google</span>
+        </button>
+        <button type="button" class="social-btn" id="guestBtn">
+          <span class="social-icon">👤</span>
+          <span>متابعة كضيف</span>
+        </button>
+      </div>
 
       <div class="auth-switch">
         معندكش حساب؟ <a href="register.html">سجل الآن</a>
@@ -70,89 +133,201 @@
 import { loginWithEmail, getCurrentUser } from './js/api.js';
 import { showToast } from './js/ui.js';
 
-// لو مسجل دخول بالفعل، روح للرئيسية
+/* ============================================
+   CONFIG
+============================================ */
+const REMEMBER_KEY = 'luxe_remember_email';
+
+/* ============================================
+   CHECK EXISTING USER
+============================================ */
 const existingUser = await getCurrentUser();
 if (existingUser) {
-  window.location.href = 'index.html';
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect') || 'index.html';
+  window.location.href = redirect;
 }
 
+/* ============================================
+   ELEMENTS
+============================================ */
 const form = document.getElementById('loginForm');
 const submitBtn = document.getElementById('submitBtn');
+const btnText = submitBtn.querySelector('.btn-text');
+const btnLoading = submitBtn.querySelector('.btn-loading');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+const rememberMe = document.getElementById('rememberMe');
+const capsWarning = document.getElementById('capsWarning');
 
-function setError(id) { document.getElementById('fg-' + id).classList.add('error'); }
-function clearError(id) { document.getElementById('fg-' + id).classList.remove('error'); }
+/* ============================================
+   ERROR HELPERS
+============================================ */
+function setError(id) {
+  document.getElementById('fg-' + id)?.classList.add('error');
+}
+function clearError(id) {
+  document.getElementById('fg-' + id)?.classList.remove('error');
+}
 
 ['email', 'password'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => clearError(id));
 });
 
+/* ============================================
+   REMEMBER ME — Load saved email
+============================================ */
+try {
+  const savedEmail = localStorage.getItem(REMEMBER_KEY);
+  if (savedEmail) {
+    emailInput.value = savedEmail;
+    rememberMe.checked = true;
+    passwordInput.focus();
+  }
+} catch (e) { /* ignore */ }
+
+/* ============================================
+   TOGGLE PASSWORD VISIBILITY
+============================================ */
+togglePasswordBtn.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  togglePasswordBtn.textContent = isPassword ? '🙈' : '👁️';
+  togglePasswordBtn.setAttribute('aria-label', isPassword ? 'إخفاء كلمة السر' : 'إظهار كلمة السر');
+});
+
+/* ============================================
+   CAPS LOCK DETECTION
+============================================ */
+passwordInput.addEventListener('keydown', (e) => {
+  if (typeof e.getModifierState === 'function') {
+    capsWarning.style.display = e.getModifierState('CapsLock') ? 'block' : 'none';
+  }
+});
+passwordInput.addEventListener('blur', () => {
+  capsWarning.style.display = 'none';
+});
+
+/* ============================================
+   VALIDATE FORM
+============================================ */
 function validateForm(data) {
   let valid = true;
   clearError('email');
   clearError('password');
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { setError('email'); valid = false; }
-  if (!data.password) { setError('password'); valid = false; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    setError('email');
+    valid = false;
+  }
+  if (!data.password) {
+    setError('password');
+    valid = false;
+  }
 
   return valid;
 }
 
+/* ============================================
+   SUBMIT
+============================================ */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const data = {
-    email: document.getElementById('email').value.trim(),
-    password: document.getElementById('password').value
+    email: emailInput.value.trim(),
+    password: passwordInput.value
   };
 
   if (!validateForm(data)) {
     showToast('من فضلك صحح الأخطاء', 'error');
+    emailInput.focus();
     return;
   }
 
-  try {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'جاري تسجيل الدخول...';
+  // Loading state
+  submitBtn.disabled = true;
+  btnText.style.display = 'none';
+  btnLoading.style.display = 'inline-flex';
 
+  try {
     await loginWithEmail(data.email, data.password);
 
-    showToast('تم تسجيل الدخول بنجاح!', 'success');
-    setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+    // Save email if "remember me"
+    try {
+      if (rememberMe.checked) {
+        localStorage.setItem(REMEMBER_KEY, data.email);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+      }
+    } catch (e) { /* ignore */ }
 
+    showToast('تم تسجيل الدخول بنجاح ✓', 'success');
+
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect') || 'index.html';
+
+    setTimeout(() => { window.location.href = redirect; }, 900);
   } catch (err) {
     console.error(err);
     const msg = mapError(err.code || err.message);
     showToast(msg, 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = 'تسجيل الدخول';
+    btnText.style.display = 'inline';
+    btnLoading.style.display = 'none';
+    passwordInput.focus();
+    passwordInput.select();
   }
 });
 
-// نسيت كلمة السر
+/* ============================================
+   FORGOT PASSWORD
+============================================ */
 document.getElementById('forgotLink').addEventListener('click', async (e) => {
   e.preventDefault();
-  const email = document.getElementById('email').value.trim();
+  const email = emailInput.value.trim();
 
   if (!email) {
     showToast('اكتب بريدك الأول', 'warning');
-    document.getElementById('email').focus();
+    emailInput.focus();
     return;
   }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast('البريد غير صحيح', 'error');
+    emailInput.focus();
     return;
   }
 
   try {
     const { auth, sendPasswordResetEmail } = await import('./js/firebase-config.js');
     await sendPasswordResetEmail(auth, email);
-    showToast('تم إرسال رابط الاستعادة على بريدك', 'success');
+    showToast('تم إرسال رابط الاستعادة على بريدك ✓', 'success');
   } catch (err) {
-    showToast('البريد غير موجود', 'error');
+    console.error(err);
+    if (err.code === 'auth/user-not-found') {
+      showToast('البريد غير مسجل — جرب تسجل حساب جديد', 'error');
+    } else {
+      showToast('تعذر إرسال الرابط، حاول تاني', 'error');
+    }
   }
 });
 
+/* ============================================
+   SOCIAL / GUEST
+============================================ */
+document.getElementById('googleLoginBtn').addEventListener('click', () => {
+  showToast('تسجيل الدخول بـ Google غير متاح حالياً', 'info');
+});
+
+document.getElementById('guestBtn').addEventListener('click', () => {
+  window.location.href = 'index.html';
+});
+
+/* ============================================
+   ERROR MAP
+============================================ */
 function mapError(code) {
   const m = {
     'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
@@ -160,7 +335,8 @@ function mapError(code) {
     'auth/invalid-credential': 'البريد أو كلمة السر غير صحيحة',
     'auth/too-many-requests': 'محاولات كثيرة، جرب بعد شوية',
     'auth/network-request-failed': 'مشكلة في الاتصال',
-    'auth/invalid-email': 'البريد غير صحيح'
+    'auth/invalid-email': 'البريد غير صحيح',
+    'auth/user-disabled': 'هذا الحساب معطل — تواصل مع الدعم'
   };
   return m[code] || 'حدث خطأ، حاول مرة أخرى';
 }
