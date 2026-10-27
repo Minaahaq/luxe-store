@@ -2,35 +2,86 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>السلة - LUXE Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
       <div class="brand-tag">Premium Store</div>
     </a>
+
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
+
     <div class="header-actions">
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+        🛍<span class="badge" data-cart-badge>0</span>
+      </a>
       <div id="userArea"></div>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
   </div>
 </header>
 
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:22px;letter-spacing:5px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="mobile-drawer-nav">
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="index.html#productsSection">📦 كل المنتجات</a>
+    <a href="orders.html">🧾 طلباتي</a>
+    <a href="tracking.html">🚚 تتبع الشحنة</a>
+    <a href="profile.html">👤 حسابي</a>
+  </div>
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      🛍 السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     PAGE TITLE
+============================================ -->
 <div class="container page-title-bar">
   <h1>سلة المشتريات</h1>
   <p id="cartCountText">جاري التحميل...</p>
 </div>
 
+<!-- ============================================
+     CART
+============================================ -->
 <div class="container">
   <div class="cart-layout" id="cartLayout">
     <div class="cart-items-wrap">
@@ -42,6 +93,27 @@
   </div>
 </div>
 
+<!-- ============================================
+     STICKY CHECKOUT BAR (MOBILE)
+============================================ -->
+<div class="sticky-checkout-bar" id="stickyCheckoutBar" style="display:none">
+  <div class="sticky-checkout-info">
+    <div class="sticky-checkout-label">الإجمالي</div>
+    <div class="sticky-checkout-total" id="stickyTotal">— ج.م</div>
+  </div>
+  <button class="sticky-checkout-btn" id="stickyCheckoutBtn" type="button">
+    إتمام الشراء →
+  </button>
+</div>
+
+<!-- ============================================
+     UNDO TOAST CONTAINER
+============================================ -->
+<div id="undoToastContainer"></div>
+
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -68,26 +140,42 @@
 
 <script type="module">
 import { getCurrentUser, logout } from './js/api.js';
-import { getCart, removeFromCart, updateCartQty, getCartTotal, getCartCount, updateCartBadge, showToast, formatPrice } from './js/ui.js';
+import {
+  getCart, removeFromCart, updateCartQty, addToCart,
+  getCartTotal, getCartCount, updateCartBadge,
+  showToast, formatPrice
+} from './js/ui.js';
 
-// ===========================================
-// Configuration
-// ===========================================
+/* ============================================
+   CONFIG
+============================================ */
 const SHIPPING_COST = 200;
+const FREE_SHIPPING_THRESHOLD = 2000; // شحن مجاني بعد 2000 ج.م
+const COUPONS = {
+  'LUXE10': { type: 'percent', value: 10, label: 'خصم 10%' },
+  'WELCOME': { type: 'fixed', value: 100, label: 'خصم 100 ج.م' }
+};
 
-// ===========================================
-// User Area
-// ===========================================
+let appliedCoupon = null;
+
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   const user = await getCurrentUser();
+
   if (user) {
-    const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+
     userArea.innerHTML = `
-      <button class="user-chip" id="userChip">
-        <span>${user.displayName || user.email.split('@')[0]}</span>
+      <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
+        <span>${displayName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
+
     document.getElementById('userChip').addEventListener('click', () => {
       if (confirm('هل تريد تسجيل الخروج؟')) {
         logout().then(() => {
@@ -96,21 +184,103 @@ async function renderUserArea() {
         });
       }
     });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${displayName}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
   } else {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
   }
 }
 
-// ===========================================
-// Render Cart
-// ===========================================
+/* ============================================
+   MOBILE NAV / SEARCH
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+
+  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+
+  const goSearch = (val) => {
+    if (val && val.trim()) {
+      window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+    }
+  };
+
+  input?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') goSearch(e.target.value);
+  });
+  desktopInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') goSearch(e.target.value);
+  });
+}
+
+/* ============================================
+   CART RENDER
+============================================ */
 function renderCart() {
   const cart = getCart();
   const layout = document.getElementById('cartLayout');
   const countText = document.getElementById('cartCountText');
+  const stickyBar = document.getElementById('stickyCheckoutBar');
 
   if (cart.length === 0) {
     countText.textContent = 'السلة فاضية';
+    stickyBar.style.display = 'none';
     layout.innerHTML = `
       <div class="empty-cart">
         <div class="emoji">🛒</div>
@@ -122,7 +292,7 @@ function renderCart() {
   }
 
   const totalItems = getCartCount();
-  countText.textContent = `${totalItems} منتج في السلة`;
+  countText.textContent = `${totalItems} ${totalItems === 1 ? 'منتج' : 'منتجات'} في السلة`;
 
   const itemsHTML = cart.map(item => `
     <div class="cart-item" data-id="${item.id}">
@@ -135,37 +305,74 @@ function renderCart() {
         <div class="cart-item-price">${formatPrice(item.price)} للوحدة</div>
       </div>
       <div class="qty-picker">
-        <button data-action="minus" ${item.qty <= 1 ? 'disabled' : ''}>−</button>
+        <button data-action="minus" type="button" ${item.qty <= 1 ? 'disabled' : ''} aria-label="تقليل">−</button>
         <span>${item.qty}</span>
-        <button data-action="plus">+</button>
+        <button data-action="plus" type="button" aria-label="زيادة">+</button>
       </div>
       <div class="cart-item-total">
         <div class="subtotal">${(item.price * item.qty).toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
-        <button class="remove-btn" data-action="remove" title="حذف">🗑</button>
+        <button class="remove-btn" data-action="remove" type="button" title="حذف" aria-label="حذف">🗑</button>
       </div>
     </div>
   `).join('');
 
   const subtotal = getCartTotal();
-  const shipping = SHIPPING_COST;
-  const total = subtotal + shipping;
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const discount = appliedCoupon ? calculateDiscount(subtotal) : 0;
+  const total = subtotal + shipping - discount;
+
+  const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
   layout.innerHTML = `
     <div class="cart-items-wrap">${itemsHTML}</div>
     <div class="cart-summary">
       <h3>ملخص الطلب</h3>
+
+      ${subtotal < FREE_SHIPPING_THRESHOLD ? `
+        <div class="free-shipping-progress">
+          <div class="free-ship-label">
+            🚚 أضف <strong>${formatPrice(remainingForFreeShipping)}</strong> للحصول على شحن مجاني
+          </div>
+          <div class="free-ship-bar">
+            <div class="free-ship-fill" style="width:${freeShipProgress}%"></div>
+          </div>
+        </div>
+      ` : `
+        <div class="free-ship-success">🎉 مبروك! حصلت على شحن مجاني</div>
+      `}
+
       <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
-      <div class="summary-row"><span>الشحن</span><span class="val">${formatPrice(shipping)}</span></div>
-      <div class="free-ship-note">🚚 مصاريف الشحن: ${formatPrice(shipping)} (مدفوعة قبل الشحن)</div>
-      <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
-      
-      <div style="margin-top:16px; padding:12px; background:rgba(201,169,97,.08); border:1px solid rgba(201,169,97,.2); border-radius:10px; font-size:12px; color:var(--text-muted); line-height:1.7;">
-        <strong style="color:var(--gold-dark);">💡 ملاحظة:</strong><br>
-        هتدفع ${formatPrice(shipping)} شحن قبل تأكيد الطلب.<br>
-        سعر المنتجات (${formatPrice(subtotal)}) عند الاستلام.
+      <div class="summary-row">
+        <span>الشحن</span>
+        <span class="val">${shipping === 0 ? '<span style="color:var(--success);font-weight:800">مجاني</span>' : formatPrice(shipping)}</span>
       </div>
-      
-      <button class="checkout-btn" id="checkoutBtn">إتمام الشراء →</button>
+
+      ${discount > 0 ? `
+        <div class="summary-row">
+          <span>خصم (${appliedCoupon.label})</span>
+          <span class="val" style="color:var(--success);font-weight:800">- ${formatPrice(discount)}</span>
+        </div>
+      ` : ''}
+
+      <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
+
+      <!-- Coupon -->
+      <div class="coupon-box">
+        ${appliedCoupon ? `
+          <div class="coupon-applied">
+            <span>✓ ${appliedCoupon.label} مطبق</span>
+            <button id="removeCouponBtn" type="button">إزالة</button>
+          </div>
+        ` : `
+          <div class="coupon-input-wrap">
+            <input type="text" id="couponInput" placeholder="كود الخصم" autocomplete="off">
+            <button id="applyCouponBtn" type="button">تطبيق</button>
+          </div>
+        `}
+      </div>
+
+      <button class="checkout-btn" id="checkoutBtn" type="button">إتمام الشراء →</button>
       <a href="index.html" class="continue-link">← متابعة التسوق</a>
     </div>
   `;
@@ -178,48 +385,133 @@ function renderCart() {
     row.querySelector('[data-action="minus"]')?.addEventListener('click', () => {
       if (item.qty > 1) {
         updateCartQty(id, item.qty - 1);
+        updateCartBadge();
         renderCart();
       }
     });
     row.querySelector('[data-action="plus"]')?.addEventListener('click', () => {
       updateCartQty(id, item.qty + 1);
+      updateCartBadge();
       renderCart();
     });
     row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
-      if (confirm(`حذف "${item.name}" من السلة؟`)) {
-        removeFromCart(id);
-        showToast('تم حذف المنتج', 'info');
-        renderCart();
-      }
+      showUndoToast(item, id);
     });
   });
 
-  document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
-    const user = await getCurrentUser();
-    if (!user) {
-      showToast('لازم تسجل دخول الأول', 'warning');
-      setTimeout(() => {
-        window.location.href = 'login.html?redirect=checkout.html';
-      }, 1000);
-      return;
+  // Update sticky bar (mobile)
+  document.getElementById('stickyTotal').textContent = formatPrice(total);
+
+  // Checkout handlers
+  document.getElementById('checkoutBtn')?.addEventListener('click', handleCheckout);
+  document.getElementById('stickyCheckoutBtn')?.addEventListener('click', handleCheckout);
+
+  // Coupon
+  document.getElementById('applyCouponBtn')?.addEventListener('click', () => {
+    const code = document.getElementById('couponInput').value.trim().toUpperCase();
+    if (!code) return;
+    if (COUPONS[code]) {
+      appliedCoupon = { ...COUPONS[code], code };
+      showToast(`تم تطبيق ${COUPONS[code].label} ✓`, 'success');
+      renderCart();
+    } else {
+      showToast('كود الخصم غير صالح', 'error');
     }
-    window.location.href = 'checkout.html';
+  });
+
+  document.getElementById('removeCouponBtn')?.addEventListener('click', () => {
+    appliedCoupon = null;
+    showToast('تم إزالة الخصم', 'info');
+    renderCart();
   });
 }
 
-document.getElementById('searchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
-});
+function calculateDiscount(subtotal) {
+  if (!appliedCoupon) return 0;
+  if (appliedCoupon.type === 'percent') {
+    return Math.round(subtotal * (appliedCoupon.value / 100));
+  }
+  return Math.min(appliedCoupon.value, subtotal);
+}
 
+/* ============================================
+   UNDO TOAST
+============================================ */
+function showUndoToast(item, id) {
+  // Remove immediately
+  removeFromCart(id);
+  updateCartBadge();
+
+  // Show undo toast
+  const container = document.getElementById('undoToastContainer');
+  container.innerHTML = '';
+
+  const toast = document.createElement('div');
+  toast.className = 'undo-toast';
+  toast.innerHTML = `
+    <div class="undo-toast-text">تم حذف "${item.name.substring(0, 25)}${item.name.length > 25 ? '...' : ''}"</div>
+    <button class="undo-btn" type="button">تراجع</button>
+    <div class="undo-progress"></div>
+  `;
+  container.appendChild(toast);
+
+  const timeout = setTimeout(() => {
+    toast.classList.add('out');
+    setTimeout(() => toast.remove(), 300);
+  }, 5000);
+
+  toast.querySelector('.undo-btn').addEventListener('click', () => {
+    clearTimeout(timeout);
+    addToCart(item);
+    updateCartBadge();
+    toast.remove();
+    showToast('تم استرجاع المنتج ✓', 'success');
+    renderCart();
+  });
+
+  renderCart();
+}
+
+/* ============================================
+   CHECKOUT
+============================================ */
+async function handleCheckout() {
+  // Validate stock
+  const cart = getCart();
+  const outOfStock = cart.filter(i => i.stock !== undefined && i.qty > i.stock);
+  if (outOfStock.length > 0) {
+    showToast(`"${outOfStock[0].name}" — الكمية المطلوبة أكبر من المتاح`, 'error');
+    return;
+  }
+
+  const user = await getCurrentUser();
+  if (!user) {
+    showToast('لازم تسجل دخول الأول', 'warning');
+    setTimeout(() => {
+      window.location.href = 'login.html?redirect=checkout.html';
+    }, 1000);
+    return;
+  }
+  window.location.href = 'checkout.html';
+}
+
+/* ============================================
+   HEADER SCROLL
+============================================ */
 window.addEventListener('scroll', () => {
   const header = document.getElementById('mainHeader');
   if (window.scrollY > 30) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
-});
+}, { passive: true });
 
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
 renderCart();
+setupMobileNav();
+setupMobileSearch();
 </script>
 
 </body>
