@@ -2,35 +2,86 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>حسابي - LUXE Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
       <div class="brand-tag">Premium Store</div>
     </a>
+
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة...">
+      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
+
     <div class="header-actions">
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+        🛍<span class="badge" data-cart-badge>0</span>
+      </a>
       <div id="userArea"></div>
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        ☰
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
     </div>
   </div>
 </header>
 
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:22px;letter-spacing:5px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="mobile-drawer-nav">
+    <a href="index.html">🏠 الرئيسية</a>
+    <a href="index.html#productsSection">📦 كل المنتجات</a>
+    <a href="orders.html">🧾 طلباتي</a>
+    <a href="tracking.html">🚚 تتبع الشحنة</a>
+    <a href="profile.html">👤 حسابي</a>
+  </div>
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      🛍 السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     PAGE TITLE
+============================================ -->
 <div class="container page-title-bar">
   <h1>حسابي</h1>
   <p>إدارة بياناتك وعناوينك وإعداداتك</p>
 </div>
 
+<!-- ============================================
+     PROFILE
+============================================ -->
 <div class="container profile-layout" id="profileLayout">
   <div class="profile-sidebar">
     <div class="skeleton" style="width:100px;height:100px;border-radius:50%;margin:0 auto 20px"></div>
@@ -43,6 +94,24 @@
   </div>
 </div>
 
+<!-- ============================================
+     CONFIRM MODAL
+============================================ -->
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="confirm-modal">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <h3 id="confirmTitle">هل أنت متأكد؟</h3>
+    <p id="confirmMessage">هذا الإجراء لا يمكن التراجع عنه</p>
+    <div class="confirm-actions">
+      <button class="confirm-btn cancel" id="confirmCancelBtn" type="button">إلغاء</button>
+      <button class="confirm-btn danger" id="confirmOkBtn" type="button">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -78,37 +147,154 @@
 import { api, getCurrentUser, logout } from './js/api.js';
 import { showToast, getCart, updateCartBadge } from './js/ui.js';
 
+/* ============================================
+   STATE
+============================================ */
 let currentUser = null;
 let userData = null;
 let ordersCount = 0;
 let cartCount = 0;
 let activeTab = 'overview';
+let hasUnsavedChanges = false;
 
-// ===========================================
-// User Area (Header)
-// ===========================================
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   try {
     const user = await getCurrentUser();
     if (user) {
-      const initial = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+      const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+      const initial = displayName.charAt(0).toUpperCase();
+
       userArea.innerHTML = `
         <a href="profile.html" class="user-chip" style="text-decoration:none">
-          <span>${user.displayName || user.email.split('@')[0]}</span>
+          <span>${displayName}</span>
           <div class="user-avatar">${initial}</div>
         </a>`;
+
+      if (mobileUserArea) {
+        mobileUserArea.innerHTML = `
+          <a href="profile.html" class="mobile-user-chip">
+            <div class="user-avatar">${initial}</div>
+            <div class="user-info">
+              <div class="user-name">${displayName}</div>
+              <div class="user-role">عرض الحساب</div>
+            </div>
+          </a>`;
+      }
     } else {
       userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+      if (mobileUserArea) {
+        mobileUserArea.innerHTML = `
+          <a href="login.html" class="mobile-user-chip">
+            <div class="user-avatar">👤</div>
+            <div class="user-info">
+              <div class="user-name">تسجيل الدخول</div>
+              <div class="user-role">ابدأ التسوق</div>
+            </div>
+          </a>`;
+      }
     }
   } catch {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
   }
 }
 
-// ===========================================
-// Init (with error handling)
-// ===========================================
+/* ============================================
+   MOBILE NAV / SEARCH
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+
+  const goSearch = (val) => {
+    if (val && val.trim()) window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+  };
+  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+  desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+}
+
+/* ============================================
+   CONFIRM MODAL
+============================================ */
+let confirmCallback = null;
+
+function showConfirm({ icon = '⚠️', title, message, okText = 'تأكيد', danger = true }) {
+  const modal = document.getElementById('confirmModal');
+  document.getElementById('confirmIcon').textContent = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+
+  const okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = okText;
+  okBtn.className = 'confirm-btn ' + (danger ? 'danger' : 'primary');
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  return new Promise((resolve) => {
+    confirmCallback = resolve;
+  });
+}
+
+function closeConfirm(result) {
+  document.getElementById('confirmModal').style.display = 'none';
+  document.body.style.overflow = '';
+  if (confirmCallback) {
+    confirmCallback(result);
+    confirmCallback = null;
+  }
+}
+
+document.getElementById('confirmCancelBtn').addEventListener('click', () => closeConfirm(false));
+document.getElementById('confirmOkBtn').addEventListener('click', () => closeConfirm(true));
+document.getElementById('confirmModal').addEventListener('click', (e) => {
+  if (e.target.id === 'confirmModal') closeConfirm(false);
+});
+
+/* ============================================
+   INIT
+============================================ */
 async function init() {
   try {
     currentUser = await getCurrentUser();
@@ -132,14 +318,11 @@ async function init() {
         <div style="font-size:64px;margin-bottom:16px">⚠️</div>
         <h2 style="font-size:22px;font-weight:900;margin-bottom:10px">حدث خطأ في التحميل</h2>
         <p style="color:var(--text-muted);margin-bottom:24px">${err.message || 'تعذّر تحميل البيانات'}</p>
-        <button class="btn-shop" onclick="location.reload()">إعادة المحاولة</button>
+        <button class="btn-shop" type="button" onclick="location.reload()">إعادة المحاولة</button>
       </div>`;
   }
 }
 
-// ===========================================
-// Load user data (safe)
-// ===========================================
 async function loadUserData() {
   try {
     const res = await api.auth.me();
@@ -150,20 +333,17 @@ async function loadUserData() {
     }
   } catch (err) {
     console.error('loadUserData error:', err);
-    // Fallback آمن
     userData = {
       uid: currentUser.uid,
       name: currentUser.displayName || currentUser.email?.split('@')[0] || 'مستخدم',
       email: currentUser.email || '',
       phone: '',
-      addresses: []
+      addresses: [],
+      emailVerified: currentUser.emailVerified || false
     };
   }
 }
 
-// ===========================================
-// Load orders count
-// ===========================================
 async function loadOrdersCount() {
   try {
     const res = await api.orders.getMyOrders();
@@ -173,14 +353,11 @@ async function loadOrdersCount() {
   }
 }
 
-// ===========================================
-// Render Layout
-// ===========================================
+/* ============================================
+   RENDER LAYOUT
+============================================ */
 function renderLayout() {
-  if (!userData) {
-    console.error('renderLayout: userData is missing');
-    return;
-  }
+  if (!userData) return;
 
   const layout = document.getElementById('profileLayout');
   const name = userData.name || 'مستخدم';
@@ -192,25 +369,34 @@ function renderLayout() {
       <div class="profile-avatar-big">${initial}</div>
       <div class="profile-name">${name}</div>
       <div class="profile-email">${email}</div>
+      ${!userData.emailVerified ? `
+        <div class="email-verify-badge">
+          ⚠️ البريد غير مؤكد
+        </div>
+      ` : `
+        <div class="email-verify-badge verified">
+          ✓ البريد مؤكد
+        </div>
+      `}
 
-      <nav class="profile-nav">
-        <button class="profile-nav-item ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview">
+      <nav class="profile-nav" role="tablist">
+        <button class="profile-nav-item ${activeTab === 'overview' ? 'active' : ''}" data-tab="overview" role="tab" aria-selected="${activeTab === 'overview'}">
           <span class="nav-icon">📊</span>
           <span class="nav-text">نظرة عامة</span>
         </button>
-        <button class="profile-nav-item ${activeTab === 'info' ? 'active' : ''}" data-tab="info">
+        <button class="profile-nav-item ${activeTab === 'info' ? 'active' : ''}" data-tab="info" role="tab" aria-selected="${activeTab === 'info'}">
           <span class="nav-icon">👤</span>
           <span class="nav-text">البيانات الشخصية</span>
         </button>
-        <button class="profile-nav-item ${activeTab === 'addresses' ? 'active' : ''}" data-tab="addresses">
+        <button class="profile-nav-item ${activeTab === 'addresses' ? 'active' : ''}" data-tab="addresses" role="tab" aria-selected="${activeTab === 'addresses'}">
           <span class="nav-icon">📍</span>
           <span class="nav-text">العناوين</span>
         </button>
-        <button class="profile-nav-item ${activeTab === 'security' ? 'active' : ''}" data-tab="security">
+        <button class="profile-nav-item ${activeTab === 'security' ? 'active' : ''}" data-tab="security" role="tab" aria-selected="${activeTab === 'security'}">
           <span class="nav-icon">🔒</span>
           <span class="nav-text">الأمان</span>
         </button>
-        <button class="profile-nav-item logout" id="logoutBtn">
+        <button class="profile-nav-item logout" id="logoutBtn" type="button">
           <span class="nav-icon">🚪</span>
           <span class="nav-text">تسجيل الخروج</span>
         </button>
@@ -222,8 +408,24 @@ function renderLayout() {
 
   layout.querySelectorAll('.profile-nav-item[data-tab]').forEach(btn => {
     btn.addEventListener('click', () => {
-      activeTab = btn.dataset.tab;
-      renderLayout();
+      if (hasUnsavedChanges) {
+        showConfirm({
+          icon: '⚠️',
+          title: 'تغييرات غير محفوظة',
+          message: 'فيه تعديلات مش محفوظة — هتفقدها لو غيرت الصفحة. متأكد؟',
+          okText: 'نعم، تجاهل',
+          danger: true
+        }).then(ok => {
+          if (ok) {
+            hasUnsavedChanges = false;
+            activeTab = btn.dataset.tab;
+            renderLayout();
+          }
+        });
+      } else {
+        activeTab = btn.dataset.tab;
+        renderLayout();
+      }
     });
   });
 
@@ -232,9 +434,9 @@ function renderLayout() {
   renderContent();
 }
 
-// ===========================================
-// Render Content
-// ===========================================
+/* ============================================
+   RENDER CONTENT
+============================================ */
 function renderContent() {
   const content = document.getElementById('profileContent');
   if (!content) return;
@@ -247,7 +449,7 @@ function renderContent() {
   attachContentHandlers();
 }
 
-// ---------- Overview ----------
+/* ---------- Overview ---------- */
 function renderOverview() {
   return `
     <div class="profile-section">
@@ -269,43 +471,75 @@ function renderOverview() {
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-        <a href="orders.html" class="btn-shop" style="padding:12px 24px">📋 طلباتي</a>
-        <a href="cart.html" class="btn-shop" style="padding:12px 24px;background:var(--paper-2);color:var(--ink);box-shadow:none">🛒 السلة</a>
-        <a href="index.html" class="btn-shop" style="padding:12px 24px;background:var(--paper-2);color:var(--ink);box-shadow:none">🛍 تسوق</a>
+      <div class="quick-actions">
+        <a href="orders.html" class="quick-action primary">
+          <span class="qa-icon">📋</span>
+          <span class="qa-text">طلباتي</span>
+        </a>
+        <a href="cart.html" class="quick-action">
+          <span class="qa-icon">🛒</span>
+          <span class="qa-text">السلة</span>
+        </a>
+        <a href="tracking.html" class="quick-action">
+          <span class="qa-icon">🚚</span>
+          <span class="qa-text">تتبع</span>
+        </a>
+        <a href="index.html" class="quick-action">
+          <span class="qa-icon">🛍</span>
+          <span class="qa-text">تسوق</span>
+        </a>
+      </div>
+
+      <div class="profile-info-rows">
+        <div class="profile-info-row">
+          <span class="lbl">📧 البريد</span>
+          <span class="val">${userData.email || '—'}</span>
+        </div>
+        <div class="profile-info-row">
+          <span class="lbl">📱 الموبايل</span>
+          <span class="val">${userData.phone || 'لم يُضف بعد'}</span>
+        </div>
       </div>
     </div>`;
 }
 
-// ---------- Info ----------
+/* ---------- Info ---------- */
 function renderInfo() {
   return `
     <div class="profile-section">
       <h2>👤 البيانات الشخصية</h2>
       <p class="subtitle">عدّل بياناتك الأساسية</p>
 
-      <form class="profile-form" id="infoForm">
+      <form class="profile-form" id="infoForm" novalidate>
         <div class="form-group" id="fg-name">
-          <label>الاسم بالكامل</label>
-          <input type="text" id="p-name" value="${userData.name || ''}">
+          <label>الاسم بالكامل <span class="req">*</span></label>
+          <input type="text" id="p-name" value="${userData.name || ''}" autocomplete="name" autofocus>
           <div class="form-error">الاسم لازم 3 أحرف على الأقل</div>
         </div>
         <div class="form-group">
           <label>البريد الإلكتروني</label>
           <input type="email" value="${userData.email || ''}" disabled style="background:var(--paper-2);cursor:not-allowed">
+          <div class="form-hint">لا يمكن تغيير البريد — تواصل مع الدعم لو محتاج</div>
         </div>
         <div class="form-group" id="fg-phone">
           <label>رقم الموبايل</label>
-          <input type="tel" id="p-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx">
+          <input type="tel" id="p-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx" inputmode="numeric" autocomplete="tel" maxlength="11">
           <div class="form-error">رقم غير صحيح (11 رقم يبدأ بـ 01)</div>
         </div>
 
-        <button type="submit" class="btn-save" id="saveInfoBtn">💾 حفظ التعديلات</button>
+        <div class="form-actions-row">
+          <button type="submit" class="btn-save" id="saveInfoBtn">
+            <span class="btn-text">💾 حفظ التعديلات</span>
+            <span class="btn-loading" style="display:none">
+              <span class="loading-spinner"></span> جاري الحفظ...
+            </span>
+          </button>
+        </div>
       </form>
     </div>`;
 }
 
-// ---------- Addresses ----------
+/* ---------- Addresses ---------- */
 function renderAddresses() {
   const addresses = userData.addresses || [];
 
@@ -313,19 +547,30 @@ function renderAddresses() {
     <div class="empty-addr">
       <div class="emoji">📍</div>
       <div>مفيش عناوين محفوظة بعد</div>
+      <p style="font-size:12px;margin-top:6px">أضف عنوانك الأول لتسريع عملية الشراء</p>
     </div>` : `
     <div class="addresses-list">
       ${addresses.map(a => `
-        <div class="address-card">
+        <div class="address-card ${a.isDefault ? 'is-default' : ''}">
           <div class="address-info">
-            ${a.isDefault ? `<span class="label-badge">الافتراضي</span>` : ''}
+            ${a.isDefault ? `<span class="label-badge">⭐ الافتراضي</span>` : ''}
             <p>
               <strong>${a.name || userData.name || ''}</strong><br>
+              ${a.phone ? `${a.phone}<br>` : ''}
               ${a.street || ''}${a.building ? `, مبنى ${a.building}` : ''}${a.apartment ? `, شقة ${a.apartment}` : ''}<br>
               ${a.area || ''}, ${a.city || ''}
             </p>
           </div>
-          <button class="delete-addr-btn" data-addr-id="${a.id}" title="حذف">🗑</button>
+          <div class="address-actions">
+            ${!a.isDefault ? `
+              <button class="addr-btn" data-action="default" data-addr-id="${a.id}" type="button" title="تعيين كافتراضي">
+                ⭐
+              </button>
+            ` : ''}
+            <button class="addr-btn danger" data-action="delete" data-addr-id="${a.id}" type="button" title="حذف">
+              🗑
+            </button>
+          </div>
         </div>
       `).join('')}
     </div>`;
@@ -339,7 +584,7 @@ function renderAddresses() {
 
       <div class="add-address-box">
         <h4>➕ إضافة عنوان جديد</h4>
-        <form id="addrForm">
+        <form id="addrForm" novalidate>
           <div class="form-row-2">
             <div class="form-group">
               <label>الاسم المستلم</label>
@@ -347,7 +592,7 @@ function renderAddresses() {
             </div>
             <div class="form-group">
               <label>الموبايل</label>
-              <input type="tel" id="a-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx">
+              <input type="tel" id="a-phone" value="${userData.phone || ''}" placeholder="01xxxxxxxxx" inputmode="numeric" maxlength="11">
             </div>
           </div>
           <div class="form-row-2">
@@ -377,13 +622,18 @@ function renderAddresses() {
               <input type="text" id="a-apartment" placeholder="3">
             </div>
           </div>
-          <button type="submit" class="btn-save" id="saveAddrBtn">➕ إضافة العنوان</button>
+          <button type="submit" class="btn-save" id="saveAddrBtn">
+            <span class="btn-text">➕ إضافة العنوان</span>
+            <span class="btn-loading" style="display:none">
+              <span class="loading-spinner"></span> جاري الإضافة...
+            </span>
+          </button>
         </form>
       </div>
     </div>`;
 }
 
-// ---------- Security ----------
+/* ---------- Security ---------- */
 function renderSecurity() {
   return `
     <div class="profile-section">
@@ -394,13 +644,26 @@ function renderSecurity() {
         🔐 لتغيير كلمة السر، هيتبعتلك رابط على بريدك الإلكتروني (<strong>${userData.email || currentUser?.email || ''}</strong>)
       </div>
 
-      <button class="btn-save" id="resetPassBtn">📧 إرسال رابط تغيير كلمة السر</button>
+      <button class="btn-save" id="resetPassBtn" type="button">
+        <span class="btn-text">📧 إرسال رابط تغيير كلمة السر</span>
+        <span class="btn-loading" style="display:none">
+          <span class="loading-spinner"></span> جاري الإرسال...
+        </span>
+      </button>
+
+      <div class="danger-zone">
+        <h4>⚠️ منطقة الخطر</h4>
+        <p>هذه الإجراءات لا يمكن التراجع عنها</p>
+        <button class="danger-btn" id="deleteAccountBtn" type="button">
+          🗑 حذف الحساب نهائياً
+        </button>
+      </div>
     </div>`;
 }
 
-// ===========================================
-// Content Handlers
-// ===========================================
+/* ============================================
+   CONTENT HANDLERS
+============================================ */
 function attachContentHandlers() {
   // Info form
   document.getElementById('infoForm')?.addEventListener('submit', async (e) => {
@@ -408,6 +671,8 @@ function attachContentHandlers() {
     const name = document.getElementById('p-name').value.trim();
     const phone = document.getElementById('p-phone').value.trim();
     const btn = document.getElementById('saveInfoBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoading = btn.querySelector('.btn-loading');
 
     document.getElementById('fg-name').classList.remove('error');
     document.getElementById('fg-phone').classList.remove('error');
@@ -418,26 +683,33 @@ function attachContentHandlers() {
     if (!valid) return showToast('صحح الأخطاء', 'error');
 
     btn.disabled = true;
-    btn.textContent = 'جاري الحفظ...';
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline-flex';
 
     try {
       await api.auth.updateProfile({ name, phone });
       userData.name = name;
       userData.phone = phone;
+      hasUnsavedChanges = false;
       showToast('تم حفظ التعديلات ✓', 'success');
       setTimeout(() => renderLayout(), 400);
     } catch (err) {
       showToast(err.message || 'فشل الحفظ', 'error');
       btn.disabled = false;
-      btn.textContent = '💾 حفظ التعديلات';
+      btnText.style.display = 'inline';
+      btnLoading.style.display = 'none';
     }
   });
+
+  // Live tracking of unsaved changes
+  document.getElementById('p-name')?.addEventListener('input', () => { hasUnsavedChanges = true; });
+  document.getElementById('p-phone')?.addEventListener('input', () => { hasUnsavedChanges = true; });
 
   // Add address
   document.getElementById('addrForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const addr = {
-      id: 'addr_' + Date.now(),
+      id: (crypto.randomUUID && crypto.randomUUID()) || ('addr_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9)),
       name: document.getElementById('a-name').value.trim(),
       phone: document.getElementById('a-phone').value.trim(),
       city: document.getElementById('a-city').value,
@@ -455,8 +727,11 @@ function attachContentHandlers() {
 
     const newAddresses = [...(userData.addresses || []), addr];
     const btn = document.getElementById('saveAddrBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoading = btn.querySelector('.btn-loading');
     btn.disabled = true;
-    btn.textContent = 'جاري الإضافة...';
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline-flex';
 
     try {
       await api.auth.updateProfile({ addresses: newAddresses });
@@ -466,24 +741,59 @@ function attachContentHandlers() {
     } catch (err) {
       showToast(err.message || 'فشل الإضافة', 'error');
       btn.disabled = false;
-      btn.textContent = '➕ إضافة العنوان';
+      btnText.style.display = 'inline';
+      btnLoading.style.display = 'none';
     }
   });
 
-  // Delete address
-  document.querySelectorAll('.delete-addr-btn').forEach(btn => {
+  // Address actions (delete / set default)
+  document.querySelectorAll('.addr-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('حذف هذا العنوان؟')) return;
       const addrId = btn.dataset.addrId;
-      const newAddresses = (userData.addresses || []).filter(a => a.id !== addrId);
+      const action = btn.dataset.action;
 
-      try {
-        await api.auth.updateProfile({ addresses: newAddresses });
-        userData.addresses = newAddresses;
-        showToast('تم حذف العنوان', 'info');
-        renderContent();
-      } catch (err) {
-        showToast(err.message || 'فشل الحذف', 'error');
+      if (action === 'delete') {
+        const ok = await showConfirm({
+          icon: '🗑',
+          title: 'حذف العنوان',
+          message: 'هل تريد حذف هذا العنوان نهائياً؟',
+          okText: 'نعم، احذف',
+          danger: true
+        });
+        if (!ok) return;
+
+        const newAddresses = (userData.addresses || []).filter(a => a.id !== addrId);
+        // If deleted was default and there are others, set first as default
+        if (newAddresses.length > 0 && !newAddresses.some(a => a.isDefault)) {
+          newAddresses[0].isDefault = true;
+        }
+
+        btn.disabled = true;
+        try {
+          await api.auth.updateProfile({ addresses: newAddresses });
+          userData.addresses = newAddresses;
+          showToast('تم حذف العنوان', 'success');
+          renderContent();
+        } catch (err) {
+          showToast(err.message || 'فشل الحذف', 'error');
+          btn.disabled = false;
+        }
+      } else if (action === 'default') {
+        const newAddresses = (userData.addresses || []).map(a => ({
+          ...a,
+          isDefault: a.id === addrId
+        }));
+
+        btn.disabled = true;
+        try {
+          await api.auth.updateProfile({ addresses: newAddresses });
+          userData.addresses = newAddresses;
+          showToast('تم تعيين العنوان الافتراضي ✓', 'success');
+          renderContent();
+        } catch (err) {
+          showToast(err.message || 'فشل التعيين', 'error');
+          btn.disabled = false;
+        }
       }
     });
   });
@@ -491,8 +801,11 @@ function attachContentHandlers() {
   // Reset password
   document.getElementById('resetPassBtn')?.addEventListener('click', async () => {
     const btn = document.getElementById('resetPassBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const btnLoading = btn.querySelector('.btn-loading');
     btn.disabled = true;
-    btn.textContent = 'جاري الإرسال...';
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline-flex';
 
     try {
       const { auth, sendPasswordResetEmail } = await import('./js/firebase-config.js');
@@ -502,16 +815,48 @@ function attachContentHandlers() {
       showToast('فشل الإرسال', 'error');
     } finally {
       btn.disabled = false;
-      btn.textContent = '📧 إرسال رابط تغيير كلمة السر';
+      btnText.style.display = 'inline';
+      btnLoading.style.display = 'none';
+    }
+  });
+
+  // Delete account
+  document.getElementById('deleteAccountBtn')?.addEventListener('click', async () => {
+    const ok = await showConfirm({
+      icon: '⚠️',
+      title: 'حذف الحساب نهائياً',
+      message: 'كل بياناتك (طلبات، عناوين، سجل) هتتمسح للأبد. هذا الإجراء لا يمكن التراجع عنه.',
+      okText: 'نعم، احذف حسابي',
+      danger: true
+    });
+    if (!ok) return;
+
+    try {
+      if (api.auth.deleteAccount) {
+        await api.auth.deleteAccount();
+      }
+      await logout();
+      showToast('تم حذف الحساب', 'info');
+      setTimeout(() => window.location.href = 'index.html', 800);
+    } catch (err) {
+      showToast(err.message || 'فشل الحذف — تواصل مع الدعم', 'error');
     }
   });
 }
 
-// ===========================================
-// Logout
-// ===========================================
+/* ============================================
+   LOGOUT
+============================================ */
 async function handleLogout() {
-  if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+  const ok = await showConfirm({
+    icon: '🚪',
+    title: 'تسجيل الخروج',
+    message: 'هل تريد تسجيل الخروج من حسابك؟',
+    okText: 'نعم، سجل خروج',
+    danger: false
+  });
+  if (!ok) return;
+
   try {
     await logout();
     showToast('تم تسجيل الخروج', 'info');
@@ -521,24 +866,22 @@ async function handleLogout() {
   }
 }
 
-// ===========================================
-// Search
-// ===========================================
-document.getElementById('searchInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
-});
-
+/* ============================================
+   HEADER SCROLL
+============================================ */
 window.addEventListener('scroll', () => {
   const header = document.getElementById('mainHeader');
   if (window.scrollY > 30) header.classList.add('scrolled');
   else header.classList.remove('scrolled');
-});
+}, { passive: true });
 
-// ===========================================
-// Init
-// ===========================================
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
+setupMobileNav();
+setupMobileSearch();
 init();
 </script>
 
