@@ -2,78 +2,1145 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>إنشاء حساب - LUXE Store</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       LUXE REGISTER — PREMIUM DESIGN
+    ============================================ */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --gold: #c9a961;
+      --gold-light: #e8d5a3;
+      --gold-dark: #a8894a;
+      --ink: #0a0e17;
+      --ink-2: #131826;
+      --ink-3: #1c2233;
+      --paper: #faf9f6;
+      --text: #1a1a1a;
+      --text-muted: #6b7280;
+      --line: #e5e3dd;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 14px;
+      --shadow-gold: 0 8px 30px rgba(201, 169, 97, .35);
+    }
+
+    html, body {
+      height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: inherit;
+      touch-action: manipulation;
+    }
+
+    input {
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ============================================
+       ANIMATED BACKGROUND
+    ============================================ */
+    .bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(201, 169, 97, .18), transparent 55%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, .12), transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, .05), transparent 60%),
+        linear-gradient(135deg, #0a0e17 0%, #131826 50%, #0a0e17 100%);
+    }
+
+    .bg-canvas::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201, 169, 97, .04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 97, .04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: .5;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(201, 169, 97, .5), transparent 70%);
+      top: -100px;
+      right: -100px;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(139, 92, 246, .35), transparent 70%);
+      bottom: -200px;
+      left: -150px;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(59, 130, 246, .25), transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation-delay: -14s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(30px, -40px) scale(1.1); }
+      66%      { transform: translate(-20px, 30px) scale(.95); }
+    }
+
+    /* ============================================
+       LAYOUT
+    ============================================ */
+    .register-page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 24px;
+    }
+
+    /* ============================================
+       LEFT PANEL — SHOWCASE
+    ============================================ */
+    .register-showcase {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px 48px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(201, 169, 97, .15), transparent 60%),
+        radial-gradient(circle at 70% 80%, rgba(139, 92, 246, .1), transparent 60%),
+        linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      border: 1px solid rgba(201, 169, 97, .15);
+      box-shadow:
+        0 40px 100px rgba(0, 0, 0, .5),
+        inset 0 1px 0 rgba(255, 255, 255, .05);
+    }
+
+    .register-showcase::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201, 169, 97, .03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 169, 97, .03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+      mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+      pointer-events: none;
+    }
+
+    .register-showcase::after {
+      content: '';
+      position: absolute;
+      top: 20%;
+      right: 10%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(201, 169, 97, .3), transparent 70%);
+      border-radius: 50%;
+      filter: blur(60px);
+      animation: pulse-glow 4s infinite ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: .5; transform: scale(1); }
+      50%      { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Brand */
+    .showcase-brand {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .showcase-brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 8px 24px rgba(201, 169, 97, .4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .showcase-brand-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, .4) 50%, transparent 60%);
+      animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+      0%   { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(200%) rotate(45deg); }
+    }
+
+    .showcase-brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .showcase-brand-name {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .showcase-brand-tag {
+      font-size: 9.5px;
+      letter-spacing: 3px;
+      color: rgba(201, 169, 97, .6);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    /* Middle content */
+    .showcase-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .showcase-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px;
+      background: rgba(201, 169, 97, .1);
+      border: 1px solid rgba(201, 169, 97, .3);
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      width: fit-content;
+    }
+
+    .showcase-eyebrow::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--gold);
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: .3; }
+    }
+
+    .showcase-headline {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      color: #fff;
+    }
+
+    .showcase-headline em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      padding: 0 4px;
+    }
+
+    .showcase-subtitle {
+      font-size: 15.5px;
+      color: #a0a5b5;
+      line-height: 1.8;
+      max-width: 460px;
+    }
+
+    /* Perks grid */
+    .showcase-perks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .perk-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid rgba(201, 169, 97, .15);
+      border-radius: 12px;
+      transition: .3s;
+    }
+
+    .perk-card:hover {
+      background: rgba(201, 169, 97, .08);
+      border-color: rgba(201, 169, 97, .3);
+      transform: translateY(-2px);
+    }
+
+    .perk-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(201, 169, 97, .12);
+      border: 1px solid rgba(201, 169, 97, .25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .perk-text {
+      font-size: 12.5px;
+      color: #c5c9d3;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    /* Trust stats */
+    .showcase-trust {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(201, 169, 97, .15);
+      flex-wrap: wrap;
+    }
+
+    .trust-item {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .trust-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -12px;
+      top: 4px;
+      bottom: 4px;
+      width: 1px;
+      background: rgba(201, 169, 97, .2);
+    }
+
+    .trust-item-value {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .trust-item-label {
+      font-size: 10.5px;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 700;
+    }
+
+    /* ============================================
+       RIGHT PANEL — FORM
+    ============================================ */
+    .register-form-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      position: relative;
+    }
+
+    .register-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(250, 249, 246, .96);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-radius: 28px;
+      padding: 40px 36px;
+      border: 1px solid rgba(201, 169, 97, .2);
+      box-shadow:
+        0 40px 100px rgba(0, 0, 0, .4),
+        inset 0 1px 0 rgba(255, 255, 255, .5);
+      position: relative;
+      overflow: hidden;
+      animation: card-in .7s cubic-bezier(.2, .9, .3, 1.1);
+      max-height: 95vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+
+    .register-card::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .register-card::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 3px;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(30px) scale(.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .register-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      animation: slide-border 3s infinite;
+    }
+
+    @keyframes slide-border {
+      0%, 100% { transform: translateX(-100%); }
+      50%      { transform: translateX(100%); }
+    }
+
+    /* Mobile brand */
+    .register-mobile-brand {
+      display: none;
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(201, 169, 97, .15);
+    }
+
+    .register-mobile-brand .showcase-brand-name {
+      color: var(--gold-dark);
+      font-size: 24px;
+      letter-spacing: 5px;
+    }
+
+    .register-mobile-brand .showcase-brand-tag {
+      color: var(--gold-dark);
+    }
+
+    /* Head */
+    .register-head {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .register-head-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 14px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 12px 32px rgba(201, 169, 97, .4);
+      animation: icon-float 3s infinite ease-in-out;
+    }
+
+    @keyframes icon-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
+    }
+
+    .register-head h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--ink);
+      margin-bottom: 4px;
+      letter-spacing: -.5px;
+    }
+
+    .register-head p {
+      font-size: 13.5px;
+      color: #6b7280;
+    }
+
+    /* Form groups */
+    .form-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 7px;
+      letter-spacing: .3px;
+    }
+
+    .form-group label .req {
+      color: var(--danger);
+      margin-right: 2px;
+    }
+
+    .form-group label .opt {
+      color: #9a9a9a;
+      font-size: 11px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 15px;
+      color: var(--gold-dark);
+      pointer-events: none;
+      transition: .2s;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 44px 14px 44px;
+      border: 1.5px solid #e5e3dd;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--ink);
+      background: #fff;
+      transition: all .25s;
+    }
+
+    .form-group input::placeholder {
+      color: #b8b8b8;
+      font-size: 13px;
+    }
+
+    .form-group input:focus {
+      border-color: var(--gold);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(201, 169, 97, .12);
+    }
+
+    .form-group input:focus ~ .input-icon {
+      color: var(--gold);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .toggle-password-btn {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #6b7280;
+      background: transparent;
+      transition: .2s;
+    }
+
+    .toggle-password-btn:hover {
+      background: rgba(201, 169, 97, .1);
+      color: var(--gold-dark);
+    }
+
+    /* Password strength */
+    .password-strength {
+      margin-top: 6px;
+      display: flex;
+      gap: 4px;
+    }
+
+    .strength-bar {
+      height: 3px;
+      flex: 1;
+      background: #e5e3dd;
+      border-radius: 2px;
+      transition: .3s;
+    }
+
+    .strength-bar.active-weak { background: var(--danger); }
+    .strength-bar.active-medium { background: #f59e0b; }
+    .strength-bar.active-strong { background: var(--success); }
+
+    .strength-label {
+      margin-top: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .form-error {
+      color: var(--danger);
+      font-size: 11.5px;
+      margin-top: 6px;
+      font-weight: 600;
+      display: none;
+      padding-right: 4px;
+    }
+
+    .form-group.error input {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, .02);
+      animation: shake .35s;
+    }
+
+    .form-group.error .form-error {
+      display: block;
+    }
+
+    .form-group.error .input-icon {
+      color: var(--danger);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+
+    /* Terms checkbox */
+    .terms-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(201, 169, 97, .05);
+      border: 1px solid rgba(201, 169, 97, .15);
+      border-radius: 10px;
+    }
+
+    .terms-box input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--gold-dark);
+      margin-top: 2px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .terms-box label {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.6;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .terms-box label a {
+      color: var(--gold-dark);
+      font-weight: 800;
+      text-decoration: underline;
+    }
+
+    .terms-box.error {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, .04);
+      animation: shake .35s;
+    }
+
+    .terms-error {
+      color: var(--danger);
+      font-size: 11.5px;
+      font-weight: 600;
+      margin-top: -12px;
+      margin-bottom: 16px;
+      display: none;
+      padding-right: 12px;
+    }
+
+    .terms-error.show {
+      display: block;
+    }
+
+    /* Submit */
+    .btn-register {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--ink) 0%, var(--ink-3) 100%);
+      color: var(--gold);
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .5px;
+      transition: all .3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 54px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-register::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      opacity: 0;
+      transition: opacity .3s;
+      z-index: -1;
+    }
+
+    .btn-register:hover:not(:disabled) {
+      color: var(--ink);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .btn-register:hover:not(:disabled)::before {
+      opacity: 1;
+    }
+
+    .btn-register:disabled {
+      opacity: .7;
+      cursor: not-allowed;
+    }
+
+    /* Switch */
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .auth-switch a {
+      color: var(--gold-dark);
+      font-weight: 800;
+      transition: .2s;
+    }
+
+    .auth-switch a:hover {
+      color: var(--gold);
+    }
+
+    /* Footer */
+    .auth-footer {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(201, 169, 97, .1);
+      font-size: 10.5px;
+      color: #9a9a9a;
+    }
+
+    /* Loading */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(201, 169, 97, .3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ============================================
+       RESPONSIVE
+    ============================================ */
+    @media (max-width: 1024px) {
+      .register-page {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .register-showcase {
+        display: none;
+      }
+
+      .register-mobile-brand {
+        display: block;
+      }
+
+      .register-form-panel {
+        padding: 0;
+        min-height: calc(100vh - 40px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .register-page {
+        padding: 0;
+      }
+
+      .register-form-panel {
+        min-height: 100vh;
+        min-height: 100dvh;
+        padding: 20px 16px max(20px, env(safe-area-inset-bottom, 0px));
+        align-items: flex-start;
+        padding-top: 24px;
+      }
+
+      .register-card {
+        max-width: 100%;
+        padding: 28px 20px;
+        border-radius: 20px;
+        max-height: none;
+        overflow-y: visible;
+      }
+
+      .register-head h1 {
+        font-size: 22px;
+      }
+
+      .register-head p {
+        font-size: 12.5px;
+      }
+
+      .register-head-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        margin-bottom: 12px;
+      }
+
+      .form-group {
+        margin-bottom: 14px;
+      }
+
+      .form-group input {
+        padding: 13px 42px 13px 42px;
+        font-size: 15px;
+      }
+
+      .form-group input::placeholder {
+        font-size: 12.5px;
+      }
+
+      .form-group label {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .register-card {
+        padding: 22px 16px;
+      }
+
+      .register-head h1 {
+        font-size: 20px;
+      }
+
+      .terms-box label {
+        font-size: 11px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<div class="auth-page">
-  <div class="auth-side">
-    <div>
-      <div class="auth-brand">LUXE</div>
-      <div class="auth-brand-tag">Premium Store</div>
-    </div>
-    <div>
-      <h2>ابدأ رحلتك<br>في <span>عالم الفخامة</span></h2>
-      <p>انضم لآلاف العملاء الذين يثقون في LUXE لتجربة تسوق استثنائية</p>
-      <div class="auth-side-features">
-        <div class="auth-side-feature"><span class="dot"></span> منتجات أصلية 100%</div>
-        <div class="auth-side-feature"><span class="dot"></span> شحن سريع خلال 24 ساعة</div>
-        <div class="auth-side-feature"><span class="dot"></span> إرجاع مجاني خلال 14 يوم</div>
-        <div class="auth-side-feature"><span class="dot"></span> دعم على مدار الساعة</div>
+<!-- ANIMATED BG -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<div class="register-page">
+
+  <!-- ============================================
+       LEFT — SHOWCASE
+  ============================================ -->
+  <aside class="register-showcase">
+    <div class="showcase-brand">
+      <div class="showcase-brand-icon">✦</div>
+      <div class="showcase-brand-text">
+        <div class="showcase-brand-name">LUXE</div>
+        <div class="showcase-brand-tag">Premium Store</div>
       </div>
     </div>
-    <div style="font-size:12px;color:#6b7280;">© 2025 LUXE Premium Store</div>
-  </div>
 
-  <div class="auth-form-wrap">
-    <form class="auth-form" id="registerForm" novalidate>
-      <h1>إنشاء حساب جديد</h1>
-      <p>املأ البيانات لتبدأ التسوق</p>
+    <div class="showcase-content">
+      <div class="showcase-eyebrow">Join the Club</div>
+      <h2 class="showcase-headline">
+        ابدأ رحلتك<br>
+        في عالم <em>الفخامة</em>
+      </h2>
+      <p class="showcase-subtitle">
+        انضم لآلاف العملاء الذين يثقون في LUXE لتجربة تسوق استثنائية — منتجات أصلية، عروض حصرية، وخدمة تليق بيك.
+      </p>
 
-      <div class="form-group" id="fg-name">
-        <label for="name">الاسم بالكامل <span class="req">*</span></label>
-        <input type="text" id="name" placeholder="أدخل اسمك الكامل" autocomplete="name">
-        <div class="form-error">الاسم لازم يكون 3 أحرف على الأقل</div>
+      <div class="showcase-perks">
+        <div class="perk-card">
+          <div class="perk-icon">✓</div>
+          <div class="perk-text">منتجات أصلية 100%</div>
+        </div>
+        <div class="perk-card">
+          <div class="perk-icon">🚚</div>
+          <div class="perk-text">شحن سريع خلال 24 ساعة</div>
+        </div>
+        <div class="perk-card">
+          <div class="perk-icon">↩</div>
+          <div class="perk-text">إرجاع مجاني 14 يوم</div>
+        </div>
+        <div class="perk-card">
+          <div class="perk-icon">💬</div>
+          <div class="perk-text">دعم على مدار الساعة</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-trust">
+      <div class="trust-item">
+        <div class="trust-item-value">50K+</div>
+        <div class="trust-item-label">عميل سعيد</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-item-value">4.9</div>
+        <div class="trust-item-label">تقييم</div>
+      </div>
+      <div class="trust-item">
+        <div class="trust-item-value">99%</div>
+        <div class="trust-item-label">رضا العملاء</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================
+       RIGHT — FORM
+  ============================================ -->
+  <main class="register-form-panel">
+    <div class="register-card">
+
+      <div class="register-mobile-brand">
+        <div class="showcase-brand-name">LUXE</div>
+        <div class="showcase-brand-tag">Premium Store</div>
       </div>
 
-      <div class="form-group" id="fg-email">
-        <label for="email">البريد الإلكتروني <span class="req">*</span></label>
-        <input type="email" id="email" placeholder="example@email.com" autocomplete="email">
-        <div class="form-error">البريد الإلكتروني غير صحيح</div>
+      <div class="register-head">
+        <div class="register-head-icon">✦</div>
+        <h1>إنشاء حساب جديد</h1>
+        <p>انضم إلينا في أقل من دقيقة</p>
       </div>
 
-      <div class="form-group" id="fg-phone">
-        <label for="phone">رقم الموبايل</label>
-        <input type="tel" id="phone" placeholder="01xxxxxxxxx" autocomplete="tel">
-        <div class="form-error">رقم الموبايل لازم 11 رقم يبدأ بـ 01</div>
+      <form id="registerForm" novalidate>
+
+        <div class="form-group" id="fg-name">
+          <label for="name">الاسم بالكامل <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="text"
+              id="name"
+              placeholder="أدخل اسمك الكامل"
+              autocomplete="name"
+              autofocus
+            >
+            <span class="input-icon">👤</span>
+          </div>
+          <div class="form-error">الاسم لازم يكون 3 أحرف على الأقل</div>
+        </div>
+
+        <div class="form-group" id="fg-email">
+          <label for="email">البريد الإلكتروني <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="email"
+              id="email"
+              placeholder="example@email.com"
+              autocomplete="email"
+              inputmode="email"
+              autocapitalize="none"
+              spellcheck="false"
+            >
+            <span class="input-icon">✉</span>
+          </div>
+          <div class="form-error">البريد الإلكتروني غير صحيح</div>
+        </div>
+
+        <div class="form-group" id="fg-phone">
+          <label for="phone">رقم الموبايل <span class="opt">(اختياري)</span></label>
+          <div class="input-wrap">
+            <input
+              type="tel"
+              id="phone"
+              placeholder="01xxxxxxxxx"
+              autocomplete="tel"
+              inputmode="numeric"
+              maxlength="11"
+            >
+            <span class="input-icon">📱</span>
+          </div>
+          <div class="form-error">رقم الموبايل لازم 11 رقم يبدأ بـ 01</div>
+        </div>
+
+        <div class="form-group" id="fg-password">
+          <label for="password">كلمة السر <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="password"
+              placeholder="6 أحرف على الأقل"
+              autocomplete="new-password"
+            >
+            <span class="input-icon">🔒</span>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              id="togglePasswordBtn"
+              data-target="password"
+              aria-label="إظهار كلمة السر"
+            >👁️</button>
+          </div>
+          <div class="password-strength" id="passwordStrength" style="display:none">
+            <div class="strength-bar" data-bar="1"></div>
+            <div class="strength-bar" data-bar="2"></div>
+            <div class="strength-bar" data-bar="3"></div>
+            <div class="strength-bar" data-bar="4"></div>
+          </div>
+          <div class="strength-label" id="strengthLabel" style="display:none"></div>
+          <div class="form-error">كلمة السر لازم 6 أحرف على الأقل</div>
+        </div>
+
+        <div class="form-group" id="fg-confirm">
+          <label for="confirm">تأكيد كلمة السر <span class="req">*</span></label>
+          <div class="input-wrap">
+            <input
+              type="password"
+              id="confirm"
+              placeholder="أعد كتابة كلمة السر"
+              autocomplete="new-password"
+            >
+            <span class="input-icon">🔒</span>
+            <button
+              type="button"
+              class="toggle-password-btn"
+              id="toggleConfirmBtn"
+              data-target="confirm"
+              aria-label="إظهار تأكيد كلمة السر"
+            >👁️</button>
+          </div>
+          <div class="form-error">كلمات السر غير متطابقة</div>
+        </div>
+
+        <div class="terms-box" id="termsBox">
+          <input type="checkbox" id="terms" aria-label="أوافق على الشروط">
+          <label for="terms">
+            أوافق على <a href="#" target="_blank">الشروط والأحكام</a> و <a href="#" target="_blank">سياسة الخصوصية</a>
+          </label>
+        </div>
+        <div class="terms-error" id="termsError">لازم توافق على الشروط للمتابعة</div>
+
+        <button type="submit" class="btn-register" id="submitBtn">
+          <span class="btn-text">إنشاء الحساب</span>
+          <span class="btn-loading" style="display:none">
+            <span class="loading-spinner"></span> جاري الإنشاء...
+          </span>
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        عندك حساب بالفعل؟ <a href="login.html">سجل دخول</a>
       </div>
 
-      <div class="form-group" id="fg-password">
-        <label for="password">كلمة السر <span class="req">*</span></label>
-        <input type="password" id="password" placeholder="6 أحرف على الأقل" autocomplete="new-password">
-        <div class="form-error">كلمة السر لازم 6 أحرف على الأقل</div>
+      <div class="auth-footer">
+        © 2025 LUXE Store • جميع الحقوق محفوظة
       </div>
-
-      <div class="form-group" id="fg-confirm">
-        <label for="confirm">تأكيد كلمة السر <span class="req">*</span></label>
-        <input type="password" id="confirm" placeholder="أعد كتابة كلمة السر" autocomplete="new-password">
-        <div class="form-error">كلمات السر غير متطابقة</div>
-      </div>
-
-      <button type="submit" class="btn-primary" id="submitBtn">إنشاء الحساب</button>
-
-      <div class="auth-switch">عندك حساب بالفعل؟ <a href="login.html">سجل دخول</a></div>
-      <div class="auth-footer">© 2025 LUXE Store • جميع الحقوق محفوظة</div>
-    </form>
-  </div>
+    </div>
+  </main>
 </div>
 
 <script type="module">
-import { 
-  auth, 
+import {
+  auth,
   db,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -84,50 +1151,190 @@ import {
 
 import { showToast } from './js/ui.js';
 
+/* ============================================
+   ELEMENTS
+============================================ */
 const form = document.getElementById('registerForm');
 const submitBtn = document.getElementById('submitBtn');
+const btnText = submitBtn.querySelector('.btn-text');
+const btnLoading = submitBtn.querySelector('.btn-loading');
+const passwordInput = document.getElementById('password');
+const confirmInput = document.getElementById('confirm');
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+const phoneInput = document.getElementById('phone');
+const termsCheckbox = document.getElementById('terms');
+const termsBox = document.getElementById('termsBox');
+const termsError = document.getElementById('termsError');
+const passwordStrength = document.getElementById('passwordStrength');
+const strengthLabel = document.getElementById('strengthLabel');
 
-function setError(id) { document.getElementById('fg-' + id).classList.add('error'); }
-function clearError(id) { document.getElementById('fg-' + id).classList.remove('error'); }
+/* ============================================
+   ERROR HELPERS
+============================================ */
+function setError(id) {
+  document.getElementById('fg-' + id)?.classList.add('error');
+}
+function clearError(id) {
+  document.getElementById('fg-' + id)?.classList.remove('error');
+}
 
 ['name', 'email', 'phone', 'password', 'confirm'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => clearError(id));
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('input', () => {
+      clearError(id);
+      if (id === 'password') {
+        updatePasswordStrength();
+        if (confirmInput.value) clearError('confirm');
+      }
+      if (id === 'confirm' && confirmInput.value) {
+        if (passwordInput.value === confirmInput.value) clearError('confirm');
+      }
+    });
+  }
 });
 
+termsCheckbox.addEventListener('change', () => {
+  if (termsCheckbox.checked) {
+    termsBox.classList.remove('error');
+    termsError.classList.remove('show');
+  }
+});
+
+/* ============================================
+   TOGGLE PASSWORD (BOTH FIELDS)
+============================================ */
+document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    const isPassword = target.type === 'password';
+    target.type = isPassword ? 'text' : 'password';
+    btn.textContent = isPassword ? '🙈' : '👁️';
+    btn.setAttribute('aria-label', isPassword ? 'إخفاء كلمة السر' : 'إظهار كلمة السر');
+  });
+});
+
+/* ============================================
+   PASSWORD STRENGTH METER
+============================================ */
+function updatePasswordStrength() {
+  const pwd = passwordInput.value;
+
+  if (!pwd) {
+    passwordStrength.style.display = 'none';
+    strengthLabel.style.display = 'none';
+    return;
+  }
+
+  passwordStrength.style.display = 'flex';
+  strengthLabel.style.display = 'block';
+
+  let score = 0;
+  if (pwd.length >= 6) score++;
+  if (pwd.length >= 10) score++;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+  // Normalize to 0-4
+  const level = Math.min(4, Math.ceil(score * 4 / 5));
+  const bars = passwordStrength.querySelectorAll('.strength-bar');
+
+  bars.forEach((bar, i) => {
+    bar.classList.remove('active-weak', 'active-medium', 'active-strong');
+    if (i < level) {
+      if (level <= 1) bar.classList.add('active-weak');
+      else if (level <= 2) bar.classList.add('active-medium');
+      else bar.classList.add('active-strong');
+    }
+  });
+
+  const labels = {
+    0: '',
+    1: 'كلمة سر ضعيفة',
+    2: 'كلمة سر متوسطة',
+    3: 'كلمة سر قوية',
+    4: 'كلمة سر قوية جداً'
+  };
+  const colors = {
+    1: 'var(--danger)',
+    2: '#f59e0b',
+    3: 'var(--success)',
+    4: 'var(--success)'
+  };
+
+  strengthLabel.textContent = labels[level] || '';
+  strengthLabel.style.color = colors[level] || 'var(--text-muted)';
+}
+
+/* ============================================
+   VALIDATE
+============================================ */
 function validateForm(data) {
   let valid = true;
   ['name', 'email', 'phone', 'password', 'confirm'].forEach(clearError);
+  termsBox.classList.remove('error');
+  termsError.classList.remove('show');
 
-  if (!data.name || data.name.trim().length < 3) { setError('name'); valid = false; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) { setError('email'); valid = false; }
-  if (data.phone && !/^01[0-9]{9}$/.test(data.phone)) { setError('phone'); valid = false; }
-  if (!data.password || data.password.length < 6) { setError('password'); valid = false; }
-  if (data.password !== data.confirm) { setError('confirm'); valid = false; }
+  if (!data.name || data.name.trim().length < 3) {
+    setError('name');
+    valid = false;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    setError('email');
+    valid = false;
+  }
+  if (data.phone && !/^01[0-9]{9}$/.test(data.phone)) {
+    setError('phone');
+    valid = false;
+  }
+  if (!data.password || data.password.length < 6) {
+    setError('password');
+    valid = false;
+  }
+  if (data.password !== data.confirm) {
+    setError('confirm');
+    valid = false;
+  }
+  if (!termsCheckbox.checked) {
+    termsBox.classList.add('error');
+    termsError.classList.add('show');
+    valid = false;
+  }
 
   return valid;
 }
 
+/* ============================================
+   SUBMIT
+============================================ */
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const data = {
-    name: document.getElementById('name').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
-    password: document.getElementById('password').value,
-    confirm: document.getElementById('confirm').value
+    name: nameInput.value.trim(),
+    email: emailInput.value.trim(),
+    phone: phoneInput.value.trim(),
+    password: passwordInput.value,
+    confirm: confirmInput.value
   };
 
   if (!validateForm(data)) {
     showToast('من فضلك صحح الأخطاء', 'error');
+    if (!nameInput.value.trim()) nameInput.focus();
+    else if (!emailInput.value.trim()) emailInput.focus();
+    else if (!passwordInput.value) passwordInput.focus();
     return;
   }
 
-  try {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'جاري إنشاء الحساب...';
+  submitBtn.disabled = true;
+  btnText.style.display = 'none';
+  btnLoading.style.display = 'inline-flex';
 
-    console.log('📝 [1/3] تسجيل في Auth...');
+  try {
+    console.log('📝 [1/3] إنشاء حساب Auth...');
     const cred = await createUserWithEmailAndPassword(auth, data.email, data.password);
     const user = cred.user;
     console.log('✅ [1/3] Auth OK - UID:', user.uid);
@@ -149,33 +1356,38 @@ form.addEventListener('submit', async (e) => {
     };
 
     await setDoc(doc(db, 'users', user.uid), userData);
-    console.log('✅ [3/3] Firestore OK - User saved:', user.uid);
+    console.log('✅ [3/3] Firestore OK');
 
-    showToast('تم إنشاء الحساب بنجاح!', 'success');
-    setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+    showToast('تم إنشاء الحساب بنجاح! 🎉', 'success');
+    setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get('redirect') || 'index.html';
+      window.location.href = redirect;
+    }, 1200);
 
   } catch (err) {
     console.error('❌ Registration error:', err);
-    console.error('Error code:', err.code);
-    console.error('Error message:', err.message);
 
     let msg = 'حدث خطأ، حاول مرة أخرى';
-
     if (err.code === 'auth/email-already-in-use') {
-      msg = 'هذا البريد مستخدم بالفعل';
+      msg = 'هذا البريد مستخدم بالفعل — جرب تسجيل الدخول';
+      setError('email');
     } else if (err.code === 'auth/invalid-email') {
       msg = 'البريد الإلكتروني غير صحيح';
+      setError('email');
     } else if (err.code === 'auth/weak-password') {
-      msg = 'كلمة السر ضعيفة';
+      msg = 'كلمة السر ضعيفة جداً';
+      setError('password');
     } else if (err.code === 'auth/network-request-failed') {
-      msg = 'مشكلة في الاتصال';
+      msg = 'مشكلة في الاتصال — تحقق من الإنترنت';
     } else if (err.code === 'permission-denied' || err.message?.includes('permission')) {
       msg = 'خطأ في صلاحيات قاعدة البيانات';
     }
 
     showToast(msg, 'error');
     submitBtn.disabled = false;
-    submitBtn.textContent = 'إنشاء الحساب';
+    btnText.style.display = 'inline';
+    btnLoading.style.display = 'none';
   }
 });
 </script>
