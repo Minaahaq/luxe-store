@@ -7,44 +7,49 @@ const urlsToCache = [
   '/js/ui.js'
 ];
 
-// تثبيت الـ Service Worker وتخزين الملفات الأساسية
+// تثبيت
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
-// تفعيل وتنظيف الكاش القديم
+// تفعيل
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+          if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
         })
       );
     })
   );
+  self.clients.claim();
 });
 
-// اعتراض الطلبات: نجرب نجيب من النت الأول، لو فشل نجيب من الكاش
+// اعتراض الطلبات — GET فقط
 self.addEventListener('fetch', (event) => {
+  // تجاهل أي طلب مش GET (POST, PUT, DELETE...)
+  if (event.request.method !== 'GET') return;
+
+  // تجاهل طلبات Firebase / APIs خارجية
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // لو جبنا حاجة من النت، نحفظها في الكاش للمرة الجاية
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        // نحفظ بس لو الرد ناجح
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
         return response;
       })
-      .catch(() => {
-        // لو النت فصل، نجيب من الكاش
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });
