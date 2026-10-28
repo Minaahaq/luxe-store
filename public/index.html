@@ -37,18 +37,23 @@
       <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
     </div>
 
-    <div class="header-actions">
-      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
-      <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
-        🛍<span class="badge" data-cart-badge>0</span>
-      </a>
-      <div id="userArea"></div>
-      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
-        ☰
-      </button>
-    </div>
-  </div>
+<div class="header-actions">
+  <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
+  
+  <!-- ⬇️ ضيف السطر ده -->
+  <button class="icon-btn install-app-btn" id="installBtn" type="button" aria-label="تثبيت التطبيق" style="display:none">
+    ⬇️
+  </button>
+  
+  <a href="tracking.html" class="icon-btn" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
+  <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+    🛍<span class="badge" data-cart-badge>0</span>
+  </a>
+  <div id="userArea"></div>
+  <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+    ☰
+  </button>
+</div>
 
   <!-- Mobile search overlay -->
   <div class="mobile-search-overlay" id="mobileSearchOverlay">
@@ -480,6 +485,61 @@ setupMobileSearch();
         });
     });
   }
+</script>
+
+  <script>
+  // ============================================
+  // PWA Install Prompt
+  // ============================================
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // منع المتصفح من إظهار الـ banner التلقائي
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // إظهار زرار التثبيت
+    const btn = document.getElementById('installBtn');
+    if (btn) {
+      btn.style.display = 'flex';
+      btn.style.animation = 'pulse-install 2s infinite';
+    }
+    
+    console.log('✅ PWA install prompt ready');
+  });
+
+  // لما المستخدم يدوس على زرار التثبيت
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('installBtn');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (!deferredPrompt) {
+          alert('التثبيت غير متاح دلوقتي — جرب تقعد شوية في الموقع وتدوس تاني');
+          return;
+        }
+        
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          console.log('✅ User accepted install');
+          btn.style.display = 'none';
+        } else {
+          console.log('❌ User dismissed install');
+        }
+        
+        deferredPrompt = null;
+      });
+    }
+  });
+
+  // لما التطبيق يتثبت فعلاً
+  window.addEventListener('appinstalled', () => {
+    console.log('✅ PWA installed successfully');
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+    deferredPrompt = null;
+  });
 </script>
 
 </body>
