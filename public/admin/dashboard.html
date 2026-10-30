@@ -2,8 +2,11 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
   <title>لوحة التحكم - LUXE Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
 </head>
@@ -52,7 +55,7 @@
     </nav>
 
     <div class="admin-sidebar-footer">
-      <button class="admin-logout" id="logoutBtn">
+      <button class="admin-logout" id="logoutBtn" type="button">
         <span class="icon">🚪</span>
         <span>تسجيل الخروج</span>
       </button>
@@ -64,55 +67,58 @@
   <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="mobile-menu-btn-admin" id="mobileMenuBtn">☰</button>
+      <div class="topbar-left">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn" type="button" aria-label="القائمة">☰</button>
         <div>
           <h1 class="admin-page-title">لوحة التحكم</h1>
           <p class="admin-page-subtitle">نظرة عامة على المتجر</p>
         </div>
       </div>
-      <div class="admin-user-badge">
-        <div class="avatar" id="adminInitial">A</div>
-        <div class="info">
-          <div class="name" id="adminName">Admin</div>
-          <div class="role">مدير</div>
+      <div class="admin-topbar-actions">
+        <button class="refresh-dashboard-btn" id="refreshBtn" type="button" aria-label="تحديث">
+          🔄 <span>تحديث</span>
+        </button>
+        <div class="admin-user-badge">
+          <div class="avatar" id="adminInitial">A</div>
+          <div class="info">
+            <div class="name" id="adminName">Admin</div>
+            <div class="role">مدير</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- STATS -->
     <div class="stats-grid-4" id="statsGrid">
-      <div class="stat-card-admin"><div class="skeleton" style="height:52px;width:52px;border-radius:14px"></div><div class="skeleton" style="height:32px;width:60%"></div><div class="skeleton" style="height:14px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:52px;width:52px;border-radius:14px"></div><div class="skeleton" style="height:32px;width:60%"></div><div class="skeleton" style="height:14px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:52px;width:52px;border-radius:14px"></div><div class="skeleton" style="height:32px;width:60%"></div><div class="skeleton" style="height:14px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:52px;width:52px;border-radius:14px"></div><div class="skeleton" style="height:32px;width:60%"></div><div class="skeleton" style="height:14px;width:40%"></div></div>
+      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
+      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
+      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
+      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
     </div>
 
     <!-- 2-COL GRID -->
     <div class="admin-grid-2">
-      <!-- Recent Orders -->
       <div class="admin-card">
         <div class="admin-card-header">
           <h2>🛒 آخر الطلبات</h2>
           <a href="orders.html" class="link">عرض الكل ←</a>
         </div>
         <div id="recentOrders">
-          <div class="skeleton" style="height:60px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:60px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:60px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px"></div>
         </div>
       </div>
 
-      <!-- Top Products -->
       <div class="admin-card">
         <div class="admin-card-header">
           <h2>⭐ أفضل المنتجات</h2>
           <a href="products.html" class="link">عرض الكل ←</a>
         </div>
         <div id="topProducts">
-          <div class="skeleton" style="height:60px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:60px;margin-bottom:10px"></div>
-          <div class="skeleton" style="height:60px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px"></div>
         </div>
       </div>
     </div>
@@ -130,17 +136,30 @@
   </main>
 </div>
 
+<!-- Confirm Modal -->
+<div class="confirm-modal-overlay" id="confirmModal">
+  <div class="confirm-modal-box">
+    <div class="confirm-icon" id="confirmIcon">🚪</div>
+    <h3 id="confirmTitle">تسجيل الخروج</h3>
+    <p id="confirmMessage">هل تريد تسجيل الخروج من لوحة التحكم؟</p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" id="confirmCancelBtn" type="button">إلغاء</button>
+      <button class="confirm-btn-ok" id="confirmOkBtn" type="button">نعم، سجل خروج</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import { api, getCurrentUser, logout } from '../js/api.js';
 
-// ===========================================
-// Status Helpers
-// ===========================================
+/* ===========================================
+   Helpers
+=========================================== */
 function showStatus(emoji, title, message, isLoading = false) {
   const page = document.getElementById('statusPage');
   const emojiEl = document.getElementById('statusEmoji');
-  const titleEl = document.getElementById('statusTitle');
-  const messageEl = document.getElementById('statusMessage');
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
 
   page.style.display = 'flex';
   document.getElementById('adminLayout').style.display = 'none';
@@ -148,8 +167,6 @@ function showStatus(emoji, title, message, isLoading = false) {
   emojiEl.textContent = emoji;
   emojiEl.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
   emojiEl.style.display = 'inline-block';
-  titleEl.textContent = title;
-  messageEl.textContent = message;
 }
 
 function showLayout() {
@@ -170,12 +187,48 @@ function showToast(message, type = 'info') {
   t.className = 'toast ' + type;
   t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
   c.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(-20px)'; t.style.transition = '.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(-20px)';
+    t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
 }
 
-// ===========================================
-// Access Check
-// ===========================================
+/* ===========================================
+   Confirm Modal
+=========================================== */
+function showConfirm({ icon = '⚠️', title, message, okText = 'تأكيد' }) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOkBtn').textContent = okText;
+
+    modal.classList.add('active');
+
+    const cleanup = (result) => {
+      modal.classList.remove('active');
+      document.getElementById('confirmCancelBtn').removeEventListener('click', onCancel);
+      document.getElementById('confirmOkBtn').removeEventListener('click', onOk);
+      modal.removeEventListener('click', onOverlay);
+      resolve(result);
+    };
+
+    const onCancel = () => cleanup(false);
+    const onOk = () => cleanup(true);
+    const onOverlay = (e) => { if (e.target.id === 'confirmModal') cleanup(false); };
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', onCancel);
+    document.getElementById('confirmOkBtn').addEventListener('click', onOk);
+    modal.addEventListener('click', onOverlay);
+  });
+}
+
+/* ===========================================
+   Access Check
+=========================================== */
 async function checkAdminAccess() {
   try {
     const user = await getCurrentUser();
@@ -186,17 +239,15 @@ async function checkAdminAccess() {
       return null;
     }
 
-    // Get user data to check role
     const meRes = await api.auth.me();
     const userData = meRes.user;
 
     if (!userData || userData.role !== 'admin') {
-      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط. لو أنت أدمن، تواصل مع الدعم.');
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط.');
       setTimeout(() => window.location.href = '../index.html', 2500);
       return null;
     }
 
-    // Update admin badge
     const name = userData.name || user.displayName || 'Admin';
     document.getElementById('adminName').textContent = name;
     document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
@@ -209,9 +260,9 @@ async function checkAdminAccess() {
   }
 }
 
-// ===========================================
-// Load Stats
-// ===========================================
+/* ===========================================
+   Load Stats
+=========================================== */
 async function loadStats() {
   try {
     const statsRes = await api.admin.getStats();
@@ -244,15 +295,15 @@ async function loadStats() {
   }
 }
 
-// ===========================================
-// Load Recent Orders
-// ===========================================
+/* ===========================================
+   Load Recent Orders
+=========================================== */
 const STATUS_MAP = {
-  pending: { label: 'قيد المراجعة', cls: 'status-pending' },
-  processing: { label: 'قيد التجهيز', cls: 'status-processing' },
-  shipped: { label: 'تم الشحن', cls: 'status-shipped' },
-  delivered: { label: 'تم التوصيل', cls: 'status-delivered' },
-  cancelled: { label: 'ملغي', cls: 'status-cancelled' }
+  pending:    { label: 'قيد المراجعة', cls: 'status-pending' },
+  processing: { label: 'قيد التجهيز',  cls: 'status-processing' },
+  shipped:    { label: 'تم الشحن',     cls: 'status-shipped' },
+  delivered:  { label: 'تم التوصيل',   cls: 'status-delivered' },
+  cancelled:  { label: 'ملغي',         cls: 'status-cancelled' }
 };
 
 async function loadRecentOrders() {
@@ -291,9 +342,9 @@ async function loadRecentOrders() {
   }
 }
 
-// ===========================================
-// Load Top Products
-// ===========================================
+/* ===========================================
+   Load Top Products
+=========================================== */
 async function loadTopProducts() {
   try {
     const res = await api.products.getAll();
@@ -316,7 +367,7 @@ async function loadTopProducts() {
       return `
         <div class="top-product-row">
           <span class="rank">${i + 1}</span>
-          <img src="${img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/44/f4f2ed/c9a961?text=LX'">
+          <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/44/f4f2ed/c9a961?text=LX'">
           <div class="info">
             <h5>${p.name}</h5>
             <span>${p.sold || 0} مبيعة • ${(p.price || 0).toLocaleString('ar-EG')} ج.م</span>
@@ -334,9 +385,9 @@ async function loadTopProducts() {
   }
 }
 
-// ===========================================
-// Load Orders Chart
-// ===========================================
+/* ===========================================
+   Load Orders Chart
+=========================================== */
 async function loadOrdersChart() {
   try {
     const res = await api.admin.getAllOrders();
@@ -376,11 +427,18 @@ async function loadOrdersChart() {
   }
 }
 
-// ===========================================
-// Logout
-// ===========================================
+/* ===========================================
+   Logout
+=========================================== */
 async function handleLogout() {
-  if (!confirm('تسجيل الخروج؟')) return;
+  const ok = await showConfirm({
+    icon: '🚪',
+    title: 'تسجيل الخروج',
+    message: 'هل تريد تسجيل الخروج من لوحة التحكم؟',
+    okText: 'نعم، سجل خروج'
+  });
+  if (!ok) return;
+
   try {
     await logout();
     window.location.href = '../login.html';
@@ -389,27 +447,87 @@ async function handleLogout() {
   }
 }
 
-// ===========================================
-// Mobile Menu
-// ===========================================
+/* ===========================================
+   Mobile Menu
+=========================================== */
 function setupMobileMenu() {
   const btn = document.getElementById('mobileMenuBtn');
   const sidebar = document.getElementById('adminSidebar');
   const overlay = document.getElementById('sidebarOverlay');
 
-  btn?.addEventListener('click', () => {
+  const open = () => {
     sidebar.classList.add('open');
     overlay.classList.add('active');
-  });
-  overlay?.addEventListener('click', () => {
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
     sidebar.classList.remove('open');
     overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  btn?.addEventListener('click', open);
+  overlay?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
   });
 }
 
-// ===========================================
-// Init
-// ===========================================
+/* ===========================================
+   Refresh
+=========================================== */
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('spinning');
+  }
+
+  await Promise.all([
+    loadStats(),
+    loadRecentOrders(),
+    loadTopProducts(),
+    loadOrdersChart()
+  ]);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.classList.remove('spinning');
+  }
+  showToast('تم التحديث ✓', 'success');
+}
+
+/* ===========================================
+   Pull to Refresh (Mobile)
+=========================================== */
+let pullStartY = 0;
+let pullDistance = 0;
+let isPulling = false;
+
+document.addEventListener('touchstart', (e) => {
+  if (window.scrollY === 0) {
+    pullStartY = e.touches[0].clientY;
+    isPulling = true;
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isPulling) return;
+  pullDistance = e.touches[0].clientY - pullStartY;
+}, { passive: true });
+
+document.addEventListener('touchend', async () => {
+  if (!isPulling) return;
+  if (pullDistance > 100 && window.scrollY === 0) {
+    await refreshAll();
+  }
+  isPulling = false;
+  pullDistance = 0;
+}, { passive: true });
+
+/* ===========================================
+   Init
+=========================================== */
 async function init() {
   showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
 
@@ -420,8 +538,8 @@ async function init() {
   setupMobileMenu();
 
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+  document.getElementById('refreshBtn')?.addEventListener('click', refreshAll);
 
-  // Load all data in parallel
   await Promise.all([
     loadStats(),
     loadRecentOrders(),
