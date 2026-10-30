@@ -1853,3 +1853,354 @@ input, select, textarea { font-family: inherit; outline: none; }
     transition-duration: .01ms !important;
   }
    }
+
+
+
+/* ===========================================
+   DASHBOARD — Responsive Polish
+============================================ */
+
+/* Topbar Left */
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-left > div { min-width: 0; }
+
+/* Topbar Actions */
+.admin-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Refresh button */
+.refresh-dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  transition: .2s;
+  min-height: 42px;
+  font-family: inherit;
+}
+
+.refresh-dashboard-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold-dark);
+}
+
+.refresh-dashboard-btn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+.refresh-dashboard-btn.spinning span:first-child,
+.refresh-dashboard-btn.spinning::first-letter {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+/* Confirm Modal */
+.confirm-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 23, .7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 5000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.confirm-modal-overlay.active { display: flex; }
+
+.confirm-modal-box {
+  background: var(--paper);
+  border-radius: 20px;
+  padding: 32px 28px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: fadeUp .3s ease;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .4);
+}
+
+.confirm-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.confirm-modal-box h3 {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.confirm-modal-box p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.confirm-btn-cancel,
+.confirm-btn-ok {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: .2s;
+  font-family: inherit;
+  min-height: 48px;
+  border: 1.5px solid transparent;
+}
+
+.confirm-btn-cancel {
+  background: var(--paper-2);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.confirm-btn-cancel:hover {
+  background: #fff;
+  border-color: var(--text-muted);
+}
+
+.confirm-btn-ok {
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm-btn-ok:hover { background: #dc2626; }
+
+/* ===========================================
+   MOBILE — Dashboard
+============================================ */
+@media (max-width: 768px) {
+  /* Topbar */
+  .admin-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .topbar-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-page-title {
+    font-size: 20px;
+  }
+
+  .admin-page-subtitle {
+    font-size: 12px;
+  }
+
+  /* Hide user info on mobile */
+  .admin-user-badge .info { display: none; }
+
+  .admin-user-badge {
+    padding: 4px;
+    background: transparent;
+    border: none;
+  }
+
+  .admin-user-badge .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(201, 169, 97, .3);
+  }
+
+  /* Refresh button — icon only */
+  .refresh-dashboard-btn {
+    padding: 10px;
+    min-width: 42px;
+    justify-content: center;
+  }
+
+  .refresh-dashboard-btn span { display: none; }
+
+  /* Stats — 2 cols */
+  .stats-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card-admin {
+    padding: 14px;
+    gap: 8px;
+    border-radius: 16px;
+  }
+
+  .stat-icon-box {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  .stat-card-admin .value {
+    font-size: 20px;
+  }
+
+  .stat-card-admin .label {
+    font-size: 11px;
+  }
+
+  /* Grid 2 — stack */
+  .admin-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Cards */
+  .admin-card {
+    padding: 14px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+
+  .admin-card-header {
+    margin-bottom: 12px;
+  }
+
+  .admin-card-header h2 {
+    font-size: 14px;
+  }
+
+  .admin-card-header .link {
+    font-size: 11.5px;
+  }
+
+  /* Recent Orders — compact grid */
+  .recent-order-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "num    pill"
+      "cust   total";
+    gap: 4px 10px;
+    padding: 10px 0;
+  }
+
+  .recent-order-row .order-num {
+    grid-area: num;
+    min-width: 0;
+    font-size: 12px;
+  }
+
+  .recent-order-row .customer {
+    grid-area: cust;
+    font-size: 12px;
+  }
+
+  .recent-order-row .total {
+    grid-area: total;
+    justify-self: end;
+    font-size: 13px;
+  }
+
+  .recent-order-row .status-pill {
+    grid-area: pill;
+    justify-self: end;
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  /* Chart */
+  .simple-bar-chart {
+    height: 160px;
+    gap: 4px;
+    padding-top: 14px;
+  }
+
+  .bar-item .bar {
+    max-width: 28px;
+  }
+
+  .bar-item .label {
+    font-size: 8.5px;
+  }
+
+  .bar-item .value {
+    font-size: 10px;
+  }
+
+  /* Toast */
+  .toast-container {
+    top: 12px;
+    width: calc(100% - 24px);
+    max-width: 100%;
+  }
+
+  .toast {
+    padding: 12px 14px;
+    font-size: 13px;
+    min-width: 0;
+  }
+
+  /* Status page */
+  .admin-status-page { padding: 20px 14px; }
+  .admin-status-box { padding: 36px 22px; }
+  .admin-status-box .emoji { font-size: 56px; }
+  .admin-status-box h1 { font-size: 20px; }
+  .admin-status-box p { font-size: 13px; }
+
+  /* Confirm modal */
+  .confirm-modal-box {
+    padding: 26px 20px;
+  }
+
+  .confirm-icon { font-size: 42px; }
+  .confirm-modal-box h3 { font-size: 18px; }
+  .confirm-modal-box p { font-size: 13px; }
+  .confirm-actions { flex-direction: column-reverse; }
+}
+
+@media (max-width: 420px) {
+  .admin-page-title { font-size: 18px; }
+  .admin-main { padding: 12px; }
+  .stats-grid-4 { gap: 8px; }
+  .stat-card-admin { padding: 12px; }
+  .stat-card-admin .value { font-size: 18px; }
+  .stat-card-admin .label { font-size: 10px; }
+  .stat-icon-box { width: 36px; height: 36px; font-size: 16px; }
+}
+
+@media (max-width: 380px) {
+  .stats-grid-4 { grid-template-columns: 1fr; }
+  .stat-card-admin { flex-direction: row; align-items: center; }
+  .bar-item .label { font-size: 8px; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
