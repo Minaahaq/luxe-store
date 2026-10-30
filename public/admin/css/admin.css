@@ -2204,3 +2204,44 @@ input, select, textarea { font-family: inherit; outline: none; }
     transition-duration: .01ms !important;
   }
 }
+
+/* ===========================================
+   MINI STATS — Dashboard 2×2 on Mobile
+============================================ */
+@media (max-width: 640px) {
+  .mini-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .mini-stat-box {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .mini-stat-box .num {
+    font-size: 20px;
+  }
+
+  .mini-stat-box .lbl {
+    font-size: 10.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mini-stats-row {
+    gap: 8px;
+  }
+
+  .mini-stat-box {
+    padding: 12px 10px;
+  }
+
+  .mini-stat-box .num {
+    font-size: 18px;
+  }
+
+  .mini-stat-box .lbl {
+    font-size: 10px;
+  }
+}
