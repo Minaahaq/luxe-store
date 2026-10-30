@@ -88,12 +88,12 @@
       </div>
     </div>
 
-    <!-- STATS -->
-    <div class="stats-grid-4" id="statsGrid">
-      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
-      <div class="stat-card-admin"><div class="skeleton" style="height:48px;width:48px;border-radius:14px"></div><div class="skeleton" style="height:28px;width:60%"></div><div class="skeleton" style="height:12px;width:40%"></div></div>
+    <!-- STATS — mini-stat-box style (like orders.html) -->
+    <div class="mini-stats-row" id="statsGrid">
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
     </div>
 
     <!-- 2-COL GRID -->
@@ -261,7 +261,7 @@ async function checkAdminAccess() {
 }
 
 /* ===========================================
-   Load Stats
+   Load Stats — mini-stat-box style (like orders.html)
 =========================================== */
 async function loadStats() {
   try {
@@ -269,25 +269,21 @@ async function loadStats() {
     const stats = statsRes.data;
 
     document.getElementById('statsGrid').innerHTML = `
-      <div class="stat-card-admin">
-        <div class="stat-icon-box gold">📦</div>
-        <div class="value">${stats.products.toLocaleString('ar-EG')}</div>
-        <div class="label">منتج في المتجر</div>
+      <div class="mini-stat-box">
+        <div class="num">${stats.products.toLocaleString('ar-EG')}</div>
+        <div class="lbl">منتج في المتجر</div>
       </div>
-      <div class="stat-card-admin">
-        <div class="stat-icon-box blue">🛒</div>
-        <div class="value">${stats.orders.toLocaleString('ar-EG')}</div>
-        <div class="label">إجمالي الطلبات</div>
+      <div class="mini-stat-box">
+        <div class="num">${stats.orders.toLocaleString('ar-EG')}</div>
+        <div class="lbl">إجمالي الطلبات</div>
       </div>
-      <div class="stat-card-admin">
-        <div class="stat-icon-box purple">👥</div>
-        <div class="value">${stats.users.toLocaleString('ar-EG')}</div>
-        <div class="label">مستخدم مسجل</div>
+      <div class="mini-stat-box">
+        <div class="num">${stats.users.toLocaleString('ar-EG')}</div>
+        <div class="lbl">مستخدم مسجل</div>
       </div>
-      <div class="stat-card-admin">
-        <div class="stat-icon-box green">💰</div>
-        <div class="value">${(stats.revenue || 0).toLocaleString('ar-EG')}</div>
-        <div class="label">إيرادات (ج.م)</div>
+      <div class="mini-stat-box">
+        <div class="num">${(stats.revenue || 0).toLocaleString('ar-EG')}</div>
+        <div class="lbl">إيرادات (ج.م)</div>
       </div>`;
   } catch (err) {
     console.error('Stats error:', err);
@@ -299,11 +295,12 @@ async function loadStats() {
    Load Recent Orders
 =========================================== */
 const STATUS_MAP = {
-  pending:    { label: 'قيد المراجعة', cls: 'status-pending' },
-  processing: { label: 'قيد التجهيز',  cls: 'status-processing' },
-  shipped:    { label: 'تم الشحن',     cls: 'status-shipped' },
-  delivered:  { label: 'تم التوصيل',   cls: 'status-delivered' },
-  cancelled:  { label: 'ملغي',         cls: 'status-cancelled' }
+  pending_payment: { label: 'في انتظار الدفع', cls: 'status-pending' },
+  pending:         { label: 'قيد المراجعة',    cls: 'status-pending' },
+  processing:      { label: 'قيد التجهيز',     cls: 'status-processing' },
+  shipped:         { label: 'تم الشحن',        cls: 'status-shipped' },
+  delivered:       { label: 'تم التوصيل',      cls: 'status-delivered' },
+  cancelled:       { label: 'ملغي',            cls: 'status-cancelled' }
 };
 
 async function loadRecentOrders() {
@@ -393,9 +390,9 @@ async function loadOrdersChart() {
     const res = await api.admin.getAllOrders();
     const orders = res.data || [];
 
-    const statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const statuses = ['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled'];
     const labels = {
-      pending: 'قيد المراجعة',
+      pending_payment: 'انتظار الدفع',
       processing: 'قيد التجهيز',
       shipped: 'تم الشحن',
       delivered: 'تم التوصيل',
