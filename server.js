@@ -62,12 +62,16 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 
 // ===========================================
-// 404
+// 404 — HTML Page
 // ===========================================
-app.use((req, res) => {
-  res.status(404).json({ error: 'المسار غير موجود' });
+app.use((req, res, next) => {
+  // لو الطلب لـ API، رجّع JSON
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'المسار غير موجود' });
+  }
+  // غير كده، قدم صفحة 404.html
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
-
 // ===========================================
 // Error Handler
 // ===========================================
