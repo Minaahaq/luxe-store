@@ -5854,3 +5854,15 @@ footer {
 .section-eyebrow::before {
   width: 16px;
 }
+
+
+/* Tracking icon — مميز شوية */
+.header-actions a[href="tracking.html"] {
+  color: var(--gold-dark);
+}
+
+.header-actions a[href="tracking.html"]:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--gold);
+}
