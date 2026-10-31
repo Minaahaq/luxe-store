@@ -5750,3 +5750,107 @@ footer {
   background: linear-gradient(135deg, var(--gold-light), var(--gold)) !important;
   transform: translateY(-2px) scale(1.05);
 }
+
+/* ===========================================
+   HUMAN TOUCH — تقليل "المثالية"
+============================================ */
+
+/* Shadows أخف */
+.product-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  animation: none; /* شيل fadeUp */
+}
+
+.product-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+/* Hero أبسط */
+.hero {
+  height: 520px;
+  margin-bottom: 48px;
+}
+
+.hero-label {
+  font-size: 11px;
+  letter-spacing: 3px;
+  padding: 6px 16px;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 5vw, 52px);
+  margin-bottom: 16px;
+}
+
+.hero p {
+  font-size: 15px;
+  max-width: 440px;
+  margin-bottom: 28px;
+}
+
+/* Footer أبسط */
+footer {
+  padding: 48px 0 0;
+  margin-top: 60px;
+}
+
+.footer-brand p {
+  font-size: 12.5px;
+  opacity: 0.75;
+  max-width: 260px;
+}
+
+.footer-bottom {
+  padding: 20px 0;
+  font-size: 11.5px;
+  color: #8a8f9e;
+}
+
+/* SVG icons في الهيدر */
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* زرار الإضافة */
+.add-btn {
+  background: #1a1a1a;
+  transition: background 0.2s;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: #c9a961;
+  transform: none; /* شيل rotate */
+}
+
+/* Empty state */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-state p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+/* Section head أبسط */
+.section-head {
+  margin-bottom: 32px;
+}
+
+.section-head h2 {
+  font-size: clamp(24px, 3.5vw, 36px);
+}
+
+.section-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding-right: 24px;
+}
+
+.section-eyebrow::before {
+  width: 16px;
+}
