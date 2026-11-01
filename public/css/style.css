@@ -5866,3 +5866,58 @@ footer {
   border-color: var(--ink);
   color: var(--gold);
 }
+
+/* =========================================
+   LUXE — MOBILE HERO SPACING FIX
+========================================= */
+
+@media (max-width: 768px) {
+  .hero {
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 55px 24px 65px !important;
+    margin: 0 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box;
+  }
+
+  .hero-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .hero-label {
+    margin-bottom: 18px !important;
+  }
+
+  .hero h1 {
+    font-size: 34px !important;
+    line-height: 1.35 !important;
+    margin-bottom: 18px !important;
+  }
+
+  .hero p {
+    font-size: 16px !important;
+    line-height: 1.8 !important;
+    margin-bottom: 26px !important;
+  }
+
+  .btn-hero {
+    width: 100% !important;
+    min-height: 58px !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero {
+    padding: 45px 20px 55px !important;
+  }
+
+  .hero h1 {
+    font-size: 31px !important;
+  }
+}
