@@ -5997,3 +5997,30 @@ footer {
     margin-top: auto !important;
   }
 }
+
+/* LUXE - Mobile Drawer Spacing Fix */
+@media (max-width: 768px) {
+  .mobile-nav-drawer {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .mobile-drawer-nav {
+    flex: 0 0 auto !important;
+    justify-content: flex-start !important;
+    gap: 0 !important;
+    padding: 15px 0 !important;
+  }
+
+  .mobile-drawer-nav a {
+    display: block !important;
+    padding: 14px 0 !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  .mobile-drawer-footer {
+    margin-top: auto !important;
+    padding-top: 20px !important;
+  }
+}
