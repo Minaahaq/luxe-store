@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الأسئلة الشائعة - LUXE Store</title>
+  <meta name="description" content="إجابات سريعة على كل أسئلتك عن التسوق من LUXE Store">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .faq-hero {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      color: #fff;
+      padding: 70px 0 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .faq-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(201,169,97,.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(139,92,246,.08) 0%, transparent 50%);
+    }
+    .faq-hero > .container { position: relative; z-index: 1; }
+    .faq-hero .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9a961;
+      margin-bottom: 16px;
+    }
+    .faq-hero h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 44px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: -.5px;
+    }
+    .faq-hero h1 span { color: #c9a961; font-style: italic; }
+    .faq-hero p {
+      color: #a0a5b5;
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .faq-search-wrap {
+      max-width: 700px;
+      margin: -30px auto 40px;
+      padding: 0 24px;
+      position: relative;
+      z-index: 10;
+    }
+    .faq-search-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 2px solid #e5e3dd;
+      border-radius: 50px;
+      padding: 8px 8px 8px 24px;
+      box-shadow: 0 10px 40px rgba(10,14,23,.08);
+      transition: .3s;
+    }
+    .faq-search-box:focus-within {
+      border-color: #c9a961;
+      box-shadow: 0 15px 50px rgba(201,169,97,.15);
+    }
+    .faq-search-box svg { color: #a8894a; flex-shrink: 0; }
+    .faq-search-box input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 8px 0;
+      outline: none;
+      color: #0a0e17;
+    }
+    .faq-search-box .clear-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f4f2ed;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #6b7280;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: .2s;
+    }
+    .faq-search-box .clear-btn.show { display: flex; }
+    .faq-search-box .clear-btn:hover { background: #ef4444; color: #fff; }
+
+    .faq-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .faq-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .faq-tabs::-webkit-scrollbar { height: 4px; }
+    .faq-tabs::-webkit-scrollbar-thumb { background: #c9a961; border-radius: 4px; }
+    .faq-tab {
+      padding: 12px 22px;
+      border-radius: 50px;
+      background: #fff;
+      border: 1.5px solid #e5e3dd;
+      font-size: 14px;
+      font-weight: 700;
+      color: #6b7280;
+      cursor: pointer;
+      transition: .3s;
+      font-family: inherit;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .faq-tab:hover { border-color: #c9a961; color: #a8894a; }
+    .faq-tab.active {
+      background: linear-gradient(135deg, #0a0e17, #1c2233);
+      color: #c9a961;
+      border-color: #0a0e17;
+    }
+    .faq-tab .count {
+      padding: 2px 8px;
+      background: rgba(201,169,97,.15);
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .faq-tab.active .count { background: rgba(201,169,97,.25); }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .faq-item {
+      background: #fff;
+      border-radius: 18px;
+      border: 1.5px solid #e5e3dd;
+      overflow: hidden;
+      transition: .3s;
+    }
+    .faq-item:hover { border-color: #c9a961; }
+    .faq-item.open { border-color: #c9a961; box-shadow: 0 10px 40px rgba(10,14,23,.08); }
+
+    .faq-question {
+      width: 100%;
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: right;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      color: #0a0e17;
+      transition: .2s;
+    }
+    .faq-question:hover { color: #a8894a; }
+    .faq-question .icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f4f2ed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: .3s;
+      color: #a8894a;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .faq-item.open .faq-question .icon-box {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      transform: rotate(45deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .35s ease;
+    }
+    .faq-item.open .faq-answer { max-height: 1000px; }
+    .faq-answer-inner {
+      padding: 0 26px 24px;
+      font-size: 14.5px;
+      line-height: 1.9;
+      color: #1a1a1a;
+    }
+    .faq-answer-inner p { margin-bottom: 12px; }
+    .faq-answer-inner ul { list-style: none; padding: 0; margin: 12px 0; }
+    .faq-answer-inner ul li {
+      padding: 6px 0 6px 28px;
+      position: relative;
+    }
+    .faq-answer-inner ul li::before {
+      content: '•';
+      position: absolute;
+      right: 8px;
+      top: 4px;
+      color: #c9a961;
+      font-size: 20px;
+      font-weight: 900;
+    }
+    .faq-answer-inner a {
+      color: #a8894a;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px dashed #c9a961;
+    }
+    .faq-answer-inner .highlight {
+      background: rgba(201,169,97,.1);
+      padding: 12px 16px;
+      border-radius: 10px;
+      border-right: 3px solid #c9a961;
+      margin: 12px 0;
+      font-size: 13.5px;
+    }
+
+    .faq-empty {
+      text-align: center;
+      padding: 60px 20px;
+      background: #fff;
+      border-radius: 20px;
+      border: 2px dashed #e5e3dd;
+    }
+    .faq-empty .emoji { font-size: 64px; margin-bottom: 16px; opacity: .5; }
+    .faq-empty h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .faq-empty p { font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+    .faq-empty a {
+      display: inline-flex;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      border-radius: 50px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .faq-cta {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      border-radius: 24px;
+      padding: 48px 32px;
+      text-align: center;
+      color: #fff;
+      margin-top: 48px;
+    }
+    .faq-cta h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .faq-cta h2 span { color: #c9a961; font-style: italic; }
+    .faq-cta p { color: #a0a5b5; font-size: 15px; margin-bottom: 24px; }
+    .faq-cta .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .faq-cta .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: .3s;
+    }
+    .faq-cta .btn.primary {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      box-shadow: 0 8px 30px rgba(201,169,97,.35);
+    }
+    .faq-cta .btn.primary:hover { transform: translateY(-3px); }
+    .faq-cta .btn.secondary {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+    }
+
+    @media (max-width: 640px) {
+      .faq-hero { padding: 50px 0 80px; }
+      .faq-hero h1 { font-size: 28px; }
+      .faq-question { padding: 18px 20px; font-size: 14px; }
+      .faq-answer-inner { padding: 0 20px 20px; }
+      .faq-cta { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand"><div class="brand-name">LUXE</div></a>
+    <div class="search-bar"><input type="text" id="searchInput" placeholder="ابحث..."></div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الطلب">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<section class="faq-hero">
+  <div class="container">
+    <div class="eyebrow">إجابات سريعة</div>
+    <h1>الأسئلة <span>الشائعة</span></h1>
+    <p>كل اللي محتاج تعرفه عن التسوق من LUXE Store في مكان واحد</p>
+  </div>
+</section>
+
+<div class="faq-search-wrap">
+  <div class="faq-search-box">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+    </svg>
+    <input type="text" id="faqSearch" placeholder="ابحث في الأسئلة...">
+    <button class="clear-btn" id="clearSearch" type="button" aria-label="مسح">✕</button>
+  </div>
+</div>
+
+<div class="faq-container">
+  <div class="faq-tabs" id="faqTabs"></div>
+  <div class="faq-list" id="faqList"></div>
+
+  <div class="faq-cta">
+    <h2>مش لاقي <span>إجابتك</span>؟</h2>
+    <p>فريقنا جاهز لمساعدتك في أي وقت</p>
+    <div class="btns">
+      <a href="https://wa.me/201001257486" class="btn primary" target="_blank" rel="noopener">💬 اسأل على واتساب</a>
+      <a href="contact.html" class="btn secondary">📞 اتصل بنا</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="returns.html">الاستبدال والإرجاع</a>
+        <a href="faq.html">الأسئلة الشائعة</a>
+        <a href="contact.html">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="about.html">من نحن</a>
+        <a href="privacy.html">الخصوصية</a>
+        <a href="terms.html">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<a href="cart.html" class="float-cart">🛍<span class="badge" data-cart-badge>0</span></a>
+
+<script type="module">
+import { getCurrentUser, logout } from './js/api.js';
+import { showToast, updateCartBadge } from './js/ui.js';
+
+// ===========================================
+// FAQ Data
+// ===========================================
+const FAQ_DATA = [
+  { category: 'ordering', q: 'إزاي أطلب من LUXE Store؟', a: `<p>الطلب سهل جداً — 4 خطوات:</p><ul><li>اختار المنتج اللي عاجبك واضغط "أضف للسلة"</li><li>ادخل على السلة واضغط "إتمام الشراء"</li><li>املأ بيانات الشحن واختار طريقة الدفع</li><li>أكد الطلب واستنى الشحن</li></ul><div class="highlight">هتستلم رسالة تأكيد على الواتساب بعد الطلب فوراً</div>` },
+  { category: 'ordering', q: 'هل أحتاج حساب عشان أطلب؟', a: `<p>أيوه، لازم تسجل حساب عشان تقدر تكمل عملية الشراء. ده بيضمن:</p><ul><li>تتبع طلباتك بسهولة</li><li>حفظ عناوينك للطلبات القادمة</li><li>استلام إشعارات فورية بكل تحديث</li><li>حماية بياناتك</li></ul><div class="highlight">التسجيل مجاني وبياخد أقل من دقيقة</div>` },
+  { category: 'ordering', q: 'أقدر أعدل أو ألغي طلبي بعد إرساله؟', a: `<p>أيوه، لكن بشروط:</p><ul><li><strong>قبل تأكيد الدفع:</strong> تقدر تلغي بسهولة من صفحة "طلباتي"</li><li><strong>بعد تأكيد الدفع وقبل الشحن:</strong> تواصل معنا على الواتساب</li><li><strong>بعد الشحن:</strong> مش ممكن الإلغاء، لكن تقدر ترفض الاستلام</li></ul><div class="highlight">⏰ الأسرع دايمًا هو التواصل على واتساب: 01001257486</div>` },
+
+  { category: 'payment', q: 'إيه طرق الدفع المتاحة؟', a: `<p>حالياً بنقبل الدفع عبر:</p><ul><li><strong>فودافون كاش</strong> — التحويل على رقم 01001257486</li></ul><p>قريباً هنضيف طرق دفع تانية زي:</p><ul><li>إنستاباي</li><li>بطاقات ائتمانية</li><li>الدفع عند الاستلام</li></ul>` },
+  { category: 'payment', q: 'ليه لازم أدفع الشحن (200 ج) الأول؟', a: `<p>دي سياسة المتجر عشان نضمن جدية الطلبات. تفاصيلها:</p><ul><li>بتدفع <strong>200 ج فقط</strong> قبل تأكيد الطلب</li><li>سعر المنتجات (المبلغ الكبير) عند الاستلام</li><li>الـ 200 ج مش هتترجع لو لغيت الطلب بعد الشحن</li></ul><div class="highlight">💡 الفايدة: بنضمن إن كل عميل جدي، وعروضنا أفضل.</div>` },
+  { category: 'payment', q: 'إزاي أدفع فودافون كاش؟', a: `<p>خطوات الدفع:</p><ul><li>افتح تطبيق فودافون كاش</li><li>اختار "تحويل"</li><li>أدخل رقم: <strong>01001257486</strong></li><li>أدخل المبلغ (200 ج)</li><li>أكد التحويل</li><li>هتستلم SMS فيه رقم العملية</li><li>ادخل رقم العملية في صفحة الـ Checkout</li></ul><div class="highlight">⏰ هيراجع طلبك خلال 24 ساعة وتبدأ مرحلة الشحن</div>` },
+  { category: 'payment', q: 'فلوسي هتترجع لو لغيت الطلب؟', a: `<p>حسب المرحلة:</p><ul><li><strong>قبل تأكيد الدفع:</strong> مفيش دفع، مفيش استرداد</li><li><strong>بعد الدفع وقبل الشحن:</strong> نسترد 200 ج كاملة خلال 3-5 أيام</li><li><strong>بعد الشحن:</strong> نسترد 200 ج ناقص رسوم الشحن الفعلية</li><li><strong>استلمت المنتج:</strong> تقدر ترجعه خلال 14 يوم</li></ul>` },
+
+  { category: 'shipping', q: 'الشحن بيوصل إمتى؟', a: `<p>حسب المنطقة:</p><ul><li><strong>القاهرة والجيزة:</strong> 24-48 ساعة</li><li><strong>الإسكندرية والدلتا:</strong> 2-3 أيام عمل</li><li><strong>الصعيد والمحافظات البعيدة:</strong> 3-4 أيام عمل</li></ul><div class="highlight">⚠️ التأخيرات بسبب ظروف خارجة عن إرادتنا (أمطار، عطل، إجازات) مش من مسؤوليتنا</div>` },
+  { category: 'shipping', q: 'إزاي أتبع شحنتي؟', a: `<p>فيه 3 طرق:</p><ul><li>روح لصفحة "تتبع الشحنة" في الموقع</li><li>ادخل رقم التتبع (يبدأ بـ TRK-)</li><li>هتشوف حالة الشحنة لحظة بلحظة</li></ul><p>كمان هتستلم رسالة على الواتساب في كل مرحلة.</p>` },
+  { category: 'shipping', q: 'الشحن لكل المحافظات؟', a: `<p>أيوه! بنوصل لكل محافظات مصر:</p><ul><li>القاهرة والجيزة</li><li>الإسكندرية والدلتا</li><li>الصعيد (أسيوط، المنيا، سوهاج، الأقصر، أسوان)</li><li>القناة (بورسعيد، السويس، الإسماعيلية)</li></ul><div class="highlight">رسوم الشحن موحدة (200 ج) لكل المحافظات</div>` },
+  { category: 'shipping', q: 'هل ممكن أستلم من فرع؟', a: `<p>حالياً بنشتغل أونلاين فقط (توصيل للعنوان).</p><p>قريباً هنفتح نقاط استلام في:</p><ul><li>القاهرة</li><li>الجيزة</li><li>الإسكندرية</li></ul><div class="highlight">💡 تابع صفحتنا عشان تعرف أول ما نفتح</div>` },
+
+  { category: 'returns', q: 'أقدر أرجّع المنتج إمتى؟', a: `<p>المدة حسب نوع المنتج:</p><ul><li><strong>إلكترونيات:</strong> 3 أيام (لضمان عدم الفتح)</li><li><strong>عطور:</strong> 7 أيام (لو مش مفتوحة)</li><li><strong>أزياء وأحذية:</strong> 14 يوم</li><li><strong>حقائب وإكسسوارات:</strong> 14 يوم</li></ul><div class="highlight">⚠️ المنتج لازم يكون بحالته الأصلية وبكامل تغليفه</div>` },
+  { category: 'returns', q: 'إيه شروط الإرجاع؟', a: `<p>لازم يتحقق كل ده:</p><ul><li>المنتج في حالته الأصلية (بدون استخدام)</li><li>الغلاف الأصلي سليم</li><li>الملحقات موجودة</li><li>رقم الطلب متوفر</li><li>المنتج غير مشمول بقائمة المحظورات</li></ul><p>اقرأ <a href="returns.html">صفحة الإرجاع</a> للتفاصيل الكاملة.</p>` },
+  { category: 'returns', q: 'مين يتحمل رسوم شحن الإرجاع؟', a: `<p>ده بيعتمد على السبب:</p><ul><li><strong>منتج معيب أو مختلف:</strong> إحنا نتحمل الرسوم (مجاني)</li><li><strong>تغيير رأي:</strong> أنت تتحمل 200 ج</li><li><strong>مقاس غلط:</strong> حسب الحالة (تواصل معنا)</li></ul>` },
+  { category: 'returns', q: 'إزاي أستلم فلوسي بعد الإرجاع؟', a: `<p>3 طرق:</p><ul><li><strong>تحويل بنكي:</strong> 3-5 أيام عمل</li><li><strong>فودافون كاش:</strong> 24-48 ساعة</li><li><strong>رصيد في المتجر:</strong> فوري + بونص 10%</li></ul><div class="highlight">💡 رصيد المتجر أسرع + بتكسب 10% زيادة</div>` },
+
+  { category: 'products', q: 'المنتجات أصلية 100%؟', a: `<p>أيوه، وبنضمن ده:</p><ul><li>كل منتج من موزع معتمد</li><li>فاتورة أصلية مع كل طلب</li><li>ضمان الوكيل الرسمي (على المنتجات اللي ليها ضمان)</li><li>استرداد كامل لو المنتج مش أصلي</li></ul>` },
+  { category: 'products', q: 'أقدر أشوف المنتج قبل ما أشتري؟', a: `<p>حالياً أونلاين فقط، لكن تقدر:</p><ul><li>تشوف صور متعددة لكل منتج</li><li>تقرأ المواصفات الكاملة</li><li>تشوف تقييمات العملاء</li><li>تتواصل معنا على واتساب لأي استفسار</li></ul>` },
+  { category: 'products', q: 'الأسعار قابلة للتفاوض؟', a: `<p>لأ، الأسعار ثابتة وشفافة. لكن:</p><ul><li>في عروض دورية على صفحتنا</li><li>خصومات للمشترين المتكررين</li><li>كوبونات خاصة للمتابعين</li></ul><div class="highlight">💡 تابعنا على السوشيال عشان تشوف العروض أول بأول</div>` },
+
+  { category: 'account', q: 'إزاي أغيّر كلمة السر؟', a: `<p>من صفحة "حسابي":</p><ul><li>ادخل على "حسابي"</li><li>اختار تبويب "الأمان"</li><li>اضغط "إرسال رابط تغيير كلمة السر"</li><li>افتح بريدك واضغط الرابط</li></ul>` },
+  { category: 'account', q: 'نسيت كلمة السر، أعمل إيه؟', a: `<p>3 خطوات:</p><ul><li>ادخل صفحة تسجيل الدخول</li><li>اضغط "نسيت كلمة السر؟"</li><li>ادخل بريدك الإلكتروني</li></ul><p>هيوصلك رابط لإعادة تعيين كلمة السر على بريدك.</p><div class="highlight">⚠️ لو مش لاقي الإيميل، شوف مجلد Spam</div>` },
+  { category: 'account', q: 'إزاي أحذف حسابي؟', a: `<p>تواصل معنا على:</p><ul><li>واتساب: 01001257486</li><li>إيميل: info@luxe.com</li></ul><p>سيتم حذف حسابك وكل بياناتك خلال 7 أيام عمل.</p><div class="highlight">⚠️ ملاحظة: الطلبات السابقة محفوظة للأغراض المحاسبية</div>` },
+  { category: 'account', q: 'بياناتي آمنة عندكم؟', a: `<p>أيوه 100%، بنستخدم:</p><ul><li>تشفير SSL على كل الاتصالات</li><li>تشفير كلمات السر (bcrypt)</li><li>Firebase Security Rules</li><li>مراقبة مستمرة للاختراقات</li></ul><p>اقرأ <a href="privacy.html">سياسة الخصوصية</a> للتفاصيل.</p>` }
+];
+
+const CATEGORIES = [
+  { key: 'all', label: 'الكل', icon: '📋' },
+  { key: 'ordering', label: 'الطلب', icon: '🛒' },
+  { key: 'payment', label: 'الدفع', icon: '💳' },
+  { key: 'shipping', label: 'الشحن', icon: '🚚' },
+  { key: 'returns', label: 'الإرجاع', icon: '🔄' },
+  { key: 'products', label: 'المنتجات', icon: '📦' },
+  { key: 'account', label: 'الحساب', icon: '👤' }
+];
+
+let currentCategory = 'all';
+let searchQuery = '';
+
+function renderTabs() {
+  const tabs = document.getElementById('faqTabs');
+  tabs.innerHTML = CATEGORIES.map(cat => {
+    const count = cat.key === 'all' ? FAQ_DATA.length : FAQ_DATA.filter(f => f.category === cat.key).length;
+    return `<button class="faq-tab ${currentCategory === cat.key ? 'active' : ''}" data-cat="${cat.key}">
+      ${cat.icon} ${cat.label} <span class="count">${count}</span>
+    </button>`;
+  }).join('');
+
+  tabs.querySelectorAll('.faq-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentCategory = btn.dataset.cat;
+      renderTabs();
+      renderList();
+    });
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('faqList');
+
+  let filtered = FAQ_DATA;
+  if (currentCategory !== 'all') {
+    filtered = filtered.filter(f => f.category === currentCategory);
+  }
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(f =>
+      f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q)
+    );
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="faq-empty">
+        <div class="emoji">🔍</div>
+        <h3>مفيش نتائج مطابقة</h3>
+        <p>جرب كلمة تانية أو اسألنا مباشرة</p>
+        <a href="https://wa.me/201001257486" target="_blank" rel="noopener">💬 اسأل على واتساب</a>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(item => `
+    <div class="faq-item">
+      <button class="faq-question" type="button">
+        <span>${item.q}</span>
+        <span class="icon-box">+</span>
+      </button>
+      <div class="faq-answer">
+        <div class="faq-answer-inner">${item.a}</div>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      list.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+}
+
+// Search
+const searchInput = document.getElementById('faqSearch');
+const clearBtn = document.getElementById('clearSearch');
+
+searchInput.addEventListener('input', (e) => {
+  searchQuery = e.target.value.trim();
+  clearBtn.classList.toggle('show', searchQuery.length > 0);
+  renderList();
+});
+
+clearBtn.addEventListener('click', () => {
+  searchInput.value = '';
+  searchQuery = '';
+  clearBtn.classList.remove('show');
+  renderList();
+  searchInput.focus();
+});
+
+// ===========================================
+// User Area
+// ===========================================
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button">
+        <span>${displayName}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+// Init
+renderTabs();
+renderList();
+renderUserArea();
+updateCartBadge();
+</script>
+
+</body>
+</html>
