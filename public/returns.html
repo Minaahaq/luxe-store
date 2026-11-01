@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الاستبدال والإرجاع - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .returns-hero {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      color: #fff;
+      padding: 70px 0;
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .returns-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(201,169,97,.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(139,92,246,.08) 0%, transparent 50%);
+    }
+    .returns-hero > .container { position: relative; z-index: 1; }
+    .returns-hero .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9a961;
+      margin-bottom: 16px;
+    }
+    .returns-hero h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: -.5px;
+    }
+    .returns-hero h1 span { color: #c9a961; font-style: italic; }
+    .returns-hero p {
+      color: #a0a5b5;
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .returns-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .return-card {
+      background: #fff;
+      border-radius: 24px;
+      border: 1px solid #e5e3dd;
+      padding: 36px;
+      margin-bottom: 24px;
+      transition: .3s;
+    }
+    .return-card:hover {
+      box-shadow: 0 10px 40px rgba(10,14,23,.08);
+      border-color: #c9a961;
+    }
+    .return-card h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #0a0e17;
+    }
+    .return-card h2 .num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .return-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      margin-bottom: 14px;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: #faf9f6;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .data-table th {
+      background: #0a0e17;
+      color: #c9a961;
+      padding: 14px 16px;
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .data-table td {
+      padding: 16px;
+      border-bottom: 1px solid #e5e3dd;
+      font-size: 14px;
+      color: #1a1a1a;
+    }
+    .data-table td:last-child { font-weight: 700; color: #0a0e17; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: rgba(201,169,97,.05); }
+
+    .info-box {
+      padding: 18px 20px;
+      border-radius: 14px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .info-box.warning {
+      background: #fff3cd;
+      border-right: 4px solid #f59e0b;
+      color: #92400e;
+    }
+    .info-box.success {
+      background: rgba(16,185,129,.08);
+      border-right: 4px solid #10b981;
+      color: #065f46;
+    }
+    .info-box.danger {
+      background: rgba(239,68,68,.08);
+      border-right: 4px solid #ef4444;
+      color: #991b1b;
+    }
+    .info-box strong { font-weight: 900; }
+
+    /* Steps */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .step-item {
+      text-align: center;
+      padding: 24px 16px;
+      background: #faf9f6;
+      border-radius: 14px;
+      transition: .3s;
+      border: 2px solid transparent;
+    }
+    .step-item:hover {
+      background: rgba(201,169,97,.08);
+      border-color: #c9a961;
+      transform: translateY(-3px);
+    }
+    .step-item .num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0a0e17, #1c2233);
+      color: #c9a961;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      margin: 0 auto 12px;
+    }
+    .step-item h3 {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #0a0e17;
+    }
+    .step-item p {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* Contact CTA */
+    .return-contact {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      color: #fff;
+      margin-top: 30px;
+    }
+    .return-contact h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .return-contact p {
+      color: #a0a5b5;
+      font-size: 15px;
+      margin-bottom: 24px;
+    }
+    .contact-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .contact-btns a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: .3s;
+    }
+    .contact-btns .wa {
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: #fff;
+      box-shadow: 0 8px 30px rgba(37,211,102,.35);
+    }
+    .contact-btns .wa:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(37,211,102,.5);
+    }
+    .contact-btns .email {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      box-shadow: 0 8px 30px rgba(201,169,97,.35);
+    }
+    .contact-btns .email:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(201,169,97,.5);
+    }
+
+    /* Returns form */
+    .return-form {
+      margin-top: 20px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+    .form-field label .req { color: #ef4444; }
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #e5e3dd;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: .3s;
+    }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus {
+      border-color: #c9a961;
+      box-shadow: 0 0 0 4px rgba(201,169,97,.1);
+    }
+    .form-field textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+    .form-submit {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #0a0e17, #1c2233);
+      color: #c9a961;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: .3s;
+      font-family: inherit;
+    }
+    .form-submit:hover {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+    }
+
+    @media (max-width: 640px) {
+      .returns-hero { padding: 40px 0; }
+      .returns-hero h1 { font-size: 30px; }
+      .return-card { padding: 24px; }
+      .return-card h2 { font-size: 20px; }
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .contact-btns a { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الطلب">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="returns-hero">
+  <div class="container">
+    <div class="eyebrow">سياسة المتجر</div>
+    <h1>الاستبدال <span>والإرجاع</span></h1>
+    <p>رضاك هو أولويتنا — سياسة واضحة وعادلة لحماية حقك</p>
+  </div>
+</section>
+
+<div class="returns-container">
+
+  <!-- 1. Commitment -->
+  <div class="return-card">
+    <h2><span class="num">💎</span>التزامنا تجاهك</h2>
+    <p>في <strong>LUXE Store</strong>، نضمن لك تجربة تسوق آمنة وخالية من القلق. إذا لم تكن راضياً عن مشترياتك لأي سبب، يمكنك الاستبدال أو الإرجاع وفقاً للشروط التالية.</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>البند</th>
+          <th>التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>مدة الإرجاع</td>
+          <td>14 يوم من تاريخ الاستلام</td>
+        </tr>
+        <tr>
+          <td>مدة الاستبدال</td>
+          <td>14 يوم من تاريخ الاستلام</td>
+        </tr>
+        <tr>
+          <td>رسوم شحن الإرجاع</td>
+          <td>200 ج.م (مجانية لو المنتج معيب)</td>
+        </tr>
+        <tr>
+          <td>مدة استرداد المبلغ</td>
+          <td>3-7 أيام عمل</td>
+        </tr>
+        <tr>
+          <td>للتواصل</td>
+          <td>01001257486</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 2. Duration -->
+  <div class="return-card">
+    <h2><span class="num">1</span>المدة الزمنية للإرجاع</h2>
+    <p>يحق لك طلب الإرجاع خلال المدد التالية حسب نوع المنتج:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>نوع المنتج</th>
+          <th>المدة</th>
+          <th>ملاحظات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>إلكترونيات (لابتوب، موبايل، ساعات ذكية)</td>
+          <td>3 أيام</td>
+          <td>لضمان عدم الفتح</td>
+        </tr>
+        <tr>
+          <td>عطور ومستحضرات تجميل</td>
+          <td>7 أيام</td>
+          <td>بشرط عدم فتح الغلاف</td>
+        </tr>
+        <tr>
+          <td>أزياء وأحذية</td>
+          <td>14 يوم</td>
+          <td>بحالتها الأصلية</td>
+        </tr>
+        <tr>
+          <td>حقائب وإكسسوارات</td>
+          <td>14 يوم</td>
+          <td>مع كل الملحقات</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <strong>⚠️ بعد انتهاء المدة:</strong> لا يمكن قبول طلبات الإرجاع إلا في حالة وجود عيب مصنعي.
+    </div>
+  </div>
+
+  <!-- 3. Conditions -->
+  <div class="return-card">
+    <h2><span class="num">2</span>شروط قبول الإرجاع</h2>
+    <p>لكي يتم قبول طلب الإرجاع، يجب توفر <strong>كل</strong> الشروط التالية:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الشرط</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>المنتج في حالته الأصلية (بدون استخدام)</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>الغلاف الأصلي سليم وغير ممزق</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>جميع الملحقات والهدايا موجودة</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>رقم الطلب أو الفاتورة متوفر</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>عدم وجود أي تلف أو تعديل من العميل</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>المنتج غير مشمول بقائمة غير القابلة للإرجاع</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 4. Non-returnable -->
+  <div class="return-card">
+    <h2><span class="num">3</span>المنتجات غير القابلة للإرجاع</h2>
+    <p>هذه المنتجات لا يمكن إرجاعها لأسباب تتعلق بالصحة والأمان:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>المنتج</th>
+          <th>السبب</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>المنتجات المخصصة</td>
+          <td>حسب المقاس/التصميم المطلوب</td>
+        </tr>
+        <tr>
+          <td>الملابس الداخلية</td>
+          <td>أسباب صحية</td>
+        </tr>
+        <tr>
+          <td>العطور المفتوحة</td>
+          <td>مخالفة الصحة</td>
+        </tr>
+        <tr>
+          <td>المنتجات المفتوحة</td>
+          <td>خارج التغليف الأصلي</td>
+        </tr>
+        <tr>
+          <td>المنتجات بخصم 50%+</td>
+          <td>عروض تصفية نهائية</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. Steps -->
+  <div class="return-card">
+    <h2><span class="num">4</span>خطوات طلب الإرجاع</h2>
+    <p>العملية بسيطة — 5 خطوات فقط:</p>
+
+    <div class="steps-grid">
+      <div class="step-item">
+        <div class="num">1</div>
+        <h3>تواصل</h3>
+        <p>واتساب: 01001257486</p>
+      </div>
+      <div class="step-item">
+        <div class="num">2</div>
+        <h3>املأ النموذج</h3>
+        <p>رقم الطلب + السبب</p>
+      </div>
+      <div class="step-item">
+        <div class="num">3</div>
+        <h3>الموافقة</h3>
+        <p>رد خلال 24-48 ساعة</p>
+      </div>
+      <div class="step-item">
+        <div class="num">4</div>
+        <h3>الشحن</h3>
+        <p>مندوب لاستلام المنتج</p>
+      </div>
+      <div class="step-item">
+        <div class="num">5</div>
+        <h3>الاسترداد</h3>
+        <p>خلال 3-7 أيام</p>
+      </div>
+    </div>
+
+    <div class="info-box success">
+      <strong>✓ رسوم الشحن:</strong> نتحمل رسوم الإرجاع لو المنتج معيب. أنت تتحمل 200 ج.م لو الإرجاع بسبب تغيير الرأي.
+    </div>
+  </div>
+
+  <!-- 6. Refund Methods -->
+  <div class="return-card">
+    <h2><span class="num">5</span>طرق استرداد المبلغ</h2>
+    <p>عند قبول الإرجاع، يمكنك اختيار طريقة الاسترداد:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>الطريقة</th>
+          <th>المدة</th>
+          <th>ملاحظات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>تحويل بنكي</td>
+          <td>3-5 أيام عمل</td>
+          <td>لحسابك البنكي</td>
+        </tr>
+        <tr>
+          <td>فودافون كاش</td>
+          <td>24-48 ساعة</td>
+          <td>على رقمك</td>
+        </tr>
+        <tr>
+          <td>إنستاباي</td>
+          <td>24-48 ساعة</td>
+          <td>على رقمك</td>
+        </tr>
+        <tr>
+          <td>رصيد في المتجر</td>
+          <td>فوري</td>
+          <td>+ 10% بونص</td>
+        </tr>
+        <tr>
+          <td>استبدال بمنتج</td>
+          <td>24 ساعة</td>
+          <td>بدون رسوم</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <strong>⚠️ ملاحظة:</strong> يتم خصم رسوم الشحن الأصلية (200 ج.م) في حالة الإرجاع بسبب تغيير الرأي.
+    </div>
+  </div>
+
+  <!-- 7. Exchange -->
+  <div class="return-card">
+    <h2><span class="num">6</span>الاستبدال</h2>
+    <p>يمكنك استبدال المنتج بمنتج آخر من نفس الفئة أو أعلى مع دفع الفرق:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>الحالة</th>
+          <th>الإجراء</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>منتج بنفس السعر</td>
+          <td>استبدال مباشر بدون رسوم</td>
+        </tr>
+        <tr>
+          <td>منتج بسعر أعلى</td>
+          <td>دفع الفرق</td>
+        </tr>
+        <tr>
+          <td>منتج بسعر أقل</td>
+          <td>استرداد الفرق</td>
+        </tr>
+        <tr>
+          <td>منتج مختلف في الفئة</td>
+          <td>حسب التوفر</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 8. Return Request Form -->
+  <div class="return-card">
+    <h2><span class="num">7</span>طلب إرجاع سريع</h2>
+    <p>املأ النموذج وسنتواصل معك خلال 24 ساعة:</p>
+
+    <form class="return-form" id="returnForm">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>رقم الطلب <span class="req">*</span></label>
+          <input type="text" id="orderNumber" placeholder="ORD-XXXXXXXX" required>
+        </div>
+        <div class="form-field">
+          <label>رقم الموبايل <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="01xxxxxxxxx" required>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-field">
+          <label>سبب الإرجاع <span class="req">*</span></label>
+          <select id="reason" required>
+            <option value="">اختر السبب</option>
+            <option>منتج معيب</option>
+            <option>منتج مختلف عن الوصف</option>
+            <option>مقاس غير مناسب</option>
+            <option>تغيير رأي</option>
+            <option>سبب آخر</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>نوع الطلب</label>
+          <select id="requestType">
+            <option>إرجاع مع استرداد</option>
+            <option>استبدال بمنتج آخر</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-field" style="margin-bottom:16px">
+        <label>تفاصيل إضافية</label>
+        <textarea id="details" placeholder="اشرح المشكلة بالتفصيل..."></textarea>
+      </div>
+
+      <button type="submit" class="form-submit">📤 إرسال طلب الإرجاع</button>
+    </form>
+  </div>
+
+  <!-- Contact CTA -->
+  <div class="return-contact">
+    <h2>عندك سؤال؟</h2>
+    <p>فريقنا جاهز لمساعدتك</p>
+    <div class="contact-btns">
+      <a href="https://wa.me/201001257486?text=مرحباً، عندي استفسار عن الاستبدال والإرجاع" class="wa" target="_blank" rel="noopener">
+        💬 واتساب: 01001257486
+      </a>
+      <a href="mailto:info@luxe.com?subject=استفسار عن الاستبدال والإرجاع" class="email">
+        📧 info@luxe.com
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="returns.html">الاستبدال والإرجاع</a>
+        <a href="#">الأسئلة الشائعة</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<a href="cart.html" class="float-cart">🛍<span class="badge" data-cart-badge>0</span></a>
+
+<script type="module">
+import { getCurrentUser, logout, api } from './js/api.js';
+import { showToast, updateCartBadge } from './js/ui.js';
+
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button">
+        <span>${displayName}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+// ===========================================
+// Return Request Form
+// ===========================================
+document.getElementById('returnForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const orderNumber = document.getElementById('orderNumber').value.trim().toUpperCase();
+  const phone = document.getElementById('phone').value.trim();
+  const reason = document.getElementById('reason').value;
+  const requestType = document.getElementById('requestType').value;
+  const details = document.getElementById('details').value.trim();
+
+  if (!orderNumber || !phone || !reason) {
+    showToast('من فضلك اكمل البيانات المطلوبة', 'error');
+    return;
+  }
+
+  if (!/^ORD-[A-Z0-9]{6,12}$/i.test(orderNumber)) {
+    showToast('رقم الطلب غير صحيح — يبدأ بـ ORD-', 'error');
+    return;
+  }
+
+  if (!/^01[0-9]{9}$/.test(phone)) {
+    showToast('رقم الموبايل غير صحيح', 'error');
+    return;
+  }
+
+  const btn = e.target.querySelector('.form-submit');
+  btn.disabled = true;
+  btn.textContent = 'جاري الإرسال...';
+
+  try {
+    // Build WhatsApp message with all data
+    const message = `🔄 *طلب إرجاع جديد*\n\n` +
+      `📋 رقم الطلب: ${orderNumber}\n` +
+      `📱 الموبايل: ${phone}\n` +
+      `📝 النوع: ${requestType}\n` +
+      `❓ السبب: ${reason}\n` +
+      `${details ? `\n💬 تفاصيل: ${details}` : ''}\n\n` +
+      `— من موقع LUXE Store`;
+
+    const waUrl = `https://wa.me/201001257486?text=${encodeURIComponent(message)}`;
+
+    showToast('جاري فتح واتساب...', 'success');
+
+    setTimeout(() => {
+      window.open(waUrl, '_blank');
+      btn.disabled = false;
+      btn.textContent = '📤 إرسال طلب الإرجاع';
+    }, 500);
+  } catch (err) {
+    showToast('حدث خطأ، جرب تاني', 'error');
+    btn.disabled = false;
+    btn.textContent = '📤 إرسال طلب الإرجاع';
+  }
+});
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+renderUserArea();
+updateCartBadge();
+</script>
+
+</body>
+</html>
