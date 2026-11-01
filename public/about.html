@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>من نحن - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .about-hero {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      color: #fff;
+      padding: 80px 0 90px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 40px;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(201,169,97,.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(139,92,246,.08) 0%, transparent 50%);
+    }
+    .about-hero > .container { position: relative; z-index: 1; }
+    .about-hero .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9a961;
+      margin-bottom: 16px;
+    }
+    .about-hero h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 52px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      letter-spacing: -.5px;
+    }
+    .about-hero h1 span { color: #c9a961; font-style: italic; }
+    .about-hero p {
+      color: #a0a5b5;
+      font-size: 17px;
+      max-width: 650px;
+      margin: 0 auto;
+      line-height: 1.8;
+    }
+
+    .about-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Story Section */
+    .story-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-bottom: 60px;
+      background: #fff;
+      border-radius: 24px;
+      border: 1px solid #e5e3dd;
+      padding: 48px;
+    }
+    .story-text h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: #0a0e17;
+    }
+    .story-text h2 span { color: #a8894a; }
+    .story-text p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+    }
+    .story-visual {
+      background: linear-gradient(135deg, #0a0e17, #1c2233);
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .story-visual::before {
+      content: 'LUXE';
+      position: absolute;
+      bottom: -40px;
+      right: 50%;
+      transform: translateX(50%);
+      font-size: 180px;
+      font-weight: 900;
+      color: rgba(201,169,97,.05);
+      letter-spacing: 20px;
+      pointer-events: none;
+      line-height: 1;
+    }
+    .story-visual .icon {
+      font-size: 72px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .story-visual h3 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      color: #c9a961;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .story-visual p {
+      color: #a0a5b5;
+      font-size: 14px;
+      line-height: 1.7;
+      position: relative;
+    }
+
+    /* Vision & Mission */
+    .vision-mission {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 60px;
+    }
+    .vm-card {
+      background: #fff;
+      border-radius: 24px;
+      border: 1px solid #e5e3dd;
+      padding: 36px;
+      transition: .3s;
+    }
+    .vm-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 15px 40px rgba(10,14,23,.08);
+      border-color: #c9a961;
+    }
+    .vm-card .icon-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .vm-card.vision .icon-box {
+      background: rgba(201,169,97,.15);
+    }
+    .vm-card.mission .icon-box {
+      background: rgba(16,185,129,.15);
+    }
+    .vm-card h3 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      color: #0a0e17;
+    }
+    .vm-card p {
+      font-size: 14.5px;
+      line-height: 1.9;
+      color: #1a1a1a;
+    }
+
+    /* Values */
+    .values-section {
+      margin-bottom: 60px;
+    }
+    .section-title {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-title .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #a8894a;
+      margin-bottom: 12px;
+    }
+    .section-title h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -.5px;
+      color: #0a0e17;
+    }
+    .section-title h2 span { color: #a8894a; font-style: italic; }
+    .section-title p {
+      color: #6b7280;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .value-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid #e5e3dd;
+      padding: 28px 24px;
+      text-align: center;
+      transition: .3s;
+    }
+    .value-card:hover {
+      transform: translateY(-4px);
+      border-color: #c9a961;
+      box-shadow: 0 10px 30px rgba(10,14,23,.06);
+    }
+    .value-card .icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(201,169,97,.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin: 0 auto 16px;
+    }
+    .value-card h3 {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #0a0e17;
+    }
+    .value-card p {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #6b7280;
+    }
+
+    /* Stats */
+    .stats-section {
+      background: linear-gradient(135deg, #0a0e17, #1c2233);
+      border-radius: 24px;
+      padding: 48px 32px;
+      margin-bottom: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stats-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(201,169,97,.1) 0%, transparent 70%);
+    }
+    .stats-section > * { position: relative; z-index: 1; }
+    .stats-header {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 32px;
+    }
+    .stats-header .eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9a961;
+      margin-bottom: 10px;
+    }
+    .stats-header h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .stats-header h2 span { color: #c9a961; font-style: italic; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(201,169,97,.2);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .stat-box .num {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 36px;
+      font-weight: 900;
+      color: #c9a961;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-box .label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #a0a5b5;
+      letter-spacing: .3px;
+    }
+
+    /* Why us */
+    .why-section {
+      margin-bottom: 60px;
+    }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .why-card {
+      background: #fff;
+      border-radius: 20px;
+      border: 1px solid #e5e3dd;
+      padding: 28px;
+      display: flex;
+      gap: 16px;
+      transition: .3s;
+    }
+    .why-card:hover {
+      transform: translateY(-3px);
+      border-color: #c9a961;
+      box-shadow: 0 10px 30px rgba(10,14,23,.06);
+    }
+    .why-card .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(201,169,97,.15);
+      color: #a8894a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .why-card .info h3 {
+      font-size: 15px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #0a0e17;
+    }
+    .why-card .info p {
+      font-size: 13px;
+      line-height: 1.7;
+      color: #6b7280;
+    }
+
+    /* CTA */
+    .about-cta {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      border-radius: 24px;
+      padding: 48px 32px;
+      text-align: center;
+      color: #0a0e17;
+    }
+    .about-cta h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .about-cta p {
+      font-size: 15px;
+      margin-bottom: 28px;
+      opacity: .85;
+    }
+    .about-cta .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      background: #0a0e17;
+      color: #c9a961;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: .3s;
+      box-shadow: 0 8px 25px rgba(10,14,23,.3);
+    }
+    .about-cta .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(10,14,23,.4);
+    }
+
+    @media (max-width: 900px) {
+      .story-section {
+        grid-template-columns: 1fr;
+        padding: 32px;
+        gap: 24px;
+      }
+      .vision-mission {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 640px) {
+      .about-hero { padding: 50px 0 60px; }
+      .about-hero h1 { font-size: 32px; }
+      .about-hero p { font-size: 14px; }
+      .story-text h2 { font-size: 24px; }
+      .section-title h2 { font-size: 26px; }
+      .stat-box .num { font-size: 28px; }
+      .stats-section { padding: 32px 20px; }
+      .about-cta { padding: 32px 20px; }
+      .about-cta h2 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الطلب">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="about-hero">
+  <div class="container">
+    <div class="eyebrow">قصتنا</div>
+    <h1>من <span>نحن</span>؟</h1>
+    <p>LUXE Store — وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+  </div>
+</section>
+
+<div class="about-container">
+
+  <!-- Story -->
+  <div class="story-section">
+    <div class="story-text">
+      <h2>قصة <span>LUXE</span></h2>
+      <p>
+        بدأت رحلة <strong>LUXE Store</strong> من فكرة بسيطة: <em>"ليه ما يكونش فيه متجر أونلاين في مصر بيقدم تجربة تسوق فاخرة زي العالمية؟"</em>
+      </p>
+      <p>
+        في <strong>2025</strong>، قررنا نبدأ. اخترنا أفضل المنتجات من علامات تجارية عالمية — إلكترونيات، أزياء، عطور، ساعات — ووفرنالها تجربة تسوق راقية ومريحة.
+      </p>
+      <p>
+        النهاردة، بنخدم عملاء من كل محافظات مصر، وبنكبر كل يوم. رسالتنا واحدة: <strong>نخليك تحس بالفخامة في كل طلب.</strong>
+      </p>
+    </div>
+    <div class="story-visual">
+      <div class="icon">💎</div>
+      <h3>Premium Quality</h3>
+      <p>منتجات مختارة بعناية من أفضل العلامات التجارية العالمية</p>
+    </div>
+  </div>
+
+  <!-- Vision & Mission -->
+  <div class="vision-mission">
+    <div class="vm-card vision">
+      <div class="icon-box">👁️</div>
+      <h3>رؤيتنا</h3>
+      <p>
+        نكون <strong>المتجر الأول في مصر</strong> اللي بيعتمد عليه العملاء اللي بيدوروا على الفخامة والجودة. نطمح نغير مفهوم التسوق الأونلاين من "مجرد شراء" لـ "تجربة تستحق".
+      </p>
+    </div>
+    <div class="vm-card mission">
+      <div class="icon-box">🎯</div>
+      <h3>رسالتنا</h3>
+      <p>
+        نوفر <strong>منتجات أصلية</strong> بأسعار عادلة، مع <strong>خدمة عملاء استثنائية</strong>، وتوصيل سريع. نضمن إن كل عميل يحس إنه اتعامل مع أفضل متجر.
+      </p>
+    </div>
+  </div>
+
+  <!-- Values -->
+  <div class="values-section">
+    <div class="section-title">
+      <div class="eyebrow">المبادئ</div>
+      <h2>قيمنا <span>الأساسية</span></h2>
+      <p>المبادئ اللي بنمشي عليها في كل تعامل</p>
+    </div>
+
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="icon">⭐</div>
+        <h3>الجودة أولاً</h3>
+        <p>بنختار كل منتج بعناية. مفيش حاجة بتخرج للعميل غير لما تكون استوفت معاييرنا.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🤝</div>
+        <h3>الثقة</h3>
+        <p>شفافية كاملة في الأسعار، والمواصفات، وسياسات الإرجاع. مفيش مفاجآت.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">⚡</div>
+        <h3>السرعة</h3>
+        <p>توصيل سريع، رد فوري على الاستفسارات، وحل المشاكل في أقل وقت.</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">💚</div>
+        <h3>رضا العميل</h3>
+        <p>رضاك هو مقياس نجاحنا. لو مش عاجبك حاجة، بنصلحها فوراً.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-section">
+    <div class="stats-header">
+      <div class="eyebrow">الأرقام</div>
+      <h2>LUXE في <span>أرقام</span></h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="num">+500</div>
+        <div class="label">عميل سعيد</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">+100</div>
+        <div class="label">منتج فاخر</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">4.9★</div>
+        <div class="label">متوسط التقييم</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">24h</div>
+        <div class="label">توصيل سريع</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Why Us -->
+  <div class="why-section">
+    <div class="section-title">
+      <div class="eyebrow">ليه LUXE؟</div>
+      <h2>ليه تختار <span>تتسوق معانا</span></h2>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="icon">✅</div>
+        <div class="info">
+          <h3>منتجات أصلية 100%</h3>
+          <p>كل منتج بنوفره أصلي، مع ضمان الاستبدال لو مش راضي.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="icon">🚚</div>
+        <div class="info">
+          <h3>توصيل لكل مصر</h3>
+          <p>بنوصل لكل المحافظات مع تتبع لحظي للشحنة.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="icon">💳</div>
+        <div class="info">
+          <h3>دفع آمن</h3>
+          <p>فودافون كاش، إنستاباي، أو عند الاستلام — كله آمن.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="icon">🔄</div>
+        <div class="info">
+          <h3>إرجاع خلال 14 يوم</h3>
+          <p>مش عاجبك المنتج؟ رجّعه خلال 14 يوم بدون تعقيد.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="icon">🎧</div>
+        <div class="info">
+          <h3>دعم 24/7</h3>
+          <p>فريقنا متاح على واتساب في أي وقت لخدمتك.</p>
+        </div>
+      </div>
+      <div class="why-card">
+        <div class="icon">🔒</div>
+        <div class="info">
+          <h3>خصوصية تامة</h3>
+          <p>بياناتك محمية بأعلى معايير الأمان. مفيش مشاركة مع أي طرف.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="about-cta">
+    <h2>جاهز تبدأ التسوق؟</h2>
+    <p>اكتشف مجموعتنا الحصرية من المنتجات الفاخرة</p>
+    <a href="index.html" class="btn">
+      🛍 تصفح المنتجات
+    </a>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر. نختار لك أفضل المنتجات من حول العالم بمعايير صارمة للجودة والأناقة.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="returns.html">الاستبدال والإرجاع</a>
+        <a href="contact.html">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="about.html">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<a href="cart.html" class="float-cart">🛍<span class="badge" data-cart-badge>0</span></a>
+
+<script type="module">
+import { getCurrentUser, logout } from './js/api.js';
+import { showToast, updateCartBadge } from './js/ui.js';
+
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button">
+        <span>${displayName}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+renderUserArea();
+updateCartBadge();
+</script>
+
+</body>
+</html>
