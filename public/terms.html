@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الشروط والأحكام - LUXE Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .terms-hero {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      color: #fff;
+      padding: 70px 0;
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+    .terms-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(201,169,97,.15) 0%, transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(139,92,246,.08) 0%, transparent 50%);
+    }
+    .terms-hero > .container { position: relative; z-index: 1; }
+    .terms-hero .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #c9a961;
+      margin-bottom: 16px;
+    }
+    .terms-hero h1 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 44px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      letter-spacing: -.5px;
+    }
+    .terms-hero h1 span { color: #c9a961; font-style: italic; }
+    .terms-hero p {
+      color: #a0a5b5;
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .terms-hero .updated {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 8px 16px;
+      background: rgba(201,169,97,.1);
+      border: 1px solid rgba(201,169,97,.3);
+      border-radius: 50px;
+      font-size: 12px;
+      color: #c9a961;
+      font-weight: 700;
+    }
+
+    .terms-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Warning banner */
+    .warning-banner {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px solid #f59e0b;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .warning-banner .icon {
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+    .warning-banner .content h3 {
+      font-size: 16px;
+      font-weight: 900;
+      color: #92400e;
+      margin-bottom: 4px;
+    }
+    .warning-banner .content p {
+      font-size: 13.5px;
+      color: #78350f;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    /* Table of contents */
+    .toc-card {
+      background: #faf9f6;
+      border-radius: 20px;
+      border: 1px solid #e5e3dd;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+    .toc-card h3 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      color: #0a0e17;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toc-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .toc-list a {
+      display: block;
+      padding: 10px 14px;
+      background: #fff;
+      border-radius: 10px;
+      color: #0a0e17;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      transition: .2s;
+      border: 1px solid transparent;
+    }
+    .toc-list a:hover {
+      background: rgba(201,169,97,.1);
+      border-color: #c9a961;
+      color: #a8894a;
+    }
+
+    /* Terms cards */
+    .terms-card {
+      background: #fff;
+      border-radius: 24px;
+      border: 1px solid #e5e3dd;
+      padding: 36px;
+      margin-bottom: 24px;
+      scroll-margin-top: 100px;
+    }
+    .terms-card h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #0a0e17;
+    }
+    .terms-card h2 .num {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .terms-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #1a1a1a;
+      margin-bottom: 14px;
+    }
+    .terms-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0;
+    }
+    .terms-card ul li {
+      padding: 10px 0 10px 32px;
+      position: relative;
+      font-size: 14.5px;
+      line-height: 1.7;
+      color: #1a1a1a;
+    }
+    .terms-card ul li::before {
+      content: '•';
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      color: #c9a961;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .terms-card ul.cross li::before {
+      content: '✕';
+      color: #ef4444;
+      font-size: 14px;
+      top: 12px;
+    }
+
+    .info-box {
+      padding: 18px 20px;
+      border-radius: 14px;
+      margin: 16px 0;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .info-box.danger {
+      background: rgba(239,68,68,.08);
+      border-right: 4px solid #ef4444;
+      color: #991b1b;
+    }
+    .info-box.warning {
+      background: #fff3cd;
+      border-right: 4px solid #f59e0b;
+      color: #92400e;
+    }
+    .info-box.success {
+      background: rgba(16,185,129,.08);
+      border-right: 4px solid #10b981;
+      color: #065f46;
+    }
+    .info-box strong { font-weight: 900; }
+
+    /* Data table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      background: #faf9f6;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .data-table th {
+      background: #0a0e17;
+      color: #c9a961;
+      padding: 12px 14px;
+      text-align: right;
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    .data-table td {
+      padding: 14px;
+      border-bottom: 1px solid #e5e3dd;
+      font-size: 13.5px;
+      color: #1a1a1a;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table td:first-child { font-weight: 700; color: #0a0e17; }
+
+    /* Accept section */
+    .accept-section {
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      color: #fff;
+      margin-top: 30px;
+    }
+    .accept-section h2 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .accept-section p {
+      color: #a0a5b5;
+      font-size: 15px;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+    .accept-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .accept-btns a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      transition: .3s;
+    }
+    .accept-btns .primary {
+      background: linear-gradient(135deg, #c9a961, #a8894a);
+      color: #0a0e17;
+      box-shadow: 0 8px 30px rgba(201,169,97,.35);
+    }
+    .accept-btns .primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(201,169,97,.5);
+    }
+    .accept-btns .secondary {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #fff;
+    }
+    .accept-btns .secondary:hover {
+      background: rgba(255,255,255,.2);
+    }
+
+    @media (max-width: 640px) {
+      .terms-hero { padding: 40px 0; }
+      .terms-hero h1 { font-size: 28px; }
+      .terms-card { padding: 24px; }
+      .terms-card h2 { font-size: 18px; }
+      .toc-list { grid-template-columns: 1fr; }
+      .accept-section { padding: 32px 20px; }
+      .accept-section h2 { font-size: 22px; }
+      .warning-banner { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand">
+      <div class="brand-name">LUXE</div>
+    </a>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ابحث...">
+    </div>
+    <div class="header-actions">
+      <a href="tracking.html" class="icon-btn" title="تتبع الطلب">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">🛍<span class="badge" data-cart-badge>0</span></a>
+      <div id="userArea"></div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="terms-hero">
+  <div class="container">
+    <div class="eyebrow">الاتفاقية القانونية</div>
+    <h1>الشروط <span>والأحكام</span></h1>
+    <p>يرجى قراءة هذه الشروط بعناية قبل استخدام الموقع أو الشراء</p>
+    <div class="updated">📅 آخر تحديث: نوفمبر 2025</div>
+  </div>
+</section>
+
+<div class="terms-container">
+
+  <!-- Warning Banner -->
+  <div class="warning-banner">
+    <div class="icon">⚠️</div>
+    <div class="content">
+      <h3>مهم — اقرأ أولاً</h3>
+      <p>باستخدامك لموقع <strong>LUXE Store</strong> أو إجراء أي عملية شراء، فإنك توافق على هذه الشروط والأحكام بالكامل. إذا لم توافق على أي بند، يرجى عدم استخدام الموقع.</p>
+    </div>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="toc-card">
+    <h3>📋 فهرس المحتويات</h3>
+    <ul class="toc-list">
+      <li><a href="#acceptance">1. قبول الشروط</a></li>
+      <li><a href="#account">2. حساب المستخدم</a></li>
+      <li><a href="#pricing">3. الأسعار والدفع</a></li>
+      <li><a href="#shipping">4. الشحن والتوصيل</a></li>
+      <li><a href="#returns">5. الإرجاع والاستبدال</a></li>
+      <li><a href="#intellectual">6. الملكية الفكرية</a></li>
+      <li><a href="#prohibited">7. استخدامات محظورة</a></li>
+      <li><a href="#liability">8. حدود المسؤولية</a></li>
+      <li><a href="#changes">9. تعديل الشروط</a></li>
+      <li><a href="#law">10. القانون المعمول به</a></li>
+    </ul>
+  </div>
+
+  <!-- 1. Acceptance -->
+  <div class="terms-card" id="acceptance">
+    <h2><span class="num">1</span>قبول الشروط</h2>
+    <p>
+      هذه الشروط والأحكام ("الشروط") تحكم استخدامك لموقع <strong>LUXE Store</strong> 
+      وخدماتنا المقدمة من خلاله. باستخدامك للموقع أو الشراء منه، فإنك تقر بأنك:
+    </p>
+    <ul>
+      <li>قمت بقراءة هذه الشروط وفهمتها بالكامل</li>
+      <li>توافق على الالتزام بهذه الشروط</li>
+      <li>تملك الأهلية القانونية للتعاقد (18 سنة أو أكثر)</li>
+      <li>جميع البيانات التي قدمتها صحيحة ودقيقة</li>
+    </ul>
+    <div class="info-box warning">
+      <strong>⚠️ تنبيه:</strong> إذا كنت أقل من 18 سنة، يجب أن يكون لديك موافقة ولي الأمر قبل استخدام الموقع.
+    </div>
+  </div>
+
+  <!-- 2. Account -->
+  <div class="terms-card" id="account">
+    <h2><span class="num">2</span>حساب المستخدم</h2>
+    <p>لإجراء عمليات شراء أو الوصول لبعض الميزات، يجب إنشاء حساب. أنت مسؤول عن:</p>
+    <ul>
+      <li>الحفاظ على سرية كلمة المرور وبيانات الحساب</li>
+      <li>عدم مشاركة بيانات الدخول مع أي شخص</li>
+      <li>الإبلاغ الفوري عن أي استخدام غير مصرح به</li>
+      <li>تحديث بياناتك لتظل صحيحة ومحدّثة</li>
+      <li>جميع الأنشطة التي تحدث على حسابك</li>
+    </ul>
+
+    <div class="info-box danger">
+      <strong>❌ نحتفظ بحقنا في:</strong> إيقاف أو حذف أي حساب يخالف الشروط، دون إشعار مسبق.
+    </div>
+  </div>
+
+  <!-- 3. Pricing & Payment -->
+  <div class="terms-card" id="pricing">
+    <h2><span class="num">3</span>الأسعار والدفع</h2>
+    <p>جميع الأسعار المعروضة بالجنيه المصري (ج.م) وتشمل:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>البند</th>
+          <th>التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>العملة</td>
+          <td>الجنيه المصري (ج.م)</td>
+        </tr>
+        <tr>
+          <td>سعر المنتجات</td>
+          <td>كما هو موضح بصفحة كل منتج</td>
+        </tr>
+        <tr>
+          <td>مصاريف الشحن</td>
+          <td>200 ج.م ثابتة على كل طلب</td>
+        </tr>
+        <tr>
+          <td>طرق الدفع</td>
+          <td>فودافون كاش (تحويل يدوي)</td>
+        </tr>
+        <tr>
+          <td>تأكيد الطلب</td>
+          <td>بعد مراجعة إثبات الدفع</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <strong>⚠️ مهم:</strong> لا يتم تأكيد الطلب نهائياً إلا بعد مراجعة إثبات دفع الشحن (200 ج.م) من قبل فريقنا.
+    </div>
+    <div class="info-box success">
+      <strong>✓ الأسعار:</strong> نحتفظ بحق تعديل الأسعار في أي وقت، لكن التعديل لا يؤثر على الطلبات المؤكدة مسبقاً.
+    </div>
+  </div>
+
+  <!-- 4. Shipping -->
+  <div class="terms-card" id="shipping">
+    <h2><span class="num">4</span>الشحن والتوصيل</h2>
+    <p>تفاصيل الشحن والتوصيل:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>البند</th>
+          <th>التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>مصاريف الشحن</td>
+          <td>200 ج.م (إجباري على كل طلب)</td>
+        </tr>
+        <tr>
+          <td>مدة التوصيل</td>
+          <td>24-48 ساعة للقاهرة والجيزة</td>
+        </tr>
+        <tr>
+          <td>مدة التوصيل (محافظات)</td>
+          <td>2-4 أيام عمل</td>
+        </tr>
+        <tr>
+          <td>شركات الشحن</td>
+          <td>شركات معتمدة من LUXE</td>
+        </tr>
+        <tr>
+          <td>تتبع الشحنة</td>
+          <td>متاح برقم التتبع على الموقع</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <strong>⚠️ ملاحظة:</strong> التأخيرات الناتجة عن ظروف خارجة عن إرادتنا (ظروف جوية، أزمات، إجازات رسمية) ليست مسؤوليتنا.
+    </div>
+  </div>
+
+  <!-- 5. Returns -->
+  <div class="terms-card" id="returns">
+    <h2><span class="num">5</span>الإرجاع والاستبدال</h2>
+    <p>سياسة الإرجاع والاستبدال ملخصة كما يلي (للتفاصيل الكاملة راجع <a href="returns.html" style="color:#a8894a;font-weight:700">صفحة الاستبدال والإرجاع</a>):</p>
+    <ul>
+      <li>يحق لك الإرجاع خلال 14 يوم من تاريخ الاستلام (حسب نوع المنتج)</li>
+      <li>المنتج يجب أن يكون بحالته الأصلية وبكامل تغليفه</li>
+      <li>بعض المنتجات غير قابلة للإرجاع (المخصصة، المفتوحة، عطور)</li>
+      <li>رسوم شحن الإرجاع: 200 ج.م (مجانية لو المنتج معيب)</li>
+      <li>الاسترداد خلال 3-7 أيام عمل من استلام المنتج</li>
+    </ul>
+  </div>
+
+  <!-- 6. Intellectual Property -->
+  <div class="terms-card" id="intellectual">
+    <h2><span class="num">6</span>الملكية الفكرية</h2>
+    <p>
+      جميع المحتويات على الموقع — النصوص، الصور، الشعارات، التصميم، الكود — هي ملكية 
+      حصرية لـ <strong>LUXE Store</strong> أو مرخصة لها.
+    </p>
+    <ul class="cross">
+      <li>لا يجوز نسخ أو تعديل أي محتوى بدون إذن كتابي</li>
+      <li>لا يجوز استخدام العلامة التجارية "LUXE" في أي نشاط تجاري</li>
+      <li>لا يجوز إعادة نشر الصور أو النصوص من الموقع</li>
+      <li>لا يجوز استخدام الموقع لأغراض تجارية بدون اتفاق</li>
+    </ul>
+    <div class="info-box danger">
+      <strong>❌ انتهاك حقوق النشر:</strong> يعرضك للمساءلة القانونية وفقاً لقانون حماية الملكية الفكرية المصري.
+    </div>
+  </div>
+
+  <!-- 7. Prohibited -->
+  <div class="terms-card" id="prohibited">
+    <h2><span class="num">7</span>استخدامات محظورة</h2>
+    <p>يُمنع منعاً باتاً:</p>
+    <ul class="cross">
+      <li>استخدام الموقع لأي غرض غير قانوني</li>
+      <li>محاولة اختراق الموقع أو قواعد البيانات</li>
+      <li>استخدام برامج آلية (Bots) لجمع البيانات</li>
+      <li>انتحال شخصية أي شخص أو جهة</li>
+      <li>نشر محتوى مسيء أو غير لائق</li>
+      <li>إجراء عمليات شراء وهمية أو احتيالية</li>
+      <li>التلاعب بأسعار المنتجات أو تقييماتها</li>
+    </ul>
+    <div class="info-box danger">
+      <strong>❌ العقوبات:</strong> أي مخالفة تؤدي إلى إيقاف الحساب فوراً، وقد يتم اتخاذ إجراءات قانونية.
+    </div>
+  </div>
+
+  <!-- 8. Liability -->
+  <div class="terms-card" id="liability">
+    <h2><span class="num">8</span>حدود المسؤولية</h2>
+    <p>في الحدود التي يسمح بها القانون:</p>
+    <ul>
+      <li>الموقع متاح "كما هو" — دون ضمانات صريحة أو ضمنية</li>
+      <li>لا نضمن عدم انقطاع الخدمة أو خلوها من الأخطاء التقنية</li>
+      <li>لا نتحمل مسؤولية أي خسارة غير مباشرة أو تبعية</li>
+      <li>مسؤوليتنا القصوى محدودة بقيمة الطلب المعني</li>
+      <li>لسنا مسؤولين عن أي محتوى خارجي مرتبط بالموقع</li>
+    </ul>
+    <div class="info-box warning">
+      <strong>⚠️ تنبيه:</strong> هذا البند لا يلغي حقوقك القانونية المكفولة بموجب قانون حماية المستهلك المصري.
+    </div>
+  </div>
+
+  <!-- 9. Changes -->
+  <div class="terms-card" id="changes">
+    <h2><span class="num">9</span>تعديل الشروط</h2>
+    <p>
+      نحتفظ بحق تعديل هذه الشروط والأحكام في أي وقت. عند إجراء تعديلات جوهرية:
+    </p>
+    <ul>
+      <li>سننشر الشروط المحدثة على هذه الصفحة</li>
+      <li>سنحدّث تاريخ "آخر تحديث" في الأعلى</li>
+      <li>سنرسل إشعاراً للمستخدمين المسجلين (للتغييرات الكبيرة)</li>
+    </ul>
+    <p>
+      استمرارك في استخدام الموقع بعد التعديل يعني موافقتك على الشروط الجديدة.
+    </p>
+  </div>
+
+  <!-- 10. Law -->
+  <div class="terms-card" id="law">
+    <h2><span class="num">10</span>القانون المعمول به</h2>
+    <p>
+      هذه الشروط تخضع وتُفسر وفقاً لـ <strong>قوانين جمهورية مصر العربية</strong>.
+    </p>
+    <p>
+      أي نزاع ينشأ عن استخدام الموقع أو هذه الشروط، يتم حله ودياً أولاً. 
+      إذا تعذّر الحل الودي، تكون <strong>محاكم القاهرة</strong> هي المختصة.
+    </p>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>البند</th>
+          <th>التفاصيل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>القانون المعمول به</td>
+          <td>القانون المصري</td>
+        </tr>
+        <tr>
+          <td>الاختصاص القضائي</td>
+          <td>محاكم القاهرة</td>
+        </tr>
+        <tr>
+          <td>اللغة الرسمية</td>
+          <td>العربية</td>
+        </tr>
+        <tr>
+          <td>الجهة المُشغّلة</td>
+          <td>LUXE Store — مصر</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Acceptance -->
+  <div class="accept-section">
+    <h2>هل توافق على الشروط؟</h2>
+    <p>باستخدامك للموقع أو إجراء عملية شراء، فإنك تقر بموافقتك على هذه الشروط والأحكام بالكامل.</p>
+    <div class="accept-btns">
+      <a href="index.html" class="primary">
+        ✓ فهمت، أوافق
+      </a>
+      <a href="contact.html" class="secondary">
+        💬 عندي سؤال
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>وجهتك الأولى للتسوق الفاخر.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="index.html">كل المنتجات</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="returns.html">الاستبدال والإرجاع</a>
+        <a href="contact.html">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="about.html">من نحن</a>
+        <a href="privacy.html">الخصوصية</a>
+        <a href="terms.html">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Premium Store • جميع الحقوق محفوظة</div>
+  </div>
+</footer>
+
+<a href="cart.html" class="float-cart">🛍<span class="badge" data-cart-badge>0</span></a>
+
+<script type="module">
+import { getCurrentUser, logout } from './js/api.js';
+import { showToast, updateCartBadge } from './js/ui.js';
+
+async function renderUserArea() {
+  const userArea = document.getElementById('userArea');
+  const user = await getCurrentUser();
+  if (user) {
+    const displayName = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = displayName.charAt(0).toUpperCase();
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button">
+        <span>${displayName}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+    document.getElementById('userChip').addEventListener('click', () => {
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
+    });
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+  }
+}
+
+document.getElementById('searchInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
+});
+
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+});
+
+renderUserArea();
+updateCartBadge();
+</script>
+
+</body>
+</html>
