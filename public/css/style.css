@@ -5921,3 +5921,59 @@ footer {
     font-size: 31px !important;
   }
 }
+/* =====================================
+   LUXE MOBILE UI FIX
+===================================== */
+
+@media (max-width: 768px) {
+
+  /* إصلاح المساحة أسفل الصفحة */
+  body {
+    padding-bottom: 0 !important;
+  }
+
+  /* القائمة الجانبية */
+  .mobile-nav-drawer {
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+
+  /* منع الفراغ الكبير */
+  .mobile-drawer-nav {
+    flex: 0 0 auto !important;
+    gap: 0;
+  }
+
+  /* تثبيت الفوتر داخل القائمة */
+  .mobile-drawer-footer {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+
+  /* وضوح زر السلة */
+  .mobile-cart-link,
+  .mobile-cart-link span {
+    color: var(--gold) !important;
+  }
+
+  /* منع التمرير الأفقي */
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* المنتجات */
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* الفوتر */
+  footer {
+    margin-bottom: 0 !important;
+  }
+}
