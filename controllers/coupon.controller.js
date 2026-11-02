@@ -1,45 +1,131 @@
-const { db } = require('../config/firebase'); // عدّل حسب ملف Firebase عندك
+const { db, COLLECTIONS } = require('../config/firebase');
 const { FieldValue } = require('firebase-admin/firestore');
 
-// ==================== CREATE ====================
-exports.createCoupon = async (req, res, next) => {
-  try {
-    const {
-      code,
-      type,              // 'percentage' | 'fixed'
-      value,             // 10 (يعني 10%) أو 50 (يعني 50 جنيه)
-      minOrderAmount = 0,
-      maxDiscount = null,
-      usageLimit = null, // null = غير محدود
-      perUserLimit = 1,
-      expiresAt = null,  // ISO date string
-      isActive = true,
-    } = req.body;
+// ===========================================
+// Constants
+// ===========================================
+const COUPONS = 'coupons';
+const COUPON_USAGES = 'coupon_usages';
 
-    // التحقق الأساسي
+// ===========================================
+// Helpers
+// ===========================================
+function normalizeCode(code) {
+  return String(code || '').trim().toUpperCase();
+}
+
+async function evaluateCoupon(rawCode, orderTotal, userId) {
+  const code = normalizeCode(rawCode);
+  if (!code) return { valid: false, message: 'كود الخصم مطلوب' };
+
+  const doc = await db.collection(COUPONS).doc(code).get();
+  if (!doc.exists) return { valid: false, message: 'كود الخصم غير موجود' };
+
+  const coupon = { id: doc.id, ...doc.data() };
+
+  if (!coupon.isActive) return { valid: false, message: 'كود الخصم غير مُفعّل' };
+
+  if (coupon.expiresAt) {
+    const expiresAt = coupon.expiresAt._seconds
+      ? new Date(coupon.expiresAt._seconds * 1000)
+      : new Date(coupon.expiresAt);
+    if (expiresAt < new Date()) return { valid: false, message: 'كود الخصم منتهي الصلاحية' };
+  }
+
+  if (coupon.usageLimit != null && coupon.usedCount >= coupon.usageLimit) {
+    return { valid: false, message: 'تم استهلاك كود الخصم بالكامل' };
+  }
+
+  if (orderTotal < (coupon.minOrderAmount || 0)) {
+    return {
+      valid: false,
+      message: `الحد الأدنى للطلب ${coupon.minOrderAmount} جنيه لاستخدام الكود`
+    };
+  }
+
+  if (userId && coupon.perUserLimit != null) {
+    const usageSnap = await db.collection(COUPON_USAGES)
+      .where('couponCode', '==', code)
+      .where('userId', '==', userId)
+      .get();
+    if (usageSnap.size >= coupon.perUserLimit) {
+      return { valid: false, message: 'لقد استخدمت هذا الكود من قبل' };
+    }
+  }
+
+  let discount = 0;
+  if (coupon.type === 'percentage') {
+    discount = (orderTotal * coupon.value) / 100;
+    if (coupon.maxDiscount != null) discount = Math.min(discount, coupon.maxDiscount);
+  } else if (coupon.type === 'fixed') {
+    discount = Math.min(coupon.value, orderTotal);
+  } else {
+    return { valid: false, message: 'نوع الكوبون غير صحيح' };
+  }
+
+  discount = Math.round(discount * 100) / 100;
+  return { valid: true, coupon, discount };
+}
+
+async function consumeCoupon(rawCode, userId, orderId) {
+  const code = normalizeCode(rawCode);
+  const couponRef = db.collection(COUPONS).doc(code);
+
+  await db.runTransaction(async (tx) => {
+    const doc = await tx.get(couponRef);
+    if (!doc.exists) throw new Error('كود الخصم غير موجود');
+
+    const data = doc.data();
+    if (data.usageLimit != null && data.usedCount >= data.usageLimit) {
+      throw new Error('تم استهلاك كود الخصم بالكامل');
+    }
+
+    tx.update(couponRef, {
+      usedCount: FieldValue.increment(1),
+      updatedAt: new Date().toISOString()
+    });
+
+    const usageRef = db.collection(COUPON_USAGES).doc();
+    tx.set(usageRef, {
+      couponCode: code,
+      userId: userId || null,
+      orderId: orderId || null,
+      usedAt: new Date().toISOString()
+    });
+  });
+}
+
+// ===========================================
+// 1. إنشاء كوبون (Admin)
+// ===========================================
+exports.create = async (req, res) => {
+  try {
+    const { code, type, value, minOrderAmount = 0, maxDiscount = null,
+            usageLimit = null, perUserLimit = 1, expiresAt = null } = req.body;
+
     if (!code || !type || value == null) {
-      return res.status(400).json({ message: 'code, type, and value are required' });
+      return res.status(400).json({ error: 'code و type و value مطلوبين' });
     }
     if (!['percentage', 'fixed'].includes(type)) {
-      return res.status(400).json({ message: 'type must be percentage or fixed' });
+      return res.status(400).json({ error: 'type لازم percentage أو fixed' });
     }
     if (type === 'percentage' && (value <= 0 || value > 100)) {
-      return res.status(400).json({ message: 'percentage value must be between 1 and 100' });
+      return res.status(400).json({ error: 'نسبة الخصم لازم بين 1 و 100' });
     }
     if (value <= 0) {
-      return res.status(400).json({ message: 'value must be greater than 0' });
+      return res.status(400).json({ error: 'قيمة الخصم لازم أكبر من 0' });
     }
 
-    const normalizedCode = code.trim().toUpperCase();
-    const couponRef = db.collection('coupons').doc(normalizedCode);
-    const existing = await couponRef.get();
-
+    const normalized = normalizeCode(code);
+    const ref = db.collection(COUPONS).doc(normalized);
+    const existing = await ref.get();
     if (existing.exists) {
-      return res.status(409).json({ message: 'Coupon code already exists' });
+      return res.status(409).json({ error: 'كود الخصم موجود بالفعل' });
     }
 
-    const couponData = {
-      code: normalizedCode,
+    const now = new Date().toISOString();
+    const data = {
+      code: normalized,
       type,
       value: Number(value),
       minOrderAmount: Number(minOrderAmount) || 0,
@@ -47,232 +133,123 @@ exports.createCoupon = async (req, res, next) => {
       usageLimit: usageLimit != null ? Number(usageLimit) : null,
       perUserLimit: Number(perUserLimit) || 1,
       usedCount: 0,
-      expiresAt: expiresAt ? new Date(expiresAt) : null,
-      isActive: Boolean(isActive),
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-      createdBy: req.user?.uid || null,
+      expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+      createdBy: req.user?.uid || null
     };
 
-    await couponRef.set(couponData);
-
-    return res.status(201).json({
-      message: 'Coupon created successfully',
-      coupon: { id: normalizedCode, ...couponData },
-    });
+    await ref.set(data);
+    res.status(201).json({ success: true, message: 'تم إنشاء الكوبون', data });
   } catch (error) {
-    next(error);
+    console.error('Create coupon error:', error);
+    res.status(500).json({ error: 'فشل إنشاء الكوبون' });
   }
 };
 
-// ==================== READ ALL ====================
-exports.getAllCoupons = async (req, res, next) => {
+// ===========================================
+// 2. كل الكوبونات (Admin)
+// ===========================================
+exports.getAll = async (req, res) => {
   try {
-    const { active } = req.query;
-    let query = db.collection('coupons');
-
-    if (active === 'true') query = query.where('isActive', '==', true);
-    if (active === 'false') query = query.where('isActive', '==', false);
-
-    const snapshot = await query.get();
-    const coupons = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-    return res.status(200).json({ count: coupons.length, coupons });
+    const snapshot = await db.collection(COUPONS).get();
+    const coupons = [];
+    snapshot.forEach(doc => coupons.push({ id: doc.id, ...doc.data() }));
+    coupons.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json({ success: true, count: coupons.length, data: coupons });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'فشل تحميل الكوبونات' });
   }
 };
 
-// ==================== READ ONE ====================
-exports.getCouponByCode = async (req, res, next) => {
+// ===========================================
+// 3. كوبون واحد (Admin)
+// ===========================================
+exports.getByCode = async (req, res) => {
   try {
-    const code = req.params.code.trim().toUpperCase();
-    const doc = await db.collection('coupons').doc(code).get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ message: 'Coupon not found' });
-    }
-
-    return res.status(200).json({ id: doc.id, ...doc.data() });
+    const code = normalizeCode(req.params.code);
+    const doc = await db.collection(COUPONS).doc(code).get();
+    if (!doc.exists) return res.status(404).json({ error: 'الكوبون غير موجود' });
+    res.json({ success: true, data: { id: doc.id, ...doc.data() } });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'فشل تحميل الكوبون' });
   }
 };
 
-// ==================== UPDATE ====================
-exports.updateCoupon = async (req, res, next) => {
+// ===========================================
+// 4. تحديث كوبون (Admin)
+// ===========================================
+exports.update = async (req, res) => {
   try {
-    const code = req.params.code.trim().toUpperCase();
-    const couponRef = db.collection('coupons').doc(code);
-    const doc = await couponRef.get();
+    const code = normalizeCode(req.params.code);
+    const ref = db.collection(COUPONS).doc(code);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'الكوبون غير موجود' });
 
-    if (!doc.exists) {
-      return res.status(404).json({ message: 'Coupon not found' });
-    }
-
-    // منع تعديل الكود نفسه و usedCount من الـ body
-    const { code: _ignore, usedCount: _ignore2, createdAt: _ignore3, ...updates } = req.body;
+    const { code: _c, usedCount: _u, createdAt: _cr, createdBy: _cb, ...updates } = req.body;
 
     if (updates.type && !['percentage', 'fixed'].includes(updates.type)) {
-      return res.status(400).json({ message: 'Invalid type' });
+      return res.status(400).json({ error: 'نوع الكوبون غير صحيح' });
     }
     if (updates.value != null) updates.value = Number(updates.value);
-    if (updates.expiresAt) updates.expiresAt = new Date(updates.expiresAt);
+    if (updates.expiresAt) updates.expiresAt = new Date(updates.expiresAt).toISOString();
+    updates.updatedAt = new Date().toISOString();
 
-    updates.updatedAt = FieldValue.serverTimestamp();
-
-    await couponRef.update(updates);
-
-    return res.status(200).json({ message: 'Coupon updated successfully', updates });
+    await ref.update(updates);
+    res.json({ success: true, message: 'تم تحديث الكوبون', updates });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'فشل تحديث الكوبون' });
   }
 };
 
-// ==================== DELETE ====================
-exports.deleteCoupon = async (req, res, next) => {
+// ===========================================
+// 5. حذف كوبون (Admin)
+// ===========================================
+exports.remove = async (req, res) => {
   try {
-    const code = req.params.code.trim().toUpperCase();
-    const couponRef = db.collection('coupons').doc(code);
-    const doc = await couponRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ message: 'Coupon not found' });
-    }
-
-    await couponRef.delete();
-
-    return res.status(200).json({ message: 'Coupon deleted successfully' });
+    const code = normalizeCode(req.params.code);
+    const ref = db.collection(COUPONS).doc(code);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ error: 'الكوبون غير موجود' });
+    await ref.delete();
+    res.json({ success: true, message: 'تم حذف الكوبون' });
   } catch (error) {
-    next(error);
+    res.status(500).json({ error: 'فشل حذف الكوبون' });
   }
 };
 
-// ==================== VALIDATE (للعميل قبل الطلب) ====================
-exports.validateCoupon = async (req, res, next) => {
+// ===========================================
+// 6. التحقق من كوبون (User) — قبل الطلب
+// ===========================================
+exports.validate = async (req, res) => {
   try {
     const { code, orderTotal } = req.body;
-
     if (!code || orderTotal == null) {
-      return res.status(400).json({ message: 'code and orderTotal are required' });
+      return res.status(400).json({ error: 'code و orderTotal مطلوبين' });
     }
 
     const result = await evaluateCoupon(code, Number(orderTotal), req.user?.uid);
-
     if (!result.valid) {
-      return res.status(400).json({ message: result.message });
+      return res.status(400).json({ error: result.message });
     }
 
-    return res.status(200).json({
-      valid: true,
-      code: result.coupon.code,
-      discount: result.discount,
-      finalTotal: result.finalTotal,
+    const finalTotal = Math.max(0, Math.round((orderTotal - result.discount) * 100) / 100);
+    res.json({
+      success: true,
+      data: {
+        code: result.coupon.code,
+        type: result.coupon.type,
+        value: result.coupon.value,
+        discount: result.discount,
+        finalTotal
+      }
     });
   } catch (error) {
-    next(error);
+    console.error('Validate coupon error:', error);
+    res.status(500).json({ error: 'فشل التحقق من الكوبون' });
   }
 };
-
-// ==================== HELPER: تقييم الكوبون ====================
-/**
- * تقييم صلاحية الكوبون وحساب الخصم
- * يُستخدم أيضاً داخل order.controller.js عند إنشاء الطلب
- */
-async function evaluateCoupon(rawCode, orderTotal, userId) {
-  const code = rawCode.trim().toUpperCase();
-  const doc = await db.collection('coupons').doc(code).get();
-
-  if (!doc.exists) {
-    return { valid: false, message: 'Coupon not found' };
-  }
-
-  const coupon = { id: doc.id, ...doc.data() };
-
-  if (!coupon.isActive) {
-    return { valid: false, message: 'Coupon is not active' };
-  }
-
-  if (coupon.expiresAt) {
-    const expiresAt =
-      coupon.expiresAt._seconds != null
-        ? new Date(coupon.expiresAt._seconds * 1000)
-        : new Date(coupon.expiresAt);
-    if (expiresAt < new Date()) {
-      return { valid: false, message: 'Coupon has expired' };
-    }
-  }
-
-  if (coupon.usageLimit != null && coupon.usedCount >= coupon.usageLimit) {
-    return { valid: false, message: 'Coupon usage limit reached' };
-  }
-
-  if (orderTotal < (coupon.minOrderAmount || 0)) {
-    return {
-      valid: false,
-      message: `Minimum order amount is ${coupon.minOrderAmount}`,
-    };
-  }
-
-  // التحقق من حد الاستخدام لكل مستخدم
-  if (userId && coupon.perUserLimit != null) {
-    const usageSnap = await db
-      .collection('coupon_usages')
-      .where('couponCode', '==', code)
-      .where('userId', '==', userId)
-      .get();
-
-    if (usageSnap.size >= coupon.perUserLimit) {
-      return { valid: false, message: 'You have reached the usage limit for this coupon' };
-    }
-  }
-
-  // حساب الخصم
-  let discount = 0;
-  if (coupon.type === 'percentage') {
-    discount = (orderTotal * coupon.value) / 100;
-    if (coupon.maxDiscount != null) {
-      discount = Math.min(discount, coupon.maxDiscount);
-    }
-  } else {
-    discount = Math.min(coupon.value, orderTotal);
-  }
-
-  discount = Math.round(discount * 100) / 100;
-  const finalTotal = Math.max(0, Math.round((orderTotal - discount) * 100) / 100);
-
-  return { valid: true, coupon, discount, finalTotal };
-}
-
-// ==================== HELPER: استهلاك الكوبون بعد نجاح الطلب ====================
-async function consumeCoupon(rawCode, userId, orderId) {
-  const code = rawCode.trim().toUpperCase();
-  const couponRef = db.collection('coupons').doc(code);
-
-  await db.runTransaction(async (tx) => {
-    const doc = await tx.get(couponRef);
-    if (!doc.exists) throw new Error('Coupon not found');
-
-    const data = doc.data();
-    if (data.usageLimit != null && data.usedCount >= data.usageLimit) {
-      throw new Error('Coupon usage limit reached');
-    }
-
-    tx.update(couponRef, {
-      usedCount: FieldValue.increment(1),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-
-    // تسجيل الاستخدام
-    const usageRef = db.collection('coupon_usages').doc();
-    tx.set(usageRef, {
-      couponCode: code,
-      userId: userId || null,
-      orderId: orderId || null,
-      usedAt: FieldValue.serverTimestamp(),
-    });
-  });
-}
 
 module.exports.evaluateCoupon = evaluateCoupon;
 module.exports.consumeCoupon = consumeCoupon;
