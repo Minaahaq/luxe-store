@@ -2429,4 +2429,95 @@ input, select, textarea { font-family: inherit; outline: none; }
   transition: .15s;
 }
 .admin-input:focus {
-  outline: none
+  outline: none;
+  border-color: var(--gold, #c9a961);
+  box-shadow: 0 0 0 3px rgba(201,169,97,.15);
+}
+.admin-input:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* Toggle switch */
+.admin-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.admin-switch input { display: none; }
+.admin-switch-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--surface-2, #1f232c);
+  border: 1px solid var(--border, #2a2f3a);
+  border-radius: 999px;
+  transition: .2s;
+}
+.admin-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 18px; height: 18px;
+  background: var(--muted, #8a90a2);
+  border-radius: 50%;
+  transition: .2s;
+}
+.admin-switch input:checked + .admin-switch-slider {
+  background: rgba(201,169,97,.25);
+  border-color: var(--gold, #c9a961);
+}
+.admin-switch input:checked + .admin-switch-slider::after {
+  left: calc(100% - 20px);
+  background: var(--gold, #c9a961);
+}
+.admin-switch-label {
+  font-size: 14px;
+  color: var(--text, #e6e8ee);
+  font-weight: 600;
+}
+
+/* Form error */
+.admin-form-error {
+  background: rgba(229,72,77,.12);
+  border: 1px solid #e5484d;
+  color: #ff8b8e;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.hidden { display: none !important; }
+
+/* Modal actions */
+.admin-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border, #2a2f3a);
+  margin-top: 4px;
+}
+
+.admin-btn-primary {
+  background: var(--gold, #c9a961);
+  color: #0a0e17;
+  border: none;
+  padding: 11px 22px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .15s;
+  font-family: inherit;
+}
+.admin-btn-primary:hover { background: #d4b56d; }
+.admin-btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .admin-form-row { grid-template-columns: 1fr; }
+  .admin-modal-box { border-radius: 18px 18px 0 0; max-height: 95vh; }
+  .coupons-toolbar { flex-direction: column; align-items: stretch; }
+}
