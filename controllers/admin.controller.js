@@ -153,7 +153,7 @@ exports.getAllUsers = async (req, res) => {
   try {
     const snapshot = await db.collection(COLLECTIONS.USERS).get();
     const users = [];
-    snapshot.forEach(doc => users.push(doc.data()));
+     snapshot.forEach(doc => users.push({ uid: doc.id, ...doc.data() }));
     res.json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -161,19 +161,28 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // ===========================================
-// تحديث دور المستخدم
+// ===========================================
+// تحديث دور المستخدم (مع الحظر)
 // ===========================================
 exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
-    if (!['customer', 'admin'].includes(role)) {
+
+    // ✅ أضفنا 'banned' عشان الحظر يشتغل
+    if (!['customer', 'admin', 'banned'].includes(role)) {
       return res.status(400).json({ error: 'دور غير صالح' });
     }
+
+    // ✅ حماية: الأدمن ميقدرش يحظر نفسه
+    if (req.user.uid === req.params.uid && role === 'banned') {
+      return res.status(400).json({ error: 'لا يمكنك حظر حسابك الشخصي!' });
+    }
+
     await db.collection(COLLECTIONS.USERS).doc(req.params.uid).update({
       role,
       updatedAt: new Date().toISOString()
     });
-    res.json({ success: true, message: 'تم تحديث الدور' });
+    res.json({ success: true, message: 'تم تحديث الحالة بنجاح' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
