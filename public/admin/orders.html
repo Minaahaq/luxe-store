@@ -6,6 +6,20 @@
   <title>إدارة الطلبات - LUXE Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
+  <style>
+    /* ستايل إضافي لتاج الخصم في الجدول */
+    .coupon-badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      margin-top: 4px;
+      border: 1px dashed rgba(16, 185, 129, 0.3);
+    }
+  </style>
 </head>
 <body>
 
@@ -29,6 +43,7 @@
       <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
       <a href="orders.html" class="admin-nav-item active"><span class="icon">🛒</span><span>الطلبات</span></a>
       <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
+      <a href="coupons.html" class="admin-nav-item"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
       <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
     </nav>
     <div class="admin-sidebar-footer">
@@ -287,6 +302,7 @@ function renderTable() {
       <tbody>
         ${pageItems.map(o => {
           const st = STATUS_MAP[o.status] || STATUS_MAP.pending_payment;
+          const hasDiscount = o.discount > 0;
           return `
             <tr class="order-row-clickable" data-order-id="${o.id}">
               <td>
@@ -300,7 +316,10 @@ function renderTable() {
                 </div>
               </td>
               <td class="date-cell">${formatDate(o.createdAt)}</td>
-              <td class="total-cell">${(o.total || 0).toLocaleString('ar-EG')} <span class="currency">ج.م</span></td>
+              <td class="total-cell">
+                ${(o.total || 0).toLocaleString('ar-EG')} <span class="currency">ج.م</span>
+                ${hasDiscount ? `<div class="coupon-badge">🎟️ خصم ${o.discount}</div>` : ''}
+              </td>
               <td><span class="status-pill ${st.cls}">${st.label}</span></td>
               <td>
                 <div class="actions-cell">
@@ -474,6 +493,15 @@ function renderOrderDetails(order) {
       <div class="order-detail-totals">
         <div class="row"><span>سعر المنتجات</span><span class="val">${formatPrice(order.subtotal)}</span></div>
         <div class="row"><span>الشحن (مدفوع)</span><span class="val" style="color:var(--success)">${formatPrice(order.shipping || 200)}</span></div>
+        
+        <!-- سطر الخصم الجديد -->
+        ${order.discount > 0 ? `
+          <div class="row" style="color: var(--success); font-weight: bold;">
+            <span>خصم (${order.couponCode || 'كوبون'})</span>
+            <span class="val" style="color: var(--success);">- ${formatPrice(order.discount)}</span>
+          </div>
+        ` : ''}
+
         <div class="row total"><span>الإجمالي</span><span class="val">${formatPrice(order.total)}</span></div>
       </div>
     </div>
