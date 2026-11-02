@@ -161,6 +161,13 @@ let checkoutData = {
   notes: ''
 };
 
+// قراءة الكوبون اللي جاي من السلة
+let appliedCoupon = null;
+try {
+  const savedCoupon = localStorage.getItem('luxe_applied_coupon');
+  if (savedCoupon) appliedCoupon = JSON.parse(savedCoupon);
+} catch (e) { /* ignore */ }
+
 /* ============================================
    USER AREA
 ============================================ */
@@ -318,10 +325,8 @@ async function initCheckout() {
     return;
   }
 
-  // Load saved draft
   loadDraft();
 
-  // Fetch user data
   try {
     const meRes = await api.auth.me();
     if (meRes.user) {
@@ -351,9 +356,12 @@ function renderCheckout() {
   const cart = getCart();
   const subtotal = getCartTotal();
   const shipping = SHIPPING_COST;
-  const total = subtotal + shipping;
+  
+  // حساب الخصم لو موجود
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  // الإجمالي بعد الخصم
+  const total = subtotal + shipping - discount;
 
-  // Steps
   const stepsHTML = `
     <div class="steps-indicator">
       <div class="step-dot ${currentStep === 1 ? 'active' : currentStep > 1 ? 'done' : ''}">
@@ -449,7 +457,7 @@ function renderCheckout() {
           <div class="warn-title">⚠️ مهم جداً — اقرأ بعناية</div>
           <p>
             لازم تحوّل <strong>${formatPrice(SHIPPING_COST)}</strong> (مصاريف الشحن) على فودافون كاش قبل تأكيد الطلب.<br><br>
-            <strong>سعر المنتجات (${formatPrice(subtotal)}) هيتدفع عند الاستلام.</strong>
+            <strong>سعر المنتجات هيتدفع عند الاستلام.</strong>
           </p>
         </div>
 
@@ -557,7 +565,7 @@ function renderCheckout() {
           </div>
           <div class="split-row total">
             <span class="split-label">💰 متبقي (عند الاستلام)</span>
-            <strong class="split-val gold">${formatPrice(subtotal)}</strong>
+            <strong class="split-val gold">${formatPrice(Math.max(0, subtotal - discount))}</strong>
           </div>
         </div>
 
@@ -585,6 +593,14 @@ function renderCheckout() {
       <div class="summary-divider">
         <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
         <div class="summary-row"><span>الشحن (مدفوع)</span><span class="val" style="color:var(--success)">${formatPrice(shipping)}</span></div>
+        
+        ${discount > 0 ? `
+          <div class="summary-row">
+            <span style="color:var(--success)">خصم (${appliedCoupon.code})</span>
+            <span class="val" style="color:var(--success);font-weight:800">- ${formatPrice(discount)}</span>
+          </div>
+        ` : ''}
+        
         <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
       </div>
     </div>`;
@@ -606,11 +622,9 @@ function renderCheckout() {
    HANDLERS
 ============================================ */
 function attachHandlers() {
-  // Next / Back (desktop)
   document.getElementById('nextBtn')?.addEventListener('click', goNext);
   document.getElementById('backBtn')?.addEventListener('click', goBack);
 
-  // Sticky actions (mobile)
   document.getElementById('stickyActionBtn')?.addEventListener('click', () => {
     if (currentStep === 3) {
       placeOrder();
@@ -619,7 +633,6 @@ function attachHandlers() {
     }
   });
 
-  // Edit buttons
   document.getElementById('editAddress')?.addEventListener('click', () => {
     currentStep = 1;
     renderCheckout();
@@ -631,10 +644,8 @@ function attachHandlers() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // Place order
   document.getElementById('placeOrderBtn')?.addEventListener('click', placeOrder);
 
-  // Copy Vodafone number
   document.getElementById('copyNumberBtn')?.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(VODAFONE_CASH_NUMBER);
@@ -644,7 +655,6 @@ function attachHandlers() {
     }
   });
 
-  // Live validation
   setupLiveValidation();
 }
 
@@ -782,11 +792,13 @@ async function placeOrder() {
       shippingAddress: checkoutData.shippingAddress,
       paymentMethod: 'vodafone_cash',
       paymentRefNumber: checkoutData.paymentRefNumber,
-      notes: checkoutData.notes
+      notes: checkoutData.notes,
+      couponCode: appliedCoupon ? appliedCoupon.code : null // ✅ إرسال كود الخصم للسيرفر
     });
 
-    // Clear cart & draft
+    // Clear cart & draft & coupon
     localStorage.removeItem('luxe_cart');
+    localStorage.removeItem('luxe_applied_coupon'); // مسح الكوبون بعد الاستخدام
     clearDraft();
     updateCartBadge();
 
@@ -807,6 +819,8 @@ async function placeOrder() {
 ============================================ */
 function showSuccessPage(res, cart) {
   const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const amountToPayOnDelivery = Math.max(0, subtotal - discount);
 
   document.getElementById('subText').textContent = '';
   document.getElementById('stickySummaryBar').style.display = 'none';
@@ -831,7 +845,7 @@ function showSuccessPage(res, cart) {
         </div>
         <div class="order-info-row">
           <span class="label">💰 متبقي (عند الاستلام)</span>
-          <strong>${formatPrice(subtotal)}</strong>
+          <strong>${formatPrice(amountToPayOnDelivery)}</strong>
         </div>
         <div class="order-info-row">
           <span class="label">رقم عملية التحويل</span>
