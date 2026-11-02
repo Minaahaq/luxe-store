@@ -139,7 +139,7 @@
 </footer>
 
 <script type="module">
-import { getCurrentUser, logout } from './js/api.js';
+import { getCurrentUser, logout, api } from './js/api.js';
 import {
   getCart, removeFromCart, updateCartQty, addToCart,
   getCartTotal, getCartCount, updateCartBadge,
@@ -151,10 +151,6 @@ import {
 ============================================ */
 const SHIPPING_COST = 200;
 const FREE_SHIPPING_THRESHOLD = 2000; // شحن مجاني بعد 2000 ج.م
-const COUPONS = {
-  'LUXE10': { type: 'percent', value: 10, label: 'خصم 10%' },
-  'WELCOME': { type: 'fixed', value: 100, label: 'خصم 100 ج.م' }
-};
 
 let appliedCoupon = null;
 
@@ -318,7 +314,7 @@ function renderCart() {
 
   const subtotal = getCartTotal();
   const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const discount = appliedCoupon ? calculateDiscount(subtotal) : 0;
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = subtotal + shipping - discount;
 
   const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
@@ -406,19 +402,39 @@ function renderCart() {
   document.getElementById('checkoutBtn')?.addEventListener('click', handleCheckout);
   document.getElementById('stickyCheckoutBtn')?.addEventListener('click', handleCheckout);
 
-  // Coupon
-  document.getElementById('applyCouponBtn')?.addEventListener('click', () => {
-    const code = document.getElementById('couponInput').value.trim().toUpperCase();
+  // Coupon Apply Logic
+  document.getElementById('applyCouponBtn')?.addEventListener('click', async () => {
+    const codeInput = document.getElementById('couponInput');
+    const code = codeInput.value.trim().toUpperCase();
     if (!code) return;
-    if (COUPONS[code]) {
-      appliedCoupon = { ...COUPONS[code], code };
-      showToast(`تم تطبيق ${COUPONS[code].label} ✓`, 'success');
+
+    const btn = document.getElementById('applyCouponBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'جاري التحقق...';
+    
+    try {
+      // السيرفر بيتحقق من الكود ويحسب الخصم
+      const res = await api.coupons.validate(code, subtotal);
+      
+      // تخزين بيانات الخصم اللي راجعة من السيرفر
+      appliedCoupon = {
+        code: res.data.code,
+        label: res.data.type === 'percentage' ? `خصم ${res.data.value}%` : `خصم ${res.data.value} ج.م`,
+        discountAmount: res.data.discount
+      };
+      
+      showToast('تم تطبيق كود الخصم بنجاح ✓', 'success');
       renderCart();
-    } else {
-      showToast('كود الخصم غير صالح', 'error');
+    } catch (err) {
+      showToast(err.message || 'كود الخصم غير صالح أو منتهي', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   });
 
+  // Remove Coupon
   document.getElementById('removeCouponBtn')?.addEventListener('click', () => {
     appliedCoupon = null;
     showToast('تم إزالة الخصم', 'info');
@@ -426,23 +442,13 @@ function renderCart() {
   });
 }
 
-function calculateDiscount(subtotal) {
-  if (!appliedCoupon) return 0;
-  if (appliedCoupon.type === 'percent') {
-    return Math.round(subtotal * (appliedCoupon.value / 100));
-  }
-  return Math.min(appliedCoupon.value, subtotal);
-}
-
 /* ============================================
    UNDO TOAST
 ============================================ */
 function showUndoToast(item, id) {
-  // Remove immediately
   removeFromCart(id);
   updateCartBadge();
 
-  // Show undo toast
   const container = document.getElementById('undoToastContainer');
   container.innerHTML = '';
 
@@ -476,7 +482,6 @@ function showUndoToast(item, id) {
    CHECKOUT
 ============================================ */
 async function handleCheckout() {
-  // Validate stock
   const cart = getCart();
   const outOfStock = cart.filter(i => i.stock !== undefined && i.qty > i.stock);
   if (outOfStock.length > 0) {
@@ -492,6 +497,14 @@ async function handleCheckout() {
     }, 1000);
     return;
   }
+
+  // حفظ الكوبون في الـ localStorage عشان صفحة الـ Checkout تستخدمه
+  if (appliedCoupon) {
+    localStorage.setItem('luxe_applied_coupon', JSON.stringify(appliedCoupon));
+  } else {
+    localStorage.removeItem('luxe_applied_coupon');
+  }
+
   window.location.href = 'checkout.html';
 }
 
