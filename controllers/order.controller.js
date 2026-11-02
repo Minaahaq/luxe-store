@@ -66,6 +66,13 @@ exports.create = async (req, res) => {
       return res.status(403).json({ error: 'بيانات المستخدم غير مكتملة' });
     }
 
+        // 🚫 منع المستخدم المحظور من عمل طلبات
+    if (req.userData.role === 'banned' || req.userData.status === 'banned') {
+      return res.status(403).json({ 
+        error: 'عذراً، حسابك محظور حالياً ولا يمكنك إتمام الطلبات. تواصل مع الدعم الفني.' 
+      });
+    }
+
     // ===== 1. تحقق من المنتجات والمخزون =====
     let subtotal = 0;
     const orderItems = [];
