@@ -9,7 +9,211 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
-  <link rel="stylesheet" href="css/admin-coupons.css">
+  
+  <style>
+    /* ستايلات مخصصة لصفحة الكوبونات عشان تبقى فخمة */
+    :root {
+      --gold: #c9a961;
+      --gold-hover: #b89850;
+      --bg-dark: #0f1115;
+      --surface-dark: #171a21;
+      --surface-hover: #1f232c;
+      --border: #2a2f3a;
+      --text: #e6e8ee;
+      --muted: #8a90a2;
+    }
+
+    .coupon-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface-dark);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; width: 4px; height: 100%;
+      background: var(--gold);
+      opacity: 0.8;
+    }
+
+    .stat-card .num {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .stat-card .lbl {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .toolbar-card {
+      background: var(--surface-dark);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    .toolbar-input {
+      flex: 1;
+      min-width: 250px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+
+    .toolbar-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.1);
+    }
+
+    .table-card {
+      background: var(--surface-dark);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    .data-table th {
+      background: var(--surface-hover);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .data-table tr:hover {
+      background: var(--surface-hover);
+    }
+
+    .code-badge {
+      background: rgba(201, 169, 97, 0.1);
+      color: var(--gold);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-weight: bold;
+      letter-spacing: 1px;
+      font-size: 15px;
+      border: 1px dashed rgba(201, 169, 97, 0.3);
+    }
+
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    .status-active { background: rgba(47, 191, 113, 0.15); color: #2fbf71; }
+    .status-inactive { background: rgba(138, 144, 162, 0.15); color: var(--muted); }
+    .status-expired { background: rgba(229, 72, 77, 0.15); color: #e5484d; }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      margin-left: 6px;
+    }
+
+    .btn-icon:hover {
+      background: var(--surface-hover);
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .btn-icon.delete:hover {
+      border-color: #e5484d;
+      color: #e5484d;
+      background: rgba(229, 72, 77, 0.1);
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #0a0e17;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-hover);
+      transform: translateY(-2px);
+    }
+  </style>
 </head>
 <body>
 
@@ -31,39 +235,16 @@
       <div class="admin-brand-name">LUXE</div>
       <div class="admin-brand-tag">Admin Panel</div>
     </div>
-
     <nav class="admin-nav">
-      <a href="dashboard.html" class="admin-nav-item">
-        <span class="icon">📊</span>
-        <span>لوحة التحكم</span>
-      </a>
-      <a href="products.html" class="admin-nav-item">
-        <span class="icon">📦</span>
-        <span>المنتجات</span>
-      </a>
-      <a href="orders.html" class="admin-nav-item">
-        <span class="icon">🛒</span>
-        <span>الطلبات</span>
-      </a>
-      <a href="users.html" class="admin-nav-item">
-        <span class="icon">👥</span>
-        <span>المستخدمين</span>
-      </a>
-      <a href="coupons.html" class="admin-nav-item active">
-        <span class="icon">🎟️</span>
-        <span>أكواد الخصم</span>
-      </a>
-      <a href="../index.html" class="admin-nav-item">
-        <span class="icon">🏠</span>
-        <span>المتجر</span>
-      </a>
+      <a href="dashboard.html" class="admin-nav-item"><span class="icon">📊</span><span>لوحة التحكم</span></a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">🛒</span><span>الطلبات</span></a>
+      <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
+      <a href="coupons.html" class="admin-nav-item active"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
+      <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
     </nav>
-
     <div class="admin-sidebar-footer">
-      <button class="admin-logout" id="logoutBtn" type="button">
-        <span class="icon">🚪</span>
-        <span>تسجيل الخروج</span>
-      </button>
+      <button class="admin-logout" id="logoutBtn" type="button"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
     </div>
   </aside>
 
@@ -76,13 +257,10 @@
         <button class="mobile-menu-btn-admin" id="mobileMenuBtn" type="button" aria-label="القائمة">☰</button>
         <div>
           <h1 class="admin-page-title">أكواد الخصم</h1>
-          <p class="admin-page-subtitle">إنشاء وإدارة كوبونات الخصم</p>
+          <p class="admin-page-subtitle">إدارة وتتبع كوبونات المتجر</p>
         </div>
       </div>
       <div class="admin-topbar-actions">
-        <button class="refresh-dashboard-btn" id="addBtn" type="button">
-          ➕ <span>كوبون جديد</span>
-        </button>
         <div class="admin-user-badge">
           <div class="avatar" id="adminInitial">A</div>
           <div class="info">
@@ -93,36 +271,34 @@
       </div>
     </div>
 
-    <!-- STATS -->
-    <div class="mini-stats-row" id="statsGrid">
-      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
-      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
-      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
-      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+    <!-- Stats -->
+    <div class="coupon-stats" id="statsGrid">
+      <div class="stat-card"><div class="num skeleton" style="width:50px;height:30px"></div><div class="lbl skeleton" style="width:100px;height:15px;margin-top:10px"></div></div>
+      <div class="stat-card"><div class="num skeleton" style="width:50px;height:30px"></div><div class="lbl skeleton" style="width:100px;height:15px;margin-top:10px"></div></div>
+      <div class="stat-card"><div class="num skeleton" style="width:50px;height:30px"></div><div class="lbl skeleton" style="width:100px;height:15px;margin-top:10px"></div></div>
+      <div class="stat-card"><div class="num skeleton" style="width:50px;height:30px"></div><div class="lbl skeleton" style="width:100px;height:15px;margin-top:10px"></div></div>
     </div>
 
     <!-- Toolbar -->
-    <div class="admin-card">
-      <div class="coupons-toolbar">
-        <input id="searchInput" class="admin-input" type="text" placeholder="🔍 ابحث بالكود..." />
-        <select id="filterStatus" class="admin-input">
-          <option value="">كل الحالات</option>
-          <option value="active">مُفعّل</option>
-          <option value="inactive">غير مُفعّل</option>
-          <option value="expired">منتهي</option>
-          <option value="used-up">استُهلك بالكامل</option>
-        </select>
-      </div>
+    <div class="toolbar-card">
+      <input id="searchInput" class="toolbar-input" type="text" placeholder="🔍 ابحث بكود الخصم..." />
+      <select id="filterStatus" class="toolbar-input" style="flex: 0 0 200px; cursor: pointer;">
+        <option value="">كل الحالات</option>
+        <option value="active">مُفعّل</option>
+        <option value="inactive">غير مُفعّل</option>
+        <option value="expired">منتهي</option>
+      </select>
+      <button id="addBtn" class="btn-primary">➕ كوبون جديد</button>
     </div>
 
     <!-- Table -->
-    <div class="admin-card">
-      <div class="admin-card-header">
+    <div class="table-card">
+      <div class="table-header">
         <h2>🎟️ قائمة الكوبونات</h2>
-        <span class="count-badge" id="couponsCount">0</span>
+        <span id="couponsCount" style="background: var(--gold); color: #000; padding: 4px 14px; border-radius: 20px; font-weight: 900;">0</span>
       </div>
-      <div class="coupons-table-wrap">
-        <table class="coupons-table">
+      <div style="overflow-x: auto;">
+        <table class="data-table">
           <thead>
             <tr>
               <th>الكود</th>
@@ -141,7 +317,6 @@
         </table>
       </div>
     </div>
-
   </main>
 </div>
 
@@ -158,15 +333,13 @@
 
       <div class="admin-form-field">
         <label>الكود *</label>
-        <input id="fieldCode" class="admin-input" type="text" placeholder="SUMMER20" required
-               style="text-transform:uppercase;font-family:monospace;letter-spacing:1px" />
-        <small>حروف وأرقام فقط. سيتحول تلقائياً لأحرف كبيرة.</small>
+        <input id="fieldCode" class="admin-input" type="text" placeholder="SUMMER20" required style="text-transform:uppercase;font-family:monospace;letter-spacing:2px;font-weight:bold" />
       </div>
 
       <div class="admin-form-row">
         <div class="admin-form-field">
           <label>النوع *</label>
-          <select id="fieldType" class="admin-input" required>
+          <select id="fieldType" class="admin-input" required style="cursor:pointer">
             <option value="percentage">نسبة مئوية (%)</option>
             <option value="fixed">مبلغ ثابت (ج.م)</option>
           </select>
@@ -184,17 +357,17 @@
         </div>
         <div class="admin-form-field">
           <label>أقصى خصم (للنسبة فقط)</label>
-          <input id="fieldMaxDiscount" class="admin-input" type="number" min="0" step="1" placeholder="اتركه فارغاً = بدون حد" />
+          <input id="fieldMaxDiscount" class="admin-input" type="number" min="0" step="1" placeholder="بدون حد" />
         </div>
       </div>
 
       <div class="admin-form-row">
         <div class="admin-form-field">
           <label>حد الاستخدام الكلي</label>
-          <input id="fieldUsageLimit" class="admin-input" type="number" min="1" step="1" placeholder="فارغ = غير محدود" />
+          <input id="fieldUsageLimit" class="admin-input" type="number" min="1" step="1" placeholder="غير محدود" />
         </div>
         <div class="admin-form-field">
-          <label>حد الاستخدام لكل مستخدم</label>
+          <label>الاستخدام لكل مستخدم</label>
           <input id="fieldPerUser" class="admin-input" type="number" min="1" step="1" value="1" />
         </div>
       </div>
@@ -202,26 +375,24 @@
       <div class="admin-form-field">
         <label>تاريخ الانتهاء</label>
         <input id="fieldExpires" class="admin-input" type="datetime-local" />
-        <small>اتركه فارغاً = بدون انتهاء.</small>
       </div>
 
-      <label class="admin-switch">
-        <input id="fieldActive" type="checkbox" checked />
-        <span class="admin-switch-slider"></span>
-        <span class="admin-switch-label">مُفعّل</span>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:10px">
+        <input id="fieldActive" type="checkbox" checked style="width:20px;height:20px;accent-color:var(--gold)" />
+        <span style="font-weight:bold;color:var(--text)">مُفعّل</span>
       </label>
 
       <div id="formError" class="admin-form-error hidden"></div>
 
       <div class="admin-modal-actions">
-        <button type="button" class="confirm-btn-cancel" id="cancelBtn">إلغاء</button>
-        <button type="submit" class="admin-btn-primary" id="submitBtn">حفظ</button>
+        <button type="button" class="btn-icon" id="cancelBtn" style="width:auto;padding:0 20px;font-weight:bold">إلغاء</button>
+        <button type="submit" class="btn-primary" id="submitBtn">حفظ الكوبون</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Confirm Modal (نسخة orders.html) -->
+<!-- Confirm Modal -->
 <div class="confirm-modal-overlay" id="confirmModal">
   <div class="confirm-modal-box">
     <div class="confirm-icon" id="confirmIcon">⚠️</div>
@@ -236,203 +407,90 @@
 
 <script type="module">
 import { api, getCurrentUser, logout } from '../js/api.js';
+const $ = (id) => document.getElementById(id);
 
-/* ===========================================
-   Helpers
-=========================================== */
+// Helpers
 function showStatus(emoji, title, message, isLoading = false) {
-  const page = document.getElementById('statusPage');
-  const emojiEl = document.getElementById('statusEmoji');
-  document.getElementById('statusTitle').textContent = title;
-  document.getElementById('statusMessage').textContent = message;
-  page.style.display = 'flex';
-  document.getElementById('adminLayout').style.display = 'none';
-  emojiEl.textContent = emoji;
-  emojiEl.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
-  emojiEl.style.display = 'inline-block';
+  $('statusTitle').textContent = title; $('statusMessage').textContent = message;
+  $('statusPage').style.display = 'flex'; $('adminLayout').style.display = 'none';
+  const e = $('statusEmoji'); e.textContent = emoji; e.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
 }
-
-function showLayout() {
-  document.getElementById('statusPage').style.display = 'none';
-  document.getElementById('adminLayout').style.display = 'grid';
-}
-
-function showToast(message, type = 'info') {
-  let c = document.getElementById('toastContainer');
-  if (!c) {
-    c = document.createElement('div');
-    c.id = 'toastContainer';
-    c.className = 'toast-container';
-    document.body.appendChild(c);
-  }
+function showLayout() { $('statusPage').style.display = 'none'; $('adminLayout').style.display = 'grid'; }
+function showToast(msg, type = 'info') {
+  let c = $('toastContainer') || document.createElement('div');
+  if (!c.id) { c.id = 'toastContainer'; c.className = 'toast-container'; document.body.appendChild(c); }
   const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
-  const t = document.createElement('div');
-  t.className = 'toast ' + type;
-  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  const t = document.createElement('div'); t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${msg}</span>`;
   c.appendChild(t);
-  setTimeout(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translateY(-20px)';
-    t.style.transition = '.3s';
-    setTimeout(() => t.remove(), 300);
-  }, 3000);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
 }
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-}
-
-function formatDate(iso) {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString('ar-EG', {
-      year: 'numeric', month: 'short', day: 'numeric'
-    });
-  } catch { return '—'; }
-}
-
-function toLocalDatetimeInput(iso) {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    const off = d.getTimezoneOffset();
-    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 16);
-  } catch { return ''; }
-}
-
-/* ===========================================
-   Confirm Modal
-=========================================== */
 function showConfirm({ icon = '⚠️', title, message, okText = 'تأكيد' }) {
   return new Promise((resolve) => {
-    const modal = document.getElementById('confirmModal');
-    document.getElementById('confirmIcon').textContent = icon;
-    document.getElementById('confirmTitle').textContent = title;
-    document.getElementById('confirmMessage').textContent = message;
-    document.getElementById('confirmOkBtn').textContent = okText;
-    modal.classList.add('active');
-
-    const cleanup = (r) => {
-      modal.classList.remove('active');
-      document.getElementById('confirmCancelBtn').removeEventListener('click', onCancel);
-      document.getElementById('confirmOkBtn').removeEventListener('click', onOk);
-      modal.removeEventListener('click', onOverlay);
-      resolve(r);
-    };
-    const onCancel = () => cleanup(false);
-    const onOk = () => cleanup(true);
-    const onOverlay = (e) => { if (e.target.id === 'confirmModal') cleanup(false); };
-
-    document.getElementById('confirmCancelBtn').addEventListener('click', onCancel);
-    document.getElementById('confirmOkBtn').addEventListener('click', onOk);
-    modal.addEventListener('click', onOverlay);
+    const m = $('confirmModal'); $('confirmIcon').textContent = icon; $('confirmTitle').textContent = title;
+    $('confirmMessage').textContent = message; $('confirmOkBtn').textContent = okText; m.classList.add('active');
+    const cleanup = (r) => { m.classList.remove('active'); $('confirmCancelBtn').removeEventListener('click', onC); $('confirmOkBtn').removeEventListener('click', onO); m.removeEventListener('click', onV); resolve(r); };
+    const onC = () => cleanup(false); const onO = () => cleanup(true); const onV = (e) => { if (e.target.id === 'confirmModal') cleanup(false); };
+    $('confirmCancelBtn').addEventListener('click', onC); $('confirmOkBtn').addEventListener('click', onO); m.addEventListener('click', onV);
   });
 }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function formatDate(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return '—'; } }
+function toLocalDatetimeInput(iso) { if (!iso) return ''; try { const d = new Date(iso); const off = d.getTimezoneOffset(); return new Date(d.getTime() - off * 60000).toISOString().slice(0, 16); } catch { return ''; } }
 
-/* ===========================================
-   Access Check
-=========================================== */
-async function checkAdminAccess() {
-  try {
-    const user = await getCurrentUser();
-    if (!user) {
-      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول الأول');
-      setTimeout(() => window.location.href = '../login.html?redirect=admin/coupons.html', 1500);
-      return null;
-    }
-    const meRes = await api.auth.me();
-    const userData = meRes.user;
-    if (!userData || userData.role !== 'admin') {
-      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط.');
-      setTimeout(() => window.location.href = '../index.html', 2500);
-      return null;
-    }
-    const name = userData.name || user.displayName || 'Admin';
-    document.getElementById('adminName').textContent = name;
-    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
-    return userData;
-  } catch (err) {
-    console.error(err);
-    showStatus('⚠️', 'حدث خطأ', err.message || 'تعذّر التحقق من الصلاحيات');
-    return null;
-  }
-}
-
-/* ===========================================
-   State
-=========================================== */
+// State
 let allCoupons = [];
 let editingCode = null;
 
-/* ===========================================
-   Status helpers
-=========================================== */
-function couponStatus(c) {
-  if (c.expiresAt && new Date(c.expiresAt) < new Date()) return 'expired';
-  if (c.usageLimit != null && c.usedCount >= c.usageLimit) return 'used-up';
-  if (!c.isActive) return 'inactive';
-  return 'active';
+// Access
+async function checkAdminAccess() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) { showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول الأول'); setTimeout(() => window.location.href = '../login.html?redirect=admin/coupons.html', 1500); return null; }
+    const meRes = await api.auth.me();
+    if (!meRes.user || meRes.user.role !== 'admin') { showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط.'); setTimeout(() => window.location.href = '../index.html', 2500); return null; }
+    $('adminName').textContent = meRes.user.name || 'Admin'; $('adminInitial').textContent = (meRes.user.name || 'A').charAt(0).toUpperCase();
+    return meRes.user;
+  } catch (err) { showStatus('⚠️', 'حدث خطأ', err.message); return null; }
 }
 
+// Logic
+function couponStatus(c) { if (c.expiresAt && new Date(c.expiresAt) < new Date()) return 'expired'; if (!c.isActive) return 'inactive'; return 'active'; }
 function statusBadge(c) {
   const st = couponStatus(c);
-  const map = {
-    active:   { cls: 'status-delivered', label: 'مُفعّل' },
-    inactive: { cls: 'status-cancelled', label: 'غير مُفعّل' },
-    expired:  { cls: 'status-cancelled', label: 'منتهي' },
-    'used-up':{ cls: 'status-pending',   label: 'استُهلك بالكامل' },
-  };
-  const m = map[st];
-  return `<span class="status-pill ${m.cls}">${m.label}</span>`;
+  const map = { active: { cls: 'status-active', label: 'مُفعّل' }, inactive: { cls: 'status-inactive', label: 'غير مُفعّل' }, expired: { cls: 'status-expired', label: 'منتهي' } };
+  return `<span class="status-badge ${map[st].cls}">${map[st].label}</span>`;
 }
 
-/* ===========================================
-   Render
-=========================================== */
 function render() {
-  const q = document.getElementById('searchInput').value.trim().toLowerCase();
-  const f = document.getElementById('filterStatus').value;
-
+  const q = $('searchInput').value.trim().toLowerCase();
+  const f = $('filterStatus').value;
   const rows = allCoupons.filter(c => {
     if (q && !c.code.toLowerCase().includes(q)) return false;
     if (f && couponStatus(c) !== f) return false;
     return true;
   });
 
-  document.getElementById('couponsCount').textContent = rows.length;
-
+  $('couponsCount').textContent = rows.length;
   if (rows.length === 0) {
-    document.getElementById('couponsBody').innerHTML = `
-      <tr><td colspan="8">
-        <div class="admin-empty">
-          <div class="emoji">🎟️</div>
-          <h4>لا توجد كوبونات</h4>
-          <p>اضغط "كوبون جديد" لإضافة أول كود خصم</p>
-        </div>
-      </td></tr>`;
+    $('couponsBody').innerHTML = `<tr><td colspan="8" class="admin-empty"><div class="emoji">🎟️</div><h4>لا توجد كوبونات</h4><p>اضغط "كوبون جديد" لإضافة أول كود خصم</p></td></tr>`;
   } else {
-    document.getElementById('couponsBody').innerHTML = rows.map(c => {
+    $('couponsBody').innerHTML = rows.map(c => {
       const typeLabel = c.type === 'percentage' ? 'نسبة %' : 'مبلغ ثابت';
       const valueLabel = c.type === 'percentage' ? `${c.value}%` : `${c.value} ج.م`;
-      const usage = c.usageLimit != null
-        ? `${c.usedCount || 0} / ${c.usageLimit}`
-        : `${c.usedCount || 0} / ∞`;
+      const usage = c.usageLimit != null ? `${c.usedCount || 0} / ${c.usageLimit}` : `${c.usedCount || 0} / ∞`;
       return `
         <tr>
-          <td class="coupon-code">${escapeHtml(c.code)}</td>
+          <td><span class="code-badge">${escapeHtml(c.code)}</span></td>
           <td>${typeLabel}</td>
-          <td>${valueLabel}</td>
+          <td style="font-weight:bold;color:var(--gold)">${valueLabel}</td>
           <td>${c.minOrderAmount ? c.minOrderAmount + ' ج.م' : '—'}</td>
           <td>${usage}</td>
           <td>${formatDate(c.expiresAt)}</td>
           <td>${statusBadge(c)}</td>
           <td>
-            <div class="row-actions">
-              <button class="icon-btn" data-action="edit" data-code="${escapeHtml(c.code)}" title="تعديل">✏️</button>
-              <button class="icon-btn danger" data-action="delete" data-code="${escapeHtml(c.code)}" title="حذف">🗑️</button>
-            </div>
+            <button class="btn-icon" data-action="edit" data-code="${escapeHtml(c.code)}">✏️</button>
+            <button class="btn-icon delete" data-action="delete" data-code="${escapeHtml(c.code)}">🗑️</button>
           </td>
         </tr>`;
     }).join('');
@@ -444,224 +502,114 @@ function render() {
   const expired = allCoupons.filter(c => couponStatus(c) === 'expired').length;
   const usages = allCoupons.reduce((s, c) => s + (c.usedCount || 0), 0);
 
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="mini-stat-box"><div class="num">${total}</div><div class="lbl">إجمالي الكوبونات</div></div>
-    <div class="mini-stat-box"><div class="num">${active}</div><div class="lbl">مُفعّلة</div></div>
-    <div class="mini-stat-box"><div class="num">${expired}</div><div class="lbl">منتهية</div></div>
-    <div class="mini-stat-box"><div class="num">${usages}</div><div class="lbl">إجمالي الاستخدامات</div></div>`;
+  $('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="num">${total}</div><div class="lbl">إجمالي الكوبونات</div></div>
+    <div class="stat-card"><div class="num">${active}</div><div class="lbl">كوبونات مُفعّلة</div></div>
+    <div class="stat-card"><div class="num">${expired}</div><div class="lbl">كوبونات منتهية</div></div>
+    <div class="stat-card"><div class="num">${usages}</div><div class="lbl">إجمالي الاستخدامات</div></div>`;
 }
 
-/* ===========================================
-   Load
-=========================================== */
 async function loadCoupons() {
-  document.getElementById('couponsBody').innerHTML = `
-    <tr><td colspan="8" class="admin-empty"><div class="emoji">⏳</div><h4>جاري التحميل...</h4></td></tr>`;
+  $('couponsBody').innerHTML = `<tr><td colspan="8" class="admin-empty"><div class="emoji">⏳</div><h4>جاري التحميل...</h4></td></tr>`;
   try {
     const res = await api.coupons.getAll();
     allCoupons = res.data || [];
     render();
   } catch (err) {
-    console.error('Load coupons error:', err);
-    document.getElementById('couponsBody').innerHTML = `
-      <tr><td colspan="8" class="admin-empty"><div class="emoji">⚠️</div><h4>${escapeHtml(err.message)}</h4></td></tr>`;
+    $('couponsBody').innerHTML = `<tr><td colspan="8" class="admin-empty"><div class="emoji">⚠️</div><h4>${escapeHtml(err.message)}</h4></td></tr>`;
     showToast('فشل تحميل الكوبونات', 'error');
   }
 }
 
-/* ===========================================
-   Modal
-=========================================== */
+// Modal Logic
 function openModal(coupon = null) {
-  document.getElementById('formError').classList.add('hidden');
-  document.getElementById('couponForm').reset();
-  document.getElementById('fieldActive').checked = true;
-  document.getElementById('fieldPerUser').value = 1;
-  document.getElementById('fieldMin').value = 0;
+  $('formError').classList.add('hidden');
+  $('couponForm').reset();
+  $('fieldActive').checked = true; $('fieldPerUser').value = 1; $('fieldMin').value = 0;
 
   if (coupon) {
     editingCode = coupon.code;
-    document.getElementById('modalTitle').textContent = `تعديل: ${coupon.code}`;
-    document.getElementById('editingCode').value = coupon.code;
-    document.getElementById('fieldCode').value = coupon.code;
-    document.getElementById('fieldCode').disabled = true;
-    document.getElementById('fieldType').value = coupon.type;
-    document.getElementById('fieldValue').value = coupon.value;
-    document.getElementById('fieldMin').value = coupon.minOrderAmount || 0;
-    document.getElementById('fieldMaxDiscount').value = coupon.maxDiscount ?? '';
-    document.getElementById('fieldUsageLimit').value = coupon.usageLimit ?? '';
-    document.getElementById('fieldPerUser').value = coupon.perUserLimit ?? 1;
-    document.getElementById('fieldExpires').value = toLocalDatetimeInput(coupon.expiresAt);
-    document.getElementById('fieldActive').checked = !!coupon.isActive;
+    $('modalTitle').textContent = `تعديل: ${coupon.code}`;
+    $('editingCode').value = coupon.code;
+    $('fieldCode').value = coupon.code; $('fieldCode').disabled = true;
+    $('fieldType').value = coupon.type; $('fieldValue').value = coupon.value;
+    $('fieldMin').value = coupon.minOrderAmount || 0;
+    $('fieldMaxDiscount').value = coupon.maxDiscount ?? '';
+    $('fieldUsageLimit').value = coupon.usageLimit ?? '';
+    $('fieldPerUser').value = coupon.perUserLimit ?? 1;
+    $('fieldExpires').value = toLocalDatetimeInput(coupon.expiresAt);
+    $('fieldActive').checked = !!coupon.isActive;
   } else {
-    editingCode = null;
-    document.getElementById('modalTitle').textContent = 'كوبون جديد';
-    document.getElementById('editingCode').value = '';
-    document.getElementById('fieldCode').disabled = false;
+    editingCode = null; $('modalTitle').textContent = 'كوبون جديد'; $('editingCode').value = '';
+    $('fieldCode').disabled = false;
   }
-
-  document.getElementById('couponModal').classList.add('active');
-  setTimeout(() => document.getElementById('fieldCode').focus(), 60);
+  $('couponModal').classList.add('active');
+  setTimeout(() => $('fieldCode').focus(), 60);
 }
 
-function closeModal() {
-  document.getElementById('couponModal').classList.remove('active');
-  editingCode = null;
-}
+function closeModal() { $('couponModal').classList.remove('active'); editingCode = null; }
 
-/* ===========================================
-   Submit
-=========================================== */
 async function onSubmit(e) {
   e.preventDefault();
-  document.getElementById('formError').classList.add('hidden');
-
+  $('formError').classList.add('hidden');
   const payload = {
-    code: document.getElementById('fieldCode').value.trim().toUpperCase(),
-    type: document.getElementById('fieldType').value,
-    value: Number(document.getElementById('fieldValue').value),
-    minOrderAmount: Number(document.getElementById('fieldMin').value) || 0,
-    maxDiscount: document.getElementById('fieldMaxDiscount').value === '' ? null : Number(document.getElementById('fieldMaxDiscount').value),
-    usageLimit: document.getElementById('fieldUsageLimit').value === '' ? null : Number(document.getElementById('fieldUsageLimit').value),
-    perUserLimit: Number(document.getElementById('fieldPerUser').value) || 1,
-    expiresAt: document.getElementById('fieldExpires').value ? new Date(document.getElementById('fieldExpires').value).toISOString() : null,
-    isActive: document.getElementById('fieldActive').checked,
+    code: $('fieldCode').value.trim().toUpperCase(), type: $('fieldType').value,
+    value: Number($('fieldValue').value), minOrderAmount: Number($('fieldMin').value) || 0,
+    maxDiscount: $('fieldMaxDiscount').value === '' ? null : Number($('fieldMaxDiscount').value),
+    usageLimit: $('fieldUsageLimit').value === '' ? null : Number($('fieldUsageLimit').value),
+    perUserLimit: Number($('fieldPerUser').value) || 1,
+    expiresAt: $('fieldExpires').value ? new Date($('fieldExpires').value).toISOString() : null,
+    isActive: $('fieldActive').checked,
   };
 
   if (!payload.code || payload.code.length < 3) return showFormError('الكود لازم 3 أحرف على الأقل');
   if (!payload.value || payload.value <= 0) return showFormError('القيمة لازم أكبر من 0');
   if (payload.type === 'percentage' && payload.value > 100) return showFormError('النسبة لازم ≤ 100');
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'جاري الحفظ...';
-
+  const btn = $('submitBtn'); btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   try {
-    if (editingCode) {
-      delete payload.code;
-      await api.coupons.update(editingCode, payload);
-      showToast('تم تحديث الكوبون ✓', 'success');
-    } else {
-      await api.coupons.create(payload);
-      showToast('تم إنشاء الكوبون ✓', 'success');
-    }
-    closeModal();
-    await loadCoupons();
-  } catch (err) {
-    showFormError(err.message || 'فشل الحفظ');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'حفظ';
-  }
+    if (editingCode) { delete payload.code; await api.coupons.update(editingCode, payload); showToast('تم تحديث الكوبون ✓', 'success'); }
+    else { await api.coupons.create(payload); showToast('تم إنشاء الكوبون ✓', 'success'); }
+    closeModal(); await loadCoupons();
+  } catch (err) { showFormError(err.message || 'فشل الحفظ'); }
+  finally { btn.disabled = false; btn.textContent = 'حفظ الكوبون'; }
 }
 
-function showFormError(msg) {
-  const el = document.getElementById('formError');
-  el.textContent = msg;
-  el.classList.remove('hidden');
-}
+function showFormError(msg) { const el = $('formError'); el.textContent = msg; el.classList.remove('hidden'); }
 
-/* ===========================================
-   Delete
-=========================================== */
 async function onDelete(code) {
-  const ok = await showConfirm({
-    icon: '🗑️',
-    title: 'حذف كوبون',
-    message: `هل تريد حذف الكوبون "${code}" نهائياً؟ لا يمكن التراجع.`,
-    okText: 'نعم، احذف'
-  });
+  const ok = await showConfirm({ icon: '🗑️', title: 'حذف كوبون', message: `هل تريد حذف الكوبون "${code}" نهائياً؟`, okText: 'نعم، احذف' });
   if (!ok) return;
-  try {
-    await api.coupons.remove(code);
-    showToast('تم حذف الكوبون ✓', 'success');
-    await loadCoupons();
-  } catch (err) {
-    showToast(err.message || 'فشل الحذف', 'error');
-  }
+  try { await api.coupons.remove(code); showToast('تم حذف الكوبون ✓', 'success'); await loadCoupons(); }
+  catch (err) { showToast(err.message || 'فشل الحذف', 'error'); }
 }
 
-/* ===========================================
-   Logout
-=========================================== */
 async function handleLogout() {
-  const ok = await showConfirm({
-    icon: '🚪', title: 'تسجيل الخروج',
-    message: 'هل تريد تسجيل الخروج من لوحة التحكم؟',
-    okText: 'نعم، سجل خروج'
-  });
-  if (!ok) return;
-  try {
-    await logout();
-    window.location.href = '../login.html';
-  } catch { showToast('فشل تسجيل الخروج', 'error'); }
+  const ok = await showConfirm({ icon: '🚪', title: 'تسجيل الخروج', message: 'هل تريد تسجيل الخروج؟', okText: 'نعم' });
+  if (!ok) return; await logout(); window.location.href = '../login.html';
 }
 
-/* ===========================================
-   Mobile Menu
-=========================================== */
-function setupMobileMenu() {
-  const btn = document.getElementById('mobileMenuBtn');
-  const sidebar = document.getElementById('adminSidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  const open = () => {
-    sidebar.classList.add('open');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  };
-  const close = () => {
-    sidebar.classList.remove('open');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-  };
-  btn?.addEventListener('click', open);
-  overlay?.addEventListener('click', close);
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
-  });
-}
-
-/* ===========================================
-   Events
-=========================================== */
 function setupEvents() {
-  document.getElementById('addBtn').addEventListener('click', () => openModal(null));
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('cancelBtn').addEventListener('click', closeModal);
-  document.getElementById('couponModal').addEventListener('click', (e) => {
-    if (e.target.id === 'couponModal') closeModal();
-  });
-  document.getElementById('couponForm').addEventListener('submit', onSubmit);
-  document.getElementById('searchInput').addEventListener('input', render);
-  document.getElementById('filterStatus').addEventListener('change', render);
-
-  document.getElementById('couponsBody').addEventListener('click', (e) => {
-    const btn = e.target.closest('button[data-action]');
-    if (!btn) return;
-    const code = btn.dataset.code;
-    const coupon = allCoupons.find(c => c.code === code);
+  $('addBtn').addEventListener('click', () => openModal(null));
+  $('modalClose').addEventListener('click', closeModal); $('cancelBtn').addEventListener('click', closeModal);
+  $('couponModal').addEventListener('click', (e) => { if (e.target.id === 'couponModal') closeModal(); });
+  $('couponForm').addEventListener('submit', onSubmit);
+  $('searchInput').addEventListener('input', render); $('filterStatus').addEventListener('change', render);
+  $('couponsBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]'); if (!btn) return;
+    const code = btn.dataset.code; const coupon = allCoupons.find(c => c.code === code);
     if (btn.dataset.action === 'edit' && coupon) openModal(coupon);
     if (btn.dataset.action === 'delete') onDelete(code);
   });
-
-  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+  $('logoutBtn').addEventListener('click', handleLogout);
 }
 
-/* ===========================================
-   Init
-=========================================== */
 async function init() {
   showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
-  const adminUser = await checkAdminAccess();
-  if (!adminUser) return;
-  showLayout();
-  setupMobileMenu();
-  setupEvents();
-  await loadCoupons();
+  const adminUser = await checkAdminAccess(); if (!adminUser) return;
+  showLayout(); setupEvents(); await loadCoupons();
 }
-
 init();
 </script>
-
 </body>
 </html>
