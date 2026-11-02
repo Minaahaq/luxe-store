@@ -1,10 +1,13 @@
 const { db, COLLECTIONS } = require('../config/firebase');
+const { FieldValue } = require('firebase-admin/firestore');
+const { evaluateCoupon, consumeCoupon } = require('./coupon.controller');
 
 // ===========================================
 // Constants
 // ===========================================
 const SHIPPING_COST = 200;
 const PHONE_RE = /^01[0-9]{9}$/;
+const COUPON_USAGES = 'coupon_usages';
 
 // ===========================================
 // Helpers
@@ -41,6 +44,11 @@ function validateOrderInput(body) {
     errors.push('رقم عملية التحويل مطلوب (6 أحرف على الأقل)');
   }
 
+  // كود الخصم (اختياري — لكن لو موجود لازم يكون string)
+  if (body.couponCode != null && typeof body.couponCode !== 'string') {
+    errors.push('كود الخصم غير صحيح');
+  }
+
   return errors;
 }
 
@@ -58,7 +66,7 @@ exports.create = async (req, res) => {
       return res.status(403).json({ error: 'بيانات المستخدم غير مكتملة' });
     }
 
-    // تحقق من المنتجات والمخزون
+    // ===== 1. تحقق من المنتجات والمخزون =====
     let subtotal = 0;
     const orderItems = [];
 
@@ -88,11 +96,28 @@ exports.create = async (req, res) => {
       });
     }
 
-    // الحساب
-    const shipping = SHIPPING_COST;
-    const total = subtotal + shipping;
+    // ===== 2. تقييم الكوبون (لو موجود) =====
+    let discount = 0;
+    let appliedCoupon = null;
 
-    // بيانات الطلب
+    if (req.body.couponCode) {
+      const evalResult = await evaluateCoupon(req.body.couponCode, subtotal, req.user.uid);
+      if (!evalResult.valid) {
+        return res.status(400).json({ error: evalResult.message });
+      }
+      discount = evalResult.discount;
+      appliedCoupon = {
+        code: evalResult.coupon.code,
+        type: evalResult.coupon.type,
+        value: evalResult.coupon.value
+      };
+    }
+
+    // ===== 3. الحساب النهائي =====
+    const shipping = SHIPPING_COST;
+    const total = Math.max(0, Math.round((subtotal + shipping - discount) * 100) / 100);
+
+    // ===== 4. بيانات الطلب =====
     const orderNumber = 'ORD-' + Date.now().toString().slice(-8);
     const trackingId = 'TRK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const now = new Date().toISOString();
@@ -118,19 +143,20 @@ exports.create = async (req, res) => {
       items: orderItems,
       subtotal,
       shipping,
-      discount: 0,
+      discount,
+      couponCode: appliedCoupon ? appliedCoupon.code : null,
+      couponDetails: appliedCoupon,
       total,
-      
+
       // بيانات الدفع
       paymentMethod: 'vodafone_cash',
       paymentRefNumber: sanitize(req.body.paymentRefNumber),
-      shippingPaid: false,         // لسه ما اتأكدش
+      shippingPaid: false,
       shippingFee: SHIPPING_COST,
-      productAmount: subtotal,     // المتبقي عند الاستلام
-      
+      productAmount: Math.max(0, Math.round((subtotal - discount) * 100) / 100),
+
       // الحالة
-      status: 'pending_payment',   // في انتظار مراجعة الدفع
-      
+      status: 'pending_payment',
       trackingHistory: [{
         status: 'pending_payment',
         note: 'تم استلام الطلب — في انتظار مراجعة إثبات دفع الشحن',
@@ -140,34 +166,83 @@ exports.create = async (req, res) => {
       updatedAt: now
     };
 
-    const ref = await db.collection(COLLECTIONS.ORDERS).add(orderData);
+    // ===== 5. Transaction: إنشاء الطلب + تقليل المخزون + استهلاك الكوبون =====
+    let orderRefId;
 
-    // قلل المخزون
-    for (const item of orderItems) {
-      const prodRef = db.collection(COLLECTIONS.PRODUCTS).doc(item.productId);
-      const prodSnap = await prodRef.get();
-      if (prodSnap.exists) {
-        const p = prodSnap.data();
-        await prodRef.update({
-          stock: Math.max(0, (p.stock || 0) - item.qty),
-          sold: (p.sold || 0) + item.qty
+    await db.runTransaction(async (tx) => {
+      // (أ) اقرأ كل المنتجات جوه الـ transaction للتأكد من المخزون اللحظي
+      const prodRefs = orderItems.map(it =>
+        db.collection(COLLECTIONS.PRODUCTS).doc(it.productId)
+      );
+      const prodDocs = await Promise.all(prodRefs.map(r => tx.get(r)));
+
+      prodDocs.forEach((snap, i) => {
+        if (!snap.exists) throw new Error(`المنتج ${orderItems[i].productId} غير موجود`);
+        const p = snap.data();
+        if ((p.stock || 0) < orderItems[i].qty) {
+          throw new Error(`الكمية المطلوبة من "${p.name}" غير متوفرة (متاح: ${p.stock})`);
+        }
+      });
+
+      // (ب) اقرأ الكوبون جوه الـ transaction
+      let couponRef = null;
+      let couponData = null;
+      if (appliedCoupon) {
+        couponRef = db.collection('coupons').doc(appliedCoupon.code);
+        const couponSnap = await tx.get(couponRef);
+        if (!couponSnap.exists) throw new Error('كود الخصم غير موجود');
+        couponData = couponSnap.data();
+        if (couponData.usageLimit != null && couponData.usedCount >= couponData.usageLimit) {
+          throw new Error('تم استهلاك كود الخصم بالكامل');
+        }
+      }
+
+      // (ج) أنشئ الطلب
+      const newOrderRef = db.collection(COLLECTIONS.ORDERS).doc();
+      orderRefId = newOrderRef.id;
+      tx.set(newOrderRef, orderData);
+
+      // (د) قلّل المخزون
+      prodDocs.forEach((snap, i) => {
+        const p = snap.data();
+        tx.update(prodRefs[i], {
+          stock: Math.max(0, (p.stock || 0) - orderItems[i].qty),
+          sold: (p.sold || 0) + orderItems[i].qty
+        });
+      });
+
+      // (هـ) استهلك الكوبون
+      if (couponRef) {
+        tx.update(couponRef, {
+          usedCount: FieldValue.increment(1),
+          updatedAt: now
+        });
+        const usageRef = db.collection(COUPON_USAGES).doc();
+        tx.set(usageRef, {
+          couponCode: appliedCoupon.code,
+          userId: req.user.uid,
+          orderId: orderRefId,
+          usedAt: now
         });
       }
-    }
+    });
 
+    // ===== 6. الرد =====
     res.status(201).json({
       success: true,
       message: 'تم إنشاء الطلب — في انتظار مراجعة الدفع',
-      orderId: ref.id,
+      orderId: orderRefId,
       orderNumber,
       trackingId,
       shippingFee: SHIPPING_COST,
-      productAmount: subtotal,
+      productAmount: orderData.productAmount,
+      discount,
+      couponCode: appliedCoupon?.code || null,
       total
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ error: 'فشل إنشاء الطلب' });
+    res.status(500).json({ error: error.message || 'فشل إنشاء الطلب' });
   }
 };
 
@@ -269,34 +344,61 @@ exports.cancel = async (req, res) => {
       return res.status(400).json({ error: 'لا يمكن الإلغاء بعد بدء التجهيز' });
     }
 
-    const history = order.trackingHistory || [];
-    history.push({
-      status: 'cancelled',
-      note: 'تم الإلغاء بواسطة العميل',
-      timestamp: new Date().toISOString()
-    });
+    const now = new Date().toISOString();
 
-    await doc.ref.update({
-      status: 'cancelled',
-      trackingHistory: history,
-      updatedAt: new Date().toISOString()
-    });
+    // ===== Transaction: إلغاء + إرجاع مخزون + إرجاع كوبون =====
+    await db.runTransaction(async (tx) => {
+      // (أ) اقرأ المنتجات
+      const prodRefs = (order.items || []).map(it =>
+        db.collection(COLLECTIONS.PRODUCTS).doc(it.productId)
+      );
+      const prodDocs = await Promise.all(prodRefs.map(r => tx.get(r)));
 
-    // رجع المخزون
-    for (const item of order.items || []) {
-      const prodRef = db.collection(COLLECTIONS.PRODUCTS).doc(item.productId);
-      const prodSnap = await prodRef.get();
-      if (prodSnap.exists) {
-        const p = prodSnap.data();
-        await prodRef.update({
-          stock: (p.stock || 0) + item.qty,
-          sold: Math.max(0, (p.sold || 0) - item.qty)
+      // (ب) حدّث حالة الطلب
+      const history = order.trackingHistory || [];
+      history.push({
+        status: 'cancelled',
+        note: 'تم الإلغاء بواسطة العميل',
+        timestamp: now
+      });
+      tx.update(doc.ref, {
+        status: 'cancelled',
+        trackingHistory: history,
+        updatedAt: now
+      });
+
+      // (ج) رجّع المخزون
+      prodDocs.forEach((snap, i) => {
+        if (!snap.exists) return;
+        const p = snap.data();
+        const qty = order.items[i].qty;
+        tx.update(prodRefs[i], {
+          stock: (p.stock || 0) + qty,
+          sold: Math.max(0, (p.sold || 0) - qty)
         });
+      });
+
+      // (د) رجّع الكوبون لو كان مستخدم
+      if (order.couponCode) {
+        const usageSnap = await db.collection(COUPON_USAGES)
+          .where('couponCode', '==', order.couponCode)
+          .where('orderId', '==', doc.id)
+          .get();
+
+        if (!usageSnap.empty) {
+          usageSnap.forEach(u => tx.delete(u.ref));
+          const couponRef = db.collection('coupons').doc(order.couponCode);
+          tx.update(couponRef, {
+            usedCount: FieldValue.increment(-1),
+            updatedAt: now
+          });
+        }
       }
-    }
+    });
 
     res.json({ success: true, message: 'تم إلغاء الطلب' });
   } catch (error) {
+    console.error('Cancel order error:', error);
     res.status(500).json({ error: 'فشل إلغاء الطلب' });
   }
 };
