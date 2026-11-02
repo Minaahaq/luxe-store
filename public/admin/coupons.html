@@ -11,6 +11,23 @@
   <link rel="stylesheet" href="css/admin.css">
   
   <style>
+      /* إجبار الصفحة على الوضع الغامق ومنع اللون الأبيض */
+  body, .admin-layout, .admin-main {
+    background-color: #0f1115 !important;
+    color: #e6e8ee !important;
+  }
+
+  /* تفتيح لون النص جوه مربع البحث والفلتر عشان يبان */
+  .toolbar-input::placeholder {
+    color: #8a90a2 !important;
+    opacity: 1;
+  }
+
+  /* لو الـ Sidebar لونه أبيض في التصميم الأساسي، السطر ده هيغمقه */
+  .admin-sidebar {
+    background-color: #171a21 !important;
+    border-left: 1px solid #2a2f3a !important;
+  }
     /* ستايلات مخصصة لصفحة الكوبونات عشان تبقى فخمة */
     :root {
       --gold: #c9a961;
