@@ -1,159 +1,667 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>إدارة أكواد الخصم — LUXE</title>
-  <link rel="stylesheet" href="css/admin-coupons.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <title>أكواد الخصم - LUXE Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/admin-coupons.css">
 </head>
 <body>
 
-  <!-- ===== Header ===== -->
-  <header class="topbar">
-    <div class="brand">LUXE <span>Admin</span></div>
-    <div class="user">
-      <span id="adminName">—</span>
-      <button id="logoutBtn" class="btn-ghost">تسجيل خروج</button>
+<!-- Loading / Access check -->
+<div id="statusPage" class="admin-status-page">
+  <div class="admin-status-box">
+    <div class="emoji" id="statusEmoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
+    <h1 id="statusTitle">جاري التحقق...</h1>
+    <p id="statusMessage">من فضلك انتظر</p>
+  </div>
+</div>
+
+<!-- Main Admin Layout -->
+<div class="admin-layout" id="adminLayout" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-name">LUXE</div>
+      <div class="admin-brand-tag">Admin Panel</div>
     </div>
-  </header>
 
-  <main class="container">
+    <nav class="admin-nav">
+      <a href="dashboard.html" class="admin-nav-item">
+        <span class="icon">📊</span>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="products.html" class="admin-nav-item">
+        <span class="icon">📦</span>
+        <span>المنتجات</span>
+      </a>
+      <a href="orders.html" class="admin-nav-item">
+        <span class="icon">🛒</span>
+        <span>الطلبات</span>
+      </a>
+      <a href="users.html" class="admin-nav-item">
+        <span class="icon">👥</span>
+        <span>المستخدمين</span>
+      </a>
+      <a href="coupons.html" class="admin-nav-item active">
+        <span class="icon">🎟️</span>
+        <span>أكواد الخصم</span>
+      </a>
+      <a href="../index.html" class="admin-nav-item">
+        <span class="icon">🏠</span>
+        <span>المتجر</span>
+      </a>
+    </nav>
 
-    <!-- ===== Toolbar ===== -->
-    <div class="toolbar">
-      <h1>أكواد الخصم</h1>
-      <div class="toolbar-actions">
-        <input id="searchInput" type="text" placeholder="ابحث بالكود..." />
-        <select id="filterStatus">
-          <option value="">الكل</option>
+    <div class="admin-sidebar-footer">
+      <button class="admin-logout" id="logoutBtn" type="button">
+        <span class="icon">🚪</span>
+        <span>تسجيل الخروج</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn" type="button" aria-label="القائمة">☰</button>
+        <div>
+          <h1 class="admin-page-title">أكواد الخصم</h1>
+          <p class="admin-page-subtitle">إنشاء وإدارة كوبونات الخصم</p>
+        </div>
+      </div>
+      <div class="admin-topbar-actions">
+        <button class="refresh-dashboard-btn" id="addBtn" type="button">
+          ➕ <span>كوبون جديد</span>
+        </button>
+        <div class="admin-user-badge">
+          <div class="avatar" id="adminInitial">A</div>
+          <div class="info">
+            <div class="name" id="adminName">Admin</div>
+            <div class="role">مدير</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="mini-stats-row" id="statsGrid">
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="admin-card">
+      <div class="coupons-toolbar">
+        <input id="searchInput" class="admin-input" type="text" placeholder="🔍 ابحث بالكود..." />
+        <select id="filterStatus" class="admin-input">
+          <option value="">كل الحالات</option>
           <option value="active">مُفعّل</option>
           <option value="inactive">غير مُفعّل</option>
           <option value="expired">منتهي</option>
+          <option value="used-up">استُهلك بالكامل</option>
         </select>
-        <button id="addBtn" class="btn-primary">+ كوبون جديد</button>
       </div>
     </div>
 
-    <!-- ===== Stats ===== -->
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-label">إجمالي الكوبونات</div>
-        <div class="stat-value" id="statTotal">0</div>
+    <!-- Table -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2>🎟️ قائمة الكوبونات</h2>
+        <span class="count-badge" id="couponsCount">0</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">مُفعّلة</div>
-        <div class="stat-value" id="statActive">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">منتهية</div>
-        <div class="stat-value" id="statExpired">0</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">إجمالي الاستخدامات</div>
-        <div class="stat-value" id="statUsages">0</div>
+      <div class="coupons-table-wrap">
+        <table class="coupons-table">
+          <thead>
+            <tr>
+              <th>الكود</th>
+              <th>النوع</th>
+              <th>القيمة</th>
+              <th>الحد الأدنى</th>
+              <th>الاستخدام</th>
+              <th>الانتهاء</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="couponsBody">
+            <tr><td colspan="8" class="admin-empty"><div class="emoji">⏳</div><h4>جاري التحميل...</h4></td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <!-- ===== Table ===== -->
-    <div class="table-wrap">
-      <table id="couponsTable">
-        <thead>
-          <tr>
-            <th>الكود</th>
-            <th>النوع</th>
-            <th>القيمة</th>
-            <th>الحد الأدنى</th>
-            <th>الاستخدام</th>
-            <th>تاريخ الانتهاء</th>
-            <th>الحالة</th>
-            <th>إجراءات</th>
-          </tr>
-        </thead>
-        <tbody id="couponsBody">
-          <tr><td colspan="8" class="empty">جاري التحميل...</td></tr>
-        </tbody>
-      </table>
-    </div>
   </main>
+</div>
 
-  <!-- ===== Modal: Create/Edit ===== -->
-  <div class="modal-backdrop" id="modal">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 id="modalTitle">كوبون جديد</h2>
-        <button class="modal-close" id="modalClose">×</button>
+<!-- ===== Modal: Create/Edit ===== -->
+<div class="admin-modal-overlay" id="couponModal">
+  <div class="admin-modal-box">
+    <div class="admin-modal-header">
+      <h3 id="modalTitle">كوبون جديد</h3>
+      <button class="admin-modal-close" id="modalClose" type="button">×</button>
+    </div>
+
+    <form id="couponForm" class="admin-modal-body">
+      <input type="hidden" id="editingCode" />
+
+      <div class="admin-form-field">
+        <label>الكود *</label>
+        <input id="fieldCode" class="admin-input" type="text" placeholder="SUMMER20" required
+               style="text-transform:uppercase;font-family:monospace;letter-spacing:1px" />
+        <small>حروف وأرقام فقط. سيتحول تلقائياً لأحرف كبيرة.</small>
       </div>
 
-      <form id="couponForm" class="modal-body">
-        <input type="hidden" id="editingCode" />
-
-        <label>
-          الكود *
-          <input id="fieldCode" type="text" placeholder="SUMMER20" required
-                 style="text-transform: uppercase" />
-          <small>حروف وأرقام فقط. سيتم تحويله تلقائياً إلى أحرف كبيرة.</small>
-        </label>
-
-        <div class="row-2">
-          <label>
-            النوع *
-            <select id="fieldType" required>
-              <option value="percentage">نسبة مئوية (%)</option>
-              <option value="fixed">مبلغ ثابت (ج.م)</option>
-            </select>
-          </label>
-          <label>
-            القيمة *
-            <input id="fieldValue" type="number" min="0.01" step="0.01" required />
-          </label>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>النوع *</label>
+          <select id="fieldType" class="admin-input" required>
+            <option value="percentage">نسبة مئوية (%)</option>
+            <option value="fixed">مبلغ ثابت (ج.م)</option>
+          </select>
         </div>
-
-        <div class="row-2">
-          <label>
-            الحد الأدنى للطلب
-            <input id="fieldMin" type="number" min="0" step="1" value="0" />
-          </label>
-          <label>
-            أقصى خصم (للنسبة فقط)
-            <input id="fieldMaxDiscount" type="number" min="0" step="1" placeholder="اتركه فارغاً = بدون حد" />
-          </label>
+        <div class="admin-form-field">
+          <label>القيمة *</label>
+          <input id="fieldValue" class="admin-input" type="number" min="0.01" step="0.01" required />
         </div>
+      </div>
 
-        <div class="row-2">
-          <label>
-            حد الاستخدام الكلي
-            <input id="fieldUsageLimit" type="number" min="1" step="1" placeholder="فارغ = غير محدود" />
-          </label>
-          <label>
-            حد الاستخدام لكل مستخدم
-            <input id="fieldPerUser" type="number" min="1" step="1" value="1" />
-          </label>
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>الحد الأدنى للطلب (ج.م)</label>
+          <input id="fieldMin" class="admin-input" type="number" min="0" step="1" value="0" />
         </div>
-
-        <label>
-          تاريخ الانتهاء
-          <input id="fieldExpires" type="datetime-local" />
-          <small>اتركه فارغاً = بدون انتهاء.</small>
-        </label>
-
-        <label class="switch">
-          <input id="fieldActive" type="checkbox" checked />
-          <span>مُفعّل</span>
-        </label>
-
-        <div id="formError" class="form-error hidden"></div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" id="cancelBtn">إلغاء</button>
-          <button type="submit" class="btn-primary" id="submitBtn">حفظ</button>
+        <div class="admin-form-field">
+          <label>أقصى خصم (للنسبة فقط)</label>
+          <input id="fieldMaxDiscount" class="admin-input" type="number" min="0" step="1" placeholder="اتركه فارغاً = بدون حد" />
         </div>
-      </form>
+      </div>
+
+      <div class="admin-form-row">
+        <div class="admin-form-field">
+          <label>حد الاستخدام الكلي</label>
+          <input id="fieldUsageLimit" class="admin-input" type="number" min="1" step="1" placeholder="فارغ = غير محدود" />
+        </div>
+        <div class="admin-form-field">
+          <label>حد الاستخدام لكل مستخدم</label>
+          <input id="fieldPerUser" class="admin-input" type="number" min="1" step="1" value="1" />
+        </div>
+      </div>
+
+      <div class="admin-form-field">
+        <label>تاريخ الانتهاء</label>
+        <input id="fieldExpires" class="admin-input" type="datetime-local" />
+        <small>اتركه فارغاً = بدون انتهاء.</small>
+      </div>
+
+      <label class="admin-switch">
+        <input id="fieldActive" type="checkbox" checked />
+        <span class="admin-switch-slider"></span>
+        <span class="admin-switch-label">مُفعّل</span>
+      </label>
+
+      <div id="formError" class="admin-form-error hidden"></div>
+
+      <div class="admin-modal-actions">
+        <button type="button" class="confirm-btn-cancel" id="cancelBtn">إلغاء</button>
+        <button type="submit" class="admin-btn-primary" id="submitBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Modal (نسخة orders.html) -->
+<div class="confirm-modal-overlay" id="confirmModal">
+  <div class="confirm-modal-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <h3 id="confirmTitle">تأكيد</h3>
+    <p id="confirmMessage"></p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" id="confirmCancelBtn" type="button">إلغاء</button>
+      <button class="confirm-btn-ok" id="confirmOkBtn" type="button">تأكيد</button>
     </div>
   </div>
+</div>
 
-  <!-- ===== Toast ===== -->
-  <div id="toast" class="toast hidden"></div>
+<script type="module">
+import { api, getCurrentUser, logout } from '../js/api.js';
 
-  <script src="js/admin-coupons.js"></script>
+/* ===========================================
+   Helpers
+=========================================== */
+function showStatus(emoji, title, message, isLoading = false) {
+  const page = document.getElementById('statusPage');
+  const emojiEl = document.getElementById('statusEmoji');
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
+  page.style.display = 'flex';
+  document.getElementById('adminLayout').style.display = 'none';
+  emojiEl.textContent = emoji;
+  emojiEl.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
+  emojiEl.style.display = 'inline-block';
+}
+
+function showLayout() {
+  document.getElementById('statusPage').style.display = 'none';
+  document.getElementById('adminLayout').style.display = 'grid';
+}
+
+function showToast(message, type = 'info') {
+  let c = document.getElementById('toastContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastContainer';
+    c.className = 'toast-container';
+    document.body.appendChild(c);
+  }
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(-20px)';
+    t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('ar-EG', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  } catch { return '—'; }
+}
+
+function toLocalDatetimeInput(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 16);
+  } catch { return ''; }
+}
+
+/* ===========================================
+   Confirm Modal
+=========================================== */
+function showConfirm({ icon = '⚠️', title, message, okText = 'تأكيد' }) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOkBtn').textContent = okText;
+    modal.classList.add('active');
+
+    const cleanup = (r) => {
+      modal.classList.remove('active');
+      document.getElementById('confirmCancelBtn').removeEventListener('click', onCancel);
+      document.getElementById('confirmOkBtn').removeEventListener('click', onOk);
+      modal.removeEventListener('click', onOverlay);
+      resolve(r);
+    };
+    const onCancel = () => cleanup(false);
+    const onOk = () => cleanup(true);
+    const onOverlay = (e) => { if (e.target.id === 'confirmModal') cleanup(false); };
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', onCancel);
+    document.getElementById('confirmOkBtn').addEventListener('click', onOk);
+    modal.addEventListener('click', onOverlay);
+  });
+}
+
+/* ===========================================
+   Access Check
+=========================================== */
+async function checkAdminAccess() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول الأول');
+      setTimeout(() => window.location.href = '../login.html?redirect=admin/coupons.html', 1500);
+      return null;
+    }
+    const meRes = await api.auth.me();
+    const userData = meRes.user;
+    if (!userData || userData.role !== 'admin') {
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط.');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+      return null;
+    }
+    const name = userData.name || user.displayName || 'Admin';
+    document.getElementById('adminName').textContent = name;
+    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
+    return userData;
+  } catch (err) {
+    console.error(err);
+    showStatus('⚠️', 'حدث خطأ', err.message || 'تعذّر التحقق من الصلاحيات');
+    return null;
+  }
+}
+
+/* ===========================================
+   State
+=========================================== */
+let allCoupons = [];
+let editingCode = null;
+
+/* ===========================================
+   Status helpers
+=========================================== */
+function couponStatus(c) {
+  if (c.expiresAt && new Date(c.expiresAt) < new Date()) return 'expired';
+  if (c.usageLimit != null && c.usedCount >= c.usageLimit) return 'used-up';
+  if (!c.isActive) return 'inactive';
+  return 'active';
+}
+
+function statusBadge(c) {
+  const st = couponStatus(c);
+  const map = {
+    active:   { cls: 'status-delivered', label: 'مُفعّل' },
+    inactive: { cls: 'status-cancelled', label: 'غير مُفعّل' },
+    expired:  { cls: 'status-cancelled', label: 'منتهي' },
+    'used-up':{ cls: 'status-pending',   label: 'استُهلك بالكامل' },
+  };
+  const m = map[st];
+  return `<span class="status-pill ${m.cls}">${m.label}</span>`;
+}
+
+/* ===========================================
+   Render
+=========================================== */
+function render() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  const f = document.getElementById('filterStatus').value;
+
+  const rows = allCoupons.filter(c => {
+    if (q && !c.code.toLowerCase().includes(q)) return false;
+    if (f && couponStatus(c) !== f) return false;
+    return true;
+  });
+
+  document.getElementById('couponsCount').textContent = rows.length;
+
+  if (rows.length === 0) {
+    document.getElementById('couponsBody').innerHTML = `
+      <tr><td colspan="8">
+        <div class="admin-empty">
+          <div class="emoji">🎟️</div>
+          <h4>لا توجد كوبونات</h4>
+          <p>اضغط "كوبون جديد" لإضافة أول كود خصم</p>
+        </div>
+      </td></tr>`;
+  } else {
+    document.getElementById('couponsBody').innerHTML = rows.map(c => {
+      const typeLabel = c.type === 'percentage' ? 'نسبة %' : 'مبلغ ثابت';
+      const valueLabel = c.type === 'percentage' ? `${c.value}%` : `${c.value} ج.م`;
+      const usage = c.usageLimit != null
+        ? `${c.usedCount || 0} / ${c.usageLimit}`
+        : `${c.usedCount || 0} / ∞`;
+      return `
+        <tr>
+          <td class="coupon-code">${escapeHtml(c.code)}</td>
+          <td>${typeLabel}</td>
+          <td>${valueLabel}</td>
+          <td>${c.minOrderAmount ? c.minOrderAmount + ' ج.م' : '—'}</td>
+          <td>${usage}</td>
+          <td>${formatDate(c.expiresAt)}</td>
+          <td>${statusBadge(c)}</td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn" data-action="edit" data-code="${escapeHtml(c.code)}" title="تعديل">✏️</button>
+              <button class="icon-btn danger" data-action="delete" data-code="${escapeHtml(c.code)}" title="حذف">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  // Stats
+  const total = allCoupons.length;
+  const active = allCoupons.filter(c => couponStatus(c) === 'active').length;
+  const expired = allCoupons.filter(c => couponStatus(c) === 'expired').length;
+  const usages = allCoupons.reduce((s, c) => s + (c.usedCount || 0), 0);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="mini-stat-box"><div class="num">${total}</div><div class="lbl">إجمالي الكوبونات</div></div>
+    <div class="mini-stat-box"><div class="num">${active}</div><div class="lbl">مُفعّلة</div></div>
+    <div class="mini-stat-box"><div class="num">${expired}</div><div class="lbl">منتهية</div></div>
+    <div class="mini-stat-box"><div class="num">${usages}</div><div class="lbl">إجمالي الاستخدامات</div></div>`;
+}
+
+/* ===========================================
+   Load
+=========================================== */
+async function loadCoupons() {
+  document.getElementById('couponsBody').innerHTML = `
+    <tr><td colspan="8" class="admin-empty"><div class="emoji">⏳</div><h4>جاري التحميل...</h4></td></tr>`;
+  try {
+    const res = await api.coupons.getAll();
+    allCoupons = res.data || [];
+    render();
+  } catch (err) {
+    console.error('Load coupons error:', err);
+    document.getElementById('couponsBody').innerHTML = `
+      <tr><td colspan="8" class="admin-empty"><div class="emoji">⚠️</div><h4>${escapeHtml(err.message)}</h4></td></tr>`;
+    showToast('فشل تحميل الكوبونات', 'error');
+  }
+}
+
+/* ===========================================
+   Modal
+=========================================== */
+function openModal(coupon = null) {
+  document.getElementById('formError').classList.add('hidden');
+  document.getElementById('couponForm').reset();
+  document.getElementById('fieldActive').checked = true;
+  document.getElementById('fieldPerUser').value = 1;
+  document.getElementById('fieldMin').value = 0;
+
+  if (coupon) {
+    editingCode = coupon.code;
+    document.getElementById('modalTitle').textContent = `تعديل: ${coupon.code}`;
+    document.getElementById('editingCode').value = coupon.code;
+    document.getElementById('fieldCode').value = coupon.code;
+    document.getElementById('fieldCode').disabled = true;
+    document.getElementById('fieldType').value = coupon.type;
+    document.getElementById('fieldValue').value = coupon.value;
+    document.getElementById('fieldMin').value = coupon.minOrderAmount || 0;
+    document.getElementById('fieldMaxDiscount').value = coupon.maxDiscount ?? '';
+    document.getElementById('fieldUsageLimit').value = coupon.usageLimit ?? '';
+    document.getElementById('fieldPerUser').value = coupon.perUserLimit ?? 1;
+    document.getElementById('fieldExpires').value = toLocalDatetimeInput(coupon.expiresAt);
+    document.getElementById('fieldActive').checked = !!coupon.isActive;
+  } else {
+    editingCode = null;
+    document.getElementById('modalTitle').textContent = 'كوبون جديد';
+    document.getElementById('editingCode').value = '';
+    document.getElementById('fieldCode').disabled = false;
+  }
+
+  document.getElementById('couponModal').classList.add('active');
+  setTimeout(() => document.getElementById('fieldCode').focus(), 60);
+}
+
+function closeModal() {
+  document.getElementById('couponModal').classList.remove('active');
+  editingCode = null;
+}
+
+/* ===========================================
+   Submit
+=========================================== */
+async function onSubmit(e) {
+  e.preventDefault();
+  document.getElementById('formError').classList.add('hidden');
+
+  const payload = {
+    code: document.getElementById('fieldCode').value.trim().toUpperCase(),
+    type: document.getElementById('fieldType').value,
+    value: Number(document.getElementById('fieldValue').value),
+    minOrderAmount: Number(document.getElementById('fieldMin').value) || 0,
+    maxDiscount: document.getElementById('fieldMaxDiscount').value === '' ? null : Number(document.getElementById('fieldMaxDiscount').value),
+    usageLimit: document.getElementById('fieldUsageLimit').value === '' ? null : Number(document.getElementById('fieldUsageLimit').value),
+    perUserLimit: Number(document.getElementById('fieldPerUser').value) || 1,
+    expiresAt: document.getElementById('fieldExpires').value ? new Date(document.getElementById('fieldExpires').value).toISOString() : null,
+    isActive: document.getElementById('fieldActive').checked,
+  };
+
+  if (!payload.code || payload.code.length < 3) return showFormError('الكود لازم 3 أحرف على الأقل');
+  if (!payload.value || payload.value <= 0) return showFormError('القيمة لازم أكبر من 0');
+  if (payload.type === 'percentage' && payload.value > 100) return showFormError('النسبة لازم ≤ 100');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ...';
+
+  try {
+    if (editingCode) {
+      delete payload.code;
+      await api.coupons.update(editingCode, payload);
+      showToast('تم تحديث الكوبون ✓', 'success');
+    } else {
+      await api.coupons.create(payload);
+      showToast('تم إنشاء الكوبون ✓', 'success');
+    }
+    closeModal();
+    await loadCoupons();
+  } catch (err) {
+    showFormError(err.message || 'فشل الحفظ');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'حفظ';
+  }
+}
+
+function showFormError(msg) {
+  const el = document.getElementById('formError');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+/* ===========================================
+   Delete
+=========================================== */
+async function onDelete(code) {
+  const ok = await showConfirm({
+    icon: '🗑️',
+    title: 'حذف كوبون',
+    message: `هل تريد حذف الكوبون "${code}" نهائياً؟ لا يمكن التراجع.`,
+    okText: 'نعم، احذف'
+  });
+  if (!ok) return;
+  try {
+    await api.coupons.remove(code);
+    showToast('تم حذف الكوبون ✓', 'success');
+    await loadCoupons();
+  } catch (err) {
+    showToast(err.message || 'فشل الحذف', 'error');
+  }
+}
+
+/* ===========================================
+   Logout
+=========================================== */
+async function handleLogout() {
+  const ok = await showConfirm({
+    icon: '🚪', title: 'تسجيل الخروج',
+    message: 'هل تريد تسجيل الخروج من لوحة التحكم؟',
+    okText: 'نعم، سجل خروج'
+  });
+  if (!ok) return;
+  try {
+    await logout();
+    window.location.href = '../login.html';
+  } catch { showToast('فشل تسجيل الخروج', 'error'); }
+}
+
+/* ===========================================
+   Mobile Menu
+=========================================== */
+function setupMobileMenu() {
+  const btn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const open = () => {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+  btn?.addEventListener('click', open);
+  overlay?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+  });
+}
+
+/* ===========================================
+   Events
+=========================================== */
+function setupEvents() {
+  document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('cancelBtn').addEventListener('click', closeModal);
+  document.getElementById('couponModal').addEventListener('click', (e) => {
+    if (e.target.id === 'couponModal') closeModal();
+  });
+  document.getElementById('couponForm').addEventListener('submit', onSubmit);
+  document.getElementById('searchInput').addEventListener('input', render);
+  document.getElementById('filterStatus').addEventListener('change', render);
+
+  document.getElementById('couponsBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const code = btn.dataset.code;
+    const coupon = allCoupons.find(c => c.code === code);
+    if (btn.dataset.action === 'edit' && coupon) openModal(coupon);
+    if (btn.dataset.action === 'delete') onDelete(code);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+}
+
+/* ===========================================
+   Init
+=========================================== */
+async function init() {
+  showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
+  const adminUser = await checkAdminAccess();
+  if (!adminUser) return;
+  showLayout();
+  setupMobileMenu();
+  setupEvents();
+  await loadCoupons();
+}
+
+init();
+</script>
+
 </body>
 </html>
