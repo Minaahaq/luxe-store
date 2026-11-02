@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة أكواد الخصم — LUXE</title>
+  <link rel="stylesheet" href="css/admin-coupons.css" />
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="topbar">
+    <div class="brand">LUXE <span>Admin</span></div>
+    <div class="user">
+      <span id="adminName">—</span>
+      <button id="logoutBtn" class="btn-ghost">تسجيل خروج</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===== Toolbar ===== -->
+    <div class="toolbar">
+      <h1>أكواد الخصم</h1>
+      <div class="toolbar-actions">
+        <input id="searchInput" type="text" placeholder="ابحث بالكود..." />
+        <select id="filterStatus">
+          <option value="">الكل</option>
+          <option value="active">مُفعّل</option>
+          <option value="inactive">غير مُفعّل</option>
+          <option value="expired">منتهي</option>
+        </select>
+        <button id="addBtn" class="btn-primary">+ كوبون جديد</button>
+      </div>
+    </div>
+
+    <!-- ===== Stats ===== -->
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">إجمالي الكوبونات</div>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">مُفعّلة</div>
+        <div class="stat-value" id="statActive">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">منتهية</div>
+        <div class="stat-value" id="statExpired">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">إجمالي الاستخدامات</div>
+        <div class="stat-value" id="statUsages">0</div>
+      </div>
+    </div>
+
+    <!-- ===== Table ===== -->
+    <div class="table-wrap">
+      <table id="couponsTable">
+        <thead>
+          <tr>
+            <th>الكود</th>
+            <th>النوع</th>
+            <th>القيمة</th>
+            <th>الحد الأدنى</th>
+            <th>الاستخدام</th>
+            <th>تاريخ الانتهاء</th>
+            <th>الحالة</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="couponsBody">
+          <tr><td colspan="8" class="empty">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ===== Modal: Create/Edit ===== -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">كوبون جديد</h2>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+
+      <form id="couponForm" class="modal-body">
+        <input type="hidden" id="editingCode" />
+
+        <label>
+          الكود *
+          <input id="fieldCode" type="text" placeholder="SUMMER20" required
+                 style="text-transform: uppercase" />
+          <small>حروف وأرقام فقط. سيتم تحويله تلقائياً إلى أحرف كبيرة.</small>
+        </label>
+
+        <div class="row-2">
+          <label>
+            النوع *
+            <select id="fieldType" required>
+              <option value="percentage">نسبة مئوية (%)</option>
+              <option value="fixed">مبلغ ثابت (ج.م)</option>
+            </select>
+          </label>
+          <label>
+            القيمة *
+            <input id="fieldValue" type="number" min="0.01" step="0.01" required />
+          </label>
+        </div>
+
+        <div class="row-2">
+          <label>
+            الحد الأدنى للطلب
+            <input id="fieldMin" type="number" min="0" step="1" value="0" />
+          </label>
+          <label>
+            أقصى خصم (للنسبة فقط)
+            <input id="fieldMaxDiscount" type="number" min="0" step="1" placeholder="اتركه فارغاً = بدون حد" />
+          </label>
+        </div>
+
+        <div class="row-2">
+          <label>
+            حد الاستخدام الكلي
+            <input id="fieldUsageLimit" type="number" min="1" step="1" placeholder="فارغ = غير محدود" />
+          </label>
+          <label>
+            حد الاستخدام لكل مستخدم
+            <input id="fieldPerUser" type="number" min="1" step="1" value="1" />
+          </label>
+        </div>
+
+        <label>
+          تاريخ الانتهاء
+          <input id="fieldExpires" type="datetime-local" />
+          <small>اتركه فارغاً = بدون انتهاء.</small>
+        </label>
+
+        <label class="switch">
+          <input id="fieldActive" type="checkbox" checked />
+          <span>مُفعّل</span>
+        </label>
+
+        <div id="formError" class="form-error hidden"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="cancelBtn">إلغاء</button>
+          <button type="submit" class="btn-primary" id="submitBtn">حفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/admin-coupons.js"></script>
+</body>
+</html>
