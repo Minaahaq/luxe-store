@@ -52,6 +52,29 @@ export const api = {
     track: (trackingId) => request(`/orders/track/${trackingId}`),
     cancel: (id) => request(`/orders/${id}/cancel`, { method: 'POST' })
   },
+
+    coupons: {
+    // ===== Admin =====
+    getAll: () => request('/coupons'),
+    getByCode: (code) => request(`/coupons/${encodeURIComponent(code)}`),
+    create: (body) => request('/coupons', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    }),
+    update: (code, body) => request(`/coupons/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body)
+    }),
+    remove: (code) => request(`/coupons/${encodeURIComponent(code)}`, {
+      method: 'DELETE'
+    }),
+
+    // ===== User =====
+    validate: (code, orderTotal) => request('/coupons/validate', {
+      method: 'POST',
+      body: JSON.stringify({ code, orderTotal })
+    })
+  },
   admin: {
     getStats: () => request('/admin/stats'),
     addProduct: (body) => request('/admin/products', {
