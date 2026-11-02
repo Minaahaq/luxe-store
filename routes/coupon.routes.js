@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const couponController = require('../controllers/coupon.controller');
-const { verifyToken, isAdmin } = require('../middleware/auth'); // عدّل حسب أسماء عندك
+const { verifyToken, isAdmin } = require('../middleware/auth');
 
 // Public — العميل يتحقق من الكوبون قبل الطلب
-router.post('/validate', verifyToken, couponController.validateCoupon);
+router.post('/validate', verifyToken, couponController.validate);
 
 // Admin only
-router.post('/', verifyToken, isAdmin, couponController.createCoupon);
-router.get('/', verifyToken, isAdmin, couponController.getAllCoupons);
-router.get('/:code', verifyToken, isAdmin, couponController.getCouponByCode);
-router.patch('/:code', verifyToken, isAdmin, couponController.updateCoupon);
-router.delete('/:code', verifyToken, isAdmin, couponController.deleteCoupon);
+router.post('/', verifyToken, isAdmin, couponController.create);
+router.get('/', verifyToken, isAdmin, couponController.getAll);
+router.get('/:code', verifyToken, isAdmin, couponController.getByCode);
+router.patch('/:code', verifyToken, isAdmin, couponController.update);
+router.delete('/:code', verifyToken, isAdmin, couponController.remove);
 
 module.exports = router;
