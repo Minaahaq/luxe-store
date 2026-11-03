@@ -204,6 +204,7 @@
 <script type="module">
 import { api, getCurrentUser, logout } from './js/api.js';
 import { showToast, addToCart, updateCartBadge } from './js/ui.js';
+import { requestNotificationPermission } from './js/firebase-config.js';
 
 let allProducts = [];
 let currentCategory = 'الكل';
@@ -462,6 +463,24 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 /* ============================================
+   PUSH NOTIFICATIONS SETUP
+============================================ */
+async function setupPushNotifications() {
+  const user = await getCurrentUser();
+  if (!user) return; // لو مش مسجل دخول مفيش إشعارات
+
+  try {
+    const token = await requestNotificationPermission();
+    if (token) {
+      await api.auth.saveFcmToken(token);
+      console.log('✅ تم تفعيل الإشعارات بنجاح');
+    }
+  } catch (err) {
+    console.error('❌ فشل تفعيل الإشعارات:', err);
+  }
+}
+
+/* ============================================
    INIT
 ============================================ */
 renderUserArea();
@@ -469,6 +488,7 @@ updateCartBadge();
 loadProducts();
 setupMobileNav();
 setupMobileSearch();
+setupPushNotifications(); // 👈 تفعيل الإشعارات
 </script>
 
 <script>
