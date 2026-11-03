@@ -117,3 +117,26 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// ===========================================
+// حفظ توكن الإشعارات (FCM Token)
+// ===========================================
+exports.saveFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+
+    if (!fcmToken) {
+      return res.status(400).json({ error: 'التوكن مطلوب' });
+    }
+
+    await db.collection(COLLECTIONS.USERS).doc(req.user.uid).update({
+      fcmToken: fcmToken,
+      updatedAt: new Date().toISOString()
+    });
+
+    res.json({ success: true, message: 'تم حفظ التوكن بنجاح' });
+  } catch (error) {
+    console.error('Save FCM Token error:', error);
+    res.status(500).json({ error: 'فشل حفظ التوكن' });
+  }
+};
