@@ -1,5 +1,5 @@
 const { db, auth, COLLECTIONS } = require('../config/firebase');
-const admin = require('firebase-admin'); // ✅ ضيفنا السطر ده عشان الإشعارات
+ // ✅ ضيفنا السطر ده عشان الإشعارات
 
 // ===========================================
 // إحصائيات
