@@ -162,6 +162,19 @@ exports.updateOrderStatus = async (req, res) => {
           },
           data: {
             url: `https://luxe-store-1uof.vercel.app/tracking.html?track=${order.trackingId}`
+          },
+          // ✅ الإعدادات دي بتظبط شكل الإشعار والصوت
+          webpush: {
+            notification: {
+              icon: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
+              badge: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
+              vibrate: [300, 100, 300, 100, 300], // نمط الاهتزاز
+              sound: 'default', // الصوت
+              requireInteraction: true, // يفضل ظاهر لحد ما يدوس عليه
+              actions: [
+                { action: 'open', title: '📦 تتبع الطلب' }
+              ]
+            }
           }
         };
 
