@@ -6209,3 +6209,192 @@ footer {
   color: #000 !important;
   transform: scale(1.1);
 }
+
+
+
+
+
+
+
+
+/* ===========================================
+   LUXE Store - Modern Card Styling
+   =========================================== */
+
+/* الكارت */
+.product-card {
+  background: #ffffff;
+  border: 1px solid #e5e3dd;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border-color: #c9a961;
+}
+
+/* الصورة */
+.product-media {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #f4f2ed;
+  position: relative;
+}
+
+.product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-media img {
+  transform: scale(1.05);
+}
+
+/* محتوى الكارت */
+.product-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* الفئة */
+.product-cat {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a8894a; /* اللون الذهبي الغامق */
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* اسم المنتج */
+.product-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.4;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 44px;
+}
+
+.product-title a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.product-title a:hover {
+  color: #c9a961;
+}
+
+/* التقييم والنجوم */
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.product-rating .stars {
+  color: #c9a961;
+  letter-spacing: 1px;
+}
+
+.product-rating .rating-count {
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* المخزون */
+.product-stock {
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.product-stock::before {
+  content: '●';
+  font-size: 8px;
+}
+
+.product-stock.in { color: #10b981; }
+.product-stock.low { color: #f59e0b; }
+.product-stock.out { color: #ef4444; }
+
+/* الجزء السفلي (السعر + زرار الإضافة) */
+.product-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid #e5e3dd;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* السعر */
+.price-main {
+  font-size: 22px;
+  font-weight: 900;
+  color: #1a1a1a;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.price-main .currency {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a8894a;
+}
+
+.price-old {
+  font-size: 12px;
+  color: #6b7280;
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+
+/* زرار الإضافة */
+.add-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #0a0e17; /* لون غامق فخم */
+  color: #c9a961;      /* ذهبي */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 300;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: #c9a961;
+  color: #0a0e17;
+  transform: rotate(90deg);
+}
+
+.add-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
