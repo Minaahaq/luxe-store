@@ -1,4 +1,5 @@
 const { db, auth, COLLECTIONS } = require('../config/firebase');
+const admin = require('firebase-admin'); // ✅ ضيفنا السطر ده عشان الإشعارات
 
 // ===========================================
 // إحصائيات
@@ -117,7 +118,7 @@ exports.getAllOrders = async (req, res) => {
 };
 
 // ===========================================
-// تحديث حالة طلب
+// تحديث حالة طلب (مع إرسال الإشعارات)
 // ===========================================
 exports.updateOrderStatus = async (req, res) => {
   try {
@@ -134,11 +135,44 @@ exports.updateOrderStatus = async (req, res) => {
       timestamp: new Date().toISOString()
     });
 
-    await doc.ref.update({
+    const updateData = {
       status,
       trackingHistory: history,
       updatedAt: new Date().toISOString()
-    });
+    };
+
+    // ✅ لو الحالة "قيد التجهيز" نعلم إن الشحن اتدفع
+    if (status === 'processing') {
+      updateData.shippingPaid = true;
+    }
+
+    await doc.ref.update(updateData);
+
+    // 🚀 إرسال الإشعار لو الحالة "تم الشحن"
+    if (status === 'shipped') {
+      const userDoc = await db.collection(COLLECTIONS.USERS).doc(order.userId).get();
+      const userData = userDoc.data();
+
+      if (userData && userData.fcmToken) {
+        const message = {
+          token: userData.fcmToken,
+          notification: {
+            title: '🚚 طلبك في الطريق!',
+            body: `طلبك رقم ${order.orderNumber} خرج للتوصيل النهاردة.`
+          },
+          data: {
+            url: `https://luxe-store-1uof.vercel.app/tracking.html?track=${order.trackingId}`
+          }
+        };
+
+        try {
+          await admin.messaging().send(message);
+          console.log('✅ Notification sent to:', order.userId);
+        } catch (fcmError) {
+          console.error('❌ FCM Send Error:', fcmError);
+        }
+      }
+    }
 
     res.json({ success: true, message: 'تم تحديث الحالة' });
   } catch (error) {
@@ -153,7 +187,7 @@ exports.getAllUsers = async (req, res) => {
   try {
     const snapshot = await db.collection(COLLECTIONS.USERS).get();
     const users = [];
-     snapshot.forEach(doc => users.push({ uid: doc.id, ...doc.data() }));
+    snapshot.forEach(doc => users.push({ uid: doc.id, ...doc.data() }));
     res.json({ success: true, count: users.length, data: users });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -161,19 +195,16 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // ===========================================
-// ===========================================
 // تحديث دور المستخدم (مع الحظر)
 // ===========================================
 exports.updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
 
-    // ✅ أضفنا 'banned' عشان الحظر يشتغل
     if (!['customer', 'admin', 'banned'].includes(role)) {
       return res.status(400).json({ error: 'دور غير صالح' });
     }
 
-    // ✅ حماية: الأدمن ميقدرش يحظر نفسه
     if (req.user.uid === req.params.uid && role === 'banned') {
       return res.status(400).json({ error: 'لا يمكنك حظر حسابك الشخصي!' });
     }
