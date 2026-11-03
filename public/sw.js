@@ -19,22 +19,34 @@ const messaging = firebase.messaging();
 // استقبال الإشعارات في الخلفية
 messaging.onBackgroundMessage((payload) => {
   console.log('[sw.js] Received background message:', payload);
+  
   const notificationTitle = payload.notification?.title || 'LUXE Store';
   const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: '/assets/icon-192x192.png',
-    badge: '/assets/icon-192x192.png',
+    body: payload.notification?.body || 'لديك إشعار جديد',
+    icon: '/assets/icon-192x192.png', // اللوجو الكبير
+    badge: '/assets/icon-192x192.png', // الأيقونة الصغيرة
+    image: '/assets/banner.jpg', // صورة كبيرة (اختياري)
+    vibrate: [300, 100, 300, 100, 300], // 🔔 نمط الاهتزاز
+    sound: 'default', // 🔊 الصوت
     data: payload.data || {},
-    vibrate: [200, 100, 200]
+    requireInteraction: true, // يفضل في الشاشة لحد ما يتقفل
+    actions: [
+      { action: 'open', title: '📦 تتبع الطلب' },
+      { action: 'close', title: '✖ إغلاق' }
+    ]
   };
+  
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// الضغط على الإشعار
+// عند الضغط على الإشعار
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  const urlToOpen = event.notification.data?.url || '/';
+  
+  if (event.action === 'close') return;
 
+  const urlToOpen = event.notification.data?.url || '/';
+  
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
       for (let i = 0; i < clientList.length; i++) {
