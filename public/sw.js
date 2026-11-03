@@ -16,20 +16,23 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// استقبال الإشعارات في الخلفية
 messaging.onBackgroundMessage((payload) => {
   console.log('[sw.js] Received background message:', payload);
   
   const notificationTitle = payload.notification?.title || 'LUXE Store';
+  
+  // ✅ بنجيب الصورة من الـ data اللي جاية من السيرفر
+  const productImage = payload.data?.image || '/assets/icon-192x192.png';
+
   const notificationOptions = {
     body: payload.notification?.body || 'لديك إشعار جديد',
-    icon: '/assets/icon-192x192.png', // اللوجو الكبير
-    badge: '/assets/icon-192x192.png', // الأيقونة الصغيرة
-    image: '/assets/banner.jpg', // صورة كبيرة (اختياري)
-    vibrate: [300, 100, 300, 100, 300], // 🔔 نمط الاهتزاز
-    sound: 'default', // 🔊 الصوت
+    icon: '/assets/icon-192x192.png', 
+    badge: '/assets/icon-192x192.png',
+    image: productImage, // ✅ صورة المنتج
+    vibrate: [300, 100, 300, 100, 300], 
+    sound: 'default', 
     data: payload.data || {},
-    requireInteraction: true, // يفضل في الشاشة لحد ما يتقفل
+    requireInteraction: true, 
     actions: [
       { action: 'open', title: '📦 تتبع الطلب' },
       { action: 'close', title: '✖ إغلاق' }
