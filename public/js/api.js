@@ -20,7 +20,15 @@ async function request(endpoint, options = {}) {
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
-  const data = await res.json();
+  
+  // 🛡️ حماية عشان لو السيرفر رجع خطأ مش JSON
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    if (!res.ok) throw new Error('حدث خطأ في السيرفر، حاول مرة أخرى');
+    return {};
+  }
 
   if (!res.ok) throw new Error(data.error || 'حدث خطأ');
   return data;
@@ -32,6 +40,11 @@ export const api = {
     updateProfile: (body) => request('/auth/profile', {
       method: 'PUT',
       body: JSON.stringify(body)
+    }),
+    // ✅ دالة حفظ توكن الإشعارات
+    saveFcmToken: (fcmToken) => request('/auth/fcm-token', {
+      method: 'POST',
+      body: JSON.stringify({ fcmToken })
     })
   },
   products: {
@@ -53,7 +66,7 @@ export const api = {
     cancel: (id) => request(`/orders/${id}/cancel`, { method: 'POST' })
   },
 
-    coupons: {
+  coupons: {
     // ===== Admin =====
     getAll: () => request('/coupons'),
     getByCode: (code) => request(`/coupons/${encodeURIComponent(code)}`),
@@ -99,7 +112,9 @@ export const api = {
   }
 };
 
-// Auth helpers
+// ===========================================
+// Auth Helpers
+// ===========================================
 export async function registerWithEmail(email, password, name) {
   const { auth, createUserWithEmailAndPassword, updateProfile } = await import('./firebase-config.js');
   const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -135,4 +150,4 @@ export async function requireLogin(redirect = 'login.html') {
     return null;
   }
   return user;
-} 
+}
