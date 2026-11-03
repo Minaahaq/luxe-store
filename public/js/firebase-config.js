@@ -31,6 +31,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// ✅ إضافة مكتبة الإشعارات
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
 // ⚠️ استبدل القيم دي بقيم مشروعك من Firebase Console
 const firebaseConfig = {
   apiKey: "AIzaSyBJY9ZeorwjPWONp9p6IpDm7bMtFn4W6Uk",
@@ -49,6 +52,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const messaging = getMessaging(app); // ✅ تهيئة الإشعارات
+
+// ===========================================
+// دالة طلب الإذن وجلب التوكن (للإشعارات)
+// ===========================================
+export async function requestNotificationPermission() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      // ⚠️ حط الـ VAPID Key بتاعك هنا
+      const token = await getToken(messaging, { 
+        vapidKey: 'BAHMCOrG3YYgi68U75gcyIsfJY1zMLzY-qYl0L7mx6LWVIdn0oTKtuqoJkM1D6kcSLqYCK621Ns3KFS7rA2zJf8' 
+      });
+      if (token) {
+        console.log('FCM Token:', token);
+        return token;
+      }
+    }
+  } catch (error) {
+    console.error('Error getting notification permission:', error);
+  }
+  return null;
+}
 
 // ===========================================
 // Exports
@@ -57,6 +83,7 @@ export {
   app,
   auth,
   db,
+  messaging, // ✅ تصدير messaging
   // Auth
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
