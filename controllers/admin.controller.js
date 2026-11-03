@@ -154,6 +154,17 @@ exports.updateOrderStatus = async (req, res) => {
       const userData = userDoc.data();
 
       if (userData && userData.fcmToken) {
+            // 🚚 إرسال الإشعار لو الحالة "تم الشحن"
+    if (status === 'shipped') {
+      const userDoc = await db.collection(COLLECTIONS.USERS).doc(order.userId).get();
+      const userData = userDoc.data();
+
+      if (userData && userData.fcmToken) {
+        // ✅ بنجيب صورة أول منتج في الطلب
+        const productImage = order.items && order.items.length > 0 
+          ? order.items[0].image 
+          : 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png'; // صورة افتراضية لو مفيش
+
         const message = {
           token: userData.fcmToken,
           notification: {
@@ -163,20 +174,30 @@ exports.updateOrderStatus = async (req, res) => {
           data: {
             url: `https://luxe-store-1uof.vercel.app/tracking.html?track=${order.trackingId}`
           },
-          // ✅ الإعدادات دي بتظبط شكل الإشعار والصوت
           webpush: {
             notification: {
               icon: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
               badge: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
-              vibrate: [300, 100, 300, 100, 300], // نمط الاهتزاز
-              sound: 'default', // الصوت
-              requireInteraction: true, // يفضل ظاهر لحد ما يدوس عليه
+              // ✅ هنا بنحط صورة المنتج
+              image: productImage, 
+              vibrate: [300, 100, 300, 100, 300],
+              sound: 'default',
+              requireInteraction: true,
               actions: [
                 { action: 'open', title: '📦 تتبع الطلب' }
               ]
             }
           }
         };
+
+        try {
+          await admin.messaging().send(message);
+          console.log('✅ Notification sent with product image');
+        } catch (fcmError) {
+          console.error('❌ FCM Send Error:', fcmError);
+        }
+      }
+    }
 
         try {
           await admin.messaging().send(message);
