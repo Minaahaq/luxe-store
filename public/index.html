@@ -18,7 +18,9 @@
 </head>
 <body>
 
-<!-- HEADER -->
+<!-- ============================================
+     HEADER
+============================================ -->
 <header class="main-header" id="mainHeader">
   <div class="container header-inner">
     <a href="index.html" class="brand">
@@ -38,9 +40,12 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       </button>
 
-      <a href="tracking.html" class="icon-btn" title="تتبع الطلب" aria-label="تتبع الطلب">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      </a>
+   <a href="tracking.html" class="icon-btn" title="تتبع الطلب" aria-label="تتبع الطلب">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+    <circle cx="12" cy="10" r="3"/>
+    </svg>
+    </a>
 
       <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
@@ -48,14 +53,52 @@
       </a>
 
       <div id="userArea"></div>
+
       <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
       </button>
     </div>
   </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
+    </div>
+  </div>
 </header>
 
-<!-- HERO -->
+<!-- ============================================
+     MOBILE NAV DRAWER
+============================================ -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:20px;letter-spacing:4px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+
+  <div class="mobile-drawer-nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html">المنتجات</a>
+    <a href="orders.html">طلباتي</a>
+    <a href="tracking.html">تتبع الشحنة</a>
+    <a href="profile.html">حسابي</a>
+  </div>
+
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ============================================
+     HERO
+============================================ -->
 <section class="hero">
   <div class="container">
     <div class="hero-content">
@@ -67,7 +110,9 @@
   </div>
 </section>
 
-<!-- PRODUCTS -->
+<!-- ============================================
+     PRODUCTS
+============================================ -->
 <section class="section" id="productsSection">
   <div class="container">
     <div class="section-head">
@@ -80,12 +125,45 @@
     <div class="filters-wrap" id="filtersWrap"></div>
 
     <div class="products-grid" id="productsGrid">
-      <!-- سيتم ملؤها بالجافاسكريبت -->
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ============================================
+     FOOTER
+============================================ -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -96,39 +174,162 @@
       <div class="footer-col">
         <h4>تسوق</h4>
         <a href="#" onclick="filterByCategory('الكل');return false">كل المنتجات</a>
+        <a href="#" onclick="filterByCategory('إلكترونيات');return false">إلكترونيات</a>
+        <a href="#" onclick="filterByCategory('أزياء');return false">أزياء</a>
+        <a href="#" onclick="filterByCategory('عطور');return false">عطور</a>
       </div>
       <div class="footer-col">
         <h4>خدمة العملاء</h4>
         <a href="tracking.html">تتبع الشحنة</a>
+        <a href="#">الاستبدال والإرجاع</a>
+        <a href="#">الأسئلة الشائعة</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
       </div>
     </div>
     <div class="footer-bottom">© 2025 LUXE Store</div>
   </div>
 </footer>
 
+<a href="cart.html" class="float-cart" aria-label="السلة">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+  <span class="badge" data-cart-badge>0</span>
+</a>
+
 <script type="module">
 import { api, getCurrentUser, logout } from './js/api.js';
 import { showToast, addToCart, updateCartBadge } from './js/ui.js';
+import { requestNotificationPermission } from './js/firebase-config.js';
 
 let allProducts = [];
 let currentCategory = 'الكل';
 let searchQuery = '';
 
+/* ============================================
+   USER AREA
+============================================ */
 async function renderUserArea() {
   const userArea = document.getElementById('userArea');
+  const mobileUserArea = document.getElementById('mobileUserArea');
   const user = await getCurrentUser();
+
   if (user) {
     const displayName = user.displayName || user.email?.split('@')[0] || 'User';
     const initial = displayName.charAt(0).toUpperCase();
-    userArea.innerHTML = `<button class="user-chip" id="userChip"><span>${displayName}</span><div class="user-avatar">${initial}</div></button>`;
+
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
+        <span>${displayName}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+
     document.getElementById('userChip').addEventListener('click', () => {
-      if (confirm('هل تريد تسجيل الخروج؟')) logout().then(() => { showToast('تم تسجيل الخروج', 'info'); setTimeout(() => location.reload(), 800); });
+      if (confirm('هل تريد تسجيل الخروج؟')) {
+        logout().then(() => {
+          showToast('تم تسجيل الخروج', 'info');
+          setTimeout(() => location.reload(), 800);
+        });
+      }
     });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${displayName}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
   } else {
     userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
   }
 }
 
+/* ============================================
+   MOBILE NAV
+============================================ */
+function setupMobileNav() {
+  const toggle = document.getElementById('mobileNavToggle');
+  const drawer = document.getElementById('mobileNavDrawer');
+  const overlay = document.getElementById('mobileNavOverlay');
+  const closeBtn = document.getElementById('mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+
+  drawer.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', close);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+/* ============================================
+   MOBILE SEARCH
+============================================ */
+function setupMobileSearch() {
+  const btn = document.getElementById('mobileSearchBtn');
+  const overlay = document.getElementById('mobileSearchOverlay');
+  const closeBtn = document.getElementById('closeSearchBtn');
+  const input = document.getElementById('mobileSearchInput');
+  const desktopInput = document.getElementById('searchInput');
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    input.value = '';
+    searchQuery = '';
+    renderProducts();
+  });
+
+  input?.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    desktopInput.value = val;
+    searchQuery = val;
+    renderProducts();
+  });
+}
+
+/* ============================================
+   PRODUCTS
+============================================ */
 async function loadProducts() {
   const grid = document.getElementById('productsGrid');
   try {
@@ -136,8 +337,17 @@ async function loadProducts() {
     allProducts = res.data || [];
     renderFilters();
     renderProducts();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const s = urlParams.get('search');
+    if (s) {
+      document.getElementById('searchInput').value = s;
+      searchQuery = s;
+      renderProducts();
+    }
   } catch (err) {
-    grid.innerHTML = `<div class="empty-state"><p>حدث خطأ في تحميل المنتجات</p></div>`;
+    console.error(err);
+    grid.innerHTML = `<div class="empty-state"><p>حدث خطأ في تحميل المنتجات</p><p style="font-size:12px;opacity:.6">${err.message}</p></div>`;
   }
 }
 
@@ -165,12 +375,16 @@ function renderProducts() {
   if (currentCategory !== 'الكل') filtered = filtered.filter(p => p.category === currentCategory);
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(p => p.name?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q));
+    filtered = filtered.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.brand?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    );
   }
 
   const grid = document.getElementById('productsGrid');
   if (filtered.length === 0) {
-    grid.innerHTML = `<div class="empty-state"><p>مفيش نتائج مطابقة</p></div>`;
+    grid.innerHTML = `<div class="empty-state"><p>مفيش نتائج مطابقة</p><p style="font-size:12px;opacity:.6">جرب كلمة تانية أو اختر فئة مختلفة</p></div>`;
     return;
   }
 
@@ -198,7 +412,11 @@ function renderProducts() {
         <div class="product-body">
           <span class="product-cat">${p.category || 'عام'}</span>
           <h3 class="product-title"><a href="product.html?id=${p.id}" style="color:inherit">${p.name}</a></h3>
-          ${rating > 0 ? `<div class="product-rating"><span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span><span class="rating-count">${rating.toFixed(1)}</span></div>` : ''}
+          ${rating > 0 ? `
+          <div class="product-rating">
+            <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
+            <span class="rating-count">${rating.toFixed(1)}</span>
+          </div>` : ''}
           <div class="product-stock ${stockClass}">${stockText}</div>
           <div class="product-footer">
             <div>
@@ -227,14 +445,95 @@ function renderProducts() {
   });
 }
 
+/* ============================================
+   SEARCH (desktop)
+============================================ */
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchQuery = e.target.value.trim();
   renderProducts();
 });
 
+/* ============================================
+   HEADER SCROLL
+============================================ */
+window.addEventListener('scroll', () => {
+  const header = document.getElementById('mainHeader');
+  if (window.scrollY > 30) header.classList.add('scrolled');
+  else header.classList.remove('scrolled');
+}, { passive: true });
+
+/* ============================================
+   PUSH NOTIFICATIONS SETUP
+============================================ */
+async function setupPushNotifications() {
+  const user = await getCurrentUser();
+  if (!user) return; // لو مش مسجل دخول مفيش إشعارات
+
+  try {
+    const token = await requestNotificationPermission();
+    if (token) {
+      await api.auth.saveFcmToken(token);
+      console.log('✅ تم تفعيل الإشعارات بنجاح');
+    }
+  } catch (err) {
+    console.error('❌ فشل تفعيل الإشعارات:', err);
+  }
+}
+
+/* ============================================
+   INIT
+============================================ */
 renderUserArea();
 updateCartBadge();
 loadProducts();
+setupMobileNav();
+setupMobileSearch();
+setupPushNotifications(); // 👈 تفعيل الإشعارات
 </script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('✅ Service Worker registered');
+        })
+        .catch((error) => {
+          console.log('❌ Service Worker failed:', error);
+        });
+    });
+  }
+</script>
+
+<script>
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'flex';
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('installBtn');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') btn.style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+    deferredPrompt = null;
+  });
+</script>
+
 </body>
 </html>
