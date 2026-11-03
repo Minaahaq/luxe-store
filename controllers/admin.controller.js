@@ -148,7 +148,7 @@ exports.updateOrderStatus = async (req, res) => {
 
     await doc.ref.update(updateData);
 
-    // 🚀 إرسال الإشعار لو الحالة "تم الشحن"
+       // 🚚 إرسال الإشعار لو الحالة "تم الشحن"
     if (status === 'shipped') {
       const userDoc = await db.collection(COLLECTIONS.USERS).doc(order.userId).get();
       const userData = userDoc.data();
@@ -162,6 +162,19 @@ exports.updateOrderStatus = async (req, res) => {
           },
           data: {
             url: `https://luxe-store-1uof.vercel.app/tracking.html?track=${order.trackingId}`
+          },
+          // ✅ الإضافة دي بتخلي الإشعار فيه لوجو وصوت وألوان
+          webpush: {
+            notification: {
+              icon: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
+              badge: 'https://luxe-store-1uof.vercel.app/assets/icon-192x192.png',
+              vibrate: [300, 100, 300, 100, 300], // 🔔 الاهتزاز
+              sound: 'default', // 🔊 الصوت
+              requireInteraction: true, // يفضل ظاهر لحد ما يدوس عليه
+              actions: [
+                { action: 'open', title: '📦 تتبع الطلب' }
+              ]
+            }
           }
         };
 
@@ -173,13 +186,6 @@ exports.updateOrderStatus = async (req, res) => {
         }
       }
     }
-
-    res.json({ success: true, message: 'تم تحديث الحالة' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 // ===========================================
 // كل المستخدمين
 // ===========================================
