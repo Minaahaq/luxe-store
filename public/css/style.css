@@ -6043,94 +6043,169 @@ footer {
 
 
 
-
-
-
-
-
-
 /* ============================================
-   Header
+   Header (تصميم زجاجي فخم)
 ============================================ */
 .main-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #0f1115; /* لون غامق فخم */
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  padding: 15px 0;
+  background: rgba(15, 17, 21, 0.85) !important; /* شفافية */
+  backdrop-filter: blur(12px); /* تأثير الزجاج */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 15px 0 !important;
 }
-.header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.brand-name { color: #c9a961; font-size: 28px; font-weight: 900; letter-spacing: 3px; }
-.search-bar { flex: 1; max-width: 500px; position: relative; }
+
+.brand-name {
+  color: #c9a961 !important;
+  font-size: 26px !important;
+  font-weight: 900 !important;
+  letter-spacing: 4px !important;
+}
+
 .search-bar input {
-  width: 100%; padding: 12px 20px; border-radius: 30px;
-  border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05);
-  color: #fff; font-family: inherit; outline: none; transition: 0.3s;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-radius: 30px !important;
+  padding: 12px 20px !important;
+  transition: 0.3s;
 }
-.search-bar input:focus { border-color: #c9a961; background: rgba(255,255,255,0.1); }
-.header-actions { display: flex; align-items: center; gap: 15px; }
-.icon-btn { color: #fff; font-size: 20px; text-decoration: none; position: relative; }
+
+.search-bar input:focus {
+  border-color: #c9a961 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  outline: none;
+}
 
 /* ============================================
-   Hero Section
+   Hero Section (تدرج لوني وخطوط كبيرة)
 ============================================ */
 .hero {
-  position: relative;
-  min-height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  /* صورة خلفية فخمة (ممكن تغير الرابط لصورة تانية) */
-  background: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat;
+  background: linear-gradient(135deg, #0f1115 0%, #171a21 100%) !important;
+  min-height: 65vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 60px 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
-.hero-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(15,17,21,0.7), #0f1115);
+
+.hero-label {
+  color: #c9a961 !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  display: block !important;
+  margin-bottom: 12px !important;
 }
-.hero-content { position: relative; z-index: 1; max-width: 700px; }
-.hero-label { color: #c9a961; font-weight: 700; letter-spacing: 2px; margin-bottom: 15px; display: block; }
-.hero-content h1 { font-size: 3.5rem; color: #fff; line-height: 1.2; margin-bottom: 20px; }
-.hero-content h1 span { color: #c9a961; }
-.hero-content p { font-size: 1.1rem; color: #e6e8ee; margin-bottom: 30px; opacity: 0.8; }
+
+.hero-content h1 {
+  font-size: 3.5rem !important;
+  color: #ffffff !important;
+  line-height: 1.2 !important;
+  margin-bottom: 20px !important;
+  font-weight: 900 !important;
+}
+
+.hero-content h1 span {
+  color: #c9a961 !important;
+}
+
+.hero-content p {
+  font-size: 1.1rem !important;
+  color: #8a90a2 !important;
+  margin-bottom: 30px !important;
+  max-width: 600px !important;
+  margin-inline: auto !important;
+  line-height: 1.6 !important;
+}
+
 .btn-hero {
-  display: inline-block; padding: 15px 40px; border-radius: 30px;
-  background: #c9a961; color: #000; font-weight: 800; font-size: 16px;
-  text-decoration: none; transition: 0.3s;
+  display: inline-block !important;
+  padding: 15px 45px !important;
+  background: #c9a961 !important;
+  color: #000 !important;
+  border-radius: 30px !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  text-decoration: none !important;
+  transition: 0.3s !important;
 }
-.btn-hero:hover { background: #b89850; transform: translateY(-3px); }
+
+.btn-hero:hover {
+  background: #b89850 !important;
+  transform: translateY(-3px) !important;
+}
 
 /* ============================================
-   Filters
+   Product Cards (نفس شكلك القديم بس أنعم)
 ============================================ */
-.filters-wrap { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 20px; margin-bottom: 20px; }
-.filters-wrap::-webkit-scrollbar { display: none; }
-.filter-btn {
-  padding: 10px 20px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-  background: transparent; color: #e6e8ee; white-space: nowrap; cursor: pointer; transition: 0.3s;
+.product-card {
+  background: #171a21 !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  transition: 0.3s !important;
 }
-.filter-btn.active, .filter-btn:hover { background: #c9a961; color: #000; border-color: #c9a961; }
 
-/* ============================================
-   Product Cards
-============================================ */
-.products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
-.product-card { background: #171a21; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
-.product-card:hover { transform: translateY(-5px); border-color: rgba(201,169,97,0.3); }
-.product-img-wrap { display: block; position: relative; aspect-ratio: 1/1; background: #fff; }
-.product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-.product-card:hover .product-img-wrap img { transform: scale(1.05); }
-.badge-discount { position: absolute; top: 10px; right: 10px; background: #ef4444; color: #fff; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 12px; }
-.badge-out { position: absolute; inset: 0; background: rgba(0,0,0,0.6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; }
-.product-body { padding: 20px; }
-.product-cat { font-size: 12px; color: #8a90a2; margin-bottom: 8px; display: block; }
-.product-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; line-height: 1.4; }
-.product-title a { color: #fff; text-decoration: none; }
-.product-footer { display: flex; justify-content: space-between; align-items: center; }
-.price-box { display: flex; flex-direction: column; }
-.price-main { font-size: 20px; font-weight: 900; color: #c9a961; }
-.price-main small { font-size: 12px; font-weight: 600; }
-.price-old { font-size: 13px; color: #8a90a2; text-decoration: line-through; }
-.add-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(201,169,97,0.1); color: #c9a961; border: none; font-size: 24px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
-.add-btn:hover { background: #c9a961; color: #000; }
+.product-card:hover {
+  transform: translateY(-5px) !important;
+  border-color: rgba(201, 169, 97, 0.3) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+.product-media {
+  aspect-ratio: 1/1;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.4s;
+}
+
+.product-card:hover .product-media img {
+  transform: scale(1.05);
+}
+
+.product-title a {
+  color: #e6e8ee !important;
+  font-weight: 700 !important;
+  transition: 0.2s;
+}
+
+.product-title a:hover {
+  color: #c9a961 !important;
+}
+
+.price-main {
+  color: #c9a961 !important;
+  font-size: 20px !important;
+  font-weight: 900 !important;
+}
+
+.add-btn {
+  background: rgba(201, 169, 97, 0.1) !important;
+  color: #c9a961 !important;
+  border: 1px solid rgba(201, 169, 97, 0.2) !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  font-size: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: 0.2s !important;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: #c9a961 !important;
+  color: #000 !important;
+  transform: scale(1.1);
+}
