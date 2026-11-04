@@ -1,15 +1,13 @@
 /* ===========================================
-   LUXE — App Feel (الإحساس بالتطبيق)
-   ضيفه في style.css بعد utilities
+   LUXE — App Feel (Bottom Nav & Splash)
    =========================================== */
 
-/* ============ 1. APP SHELL ============ */
 :root {
   --app-nav-height: 64px;
   --app-nav-safe: calc(var(--app-nav-height) + var(--safe-bottom) + 8px);
 }
 
-/* لما التطبيق مفتوح standalone، نخفي الهيدر ونستخدم bottom nav */
+/* لما التطبيق مفتوح standalone */
 body.is-app {
   padding-bottom: var(--app-nav-safe);
 }
@@ -21,12 +19,7 @@ body.is-app .main-header {
   right: 0;
 }
 
-body.is-app main,
-body.is-app section:first-of-type {
-  padding-top: 70px;
-}
-
-/* ============ 2. BOTTOM NAVIGATION ============ */
+/* ============ BOTTOM NAVIGATION ============ */
 .app-bottom-nav {
   display: none;
   position: fixed;
@@ -39,16 +32,14 @@ body.is-app section:first-of-type {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-top: 1px solid var(--line);
-  z-index: 980;
+  z-index: 9999;
   justify-content: space-around;
   align-items: center;
   box-shadow: 0 -4px 20px rgba(10, 14, 23, .06);
 }
 
-/* نظهره في mobile أو standalone */
 @media (max-width: 768px) {
   .app-bottom-nav { display: flex; }
-  body { padding-bottom: var(--app-nav-safe); }
 }
 
 body.is-app .app-bottom-nav { display: flex; }
@@ -88,7 +79,6 @@ body.is-app .app-bottom-nav { display: flex; }
   transform: scale(.9);
 }
 
-/* Badge على أيقونة السلة */
 .app-nav-item .nav-badge {
   position: absolute;
   top: 2px;
@@ -109,12 +99,12 @@ body.is-app .app-bottom-nav { display: flex; }
 
 .app-nav-item .nav-badge.show { display: flex; }
 
-/* ============ 3. SPLASH SCREEN ============ */
+/* ============ SPLASH SCREEN ============ */
 .app-splash {
   position: fixed;
   inset: 0;
   background: var(--ink);
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,57 +144,11 @@ body.is-app .app-bottom-nav { display: flex; }
   50%      { opacity: 1;  transform: scale(1.04); }
 }
 
-/* ============ 4. PAGE TRANSITION ============ */
-.app-page {
-  animation: appPageEnter .35s cubic-bezier(.2, .9, .3, 1);
-}
-
-.app-page.leaving {
-  animation: appPageLeave .25s ease forwards;
-}
-
-@keyframes appPageEnter {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes appPageLeave {
-  from { opacity: 1; transform: translateY(0); }
-  to   { opacity: 0; transform: translateY(-8px); }
-}
-
-/* ============ 5. PULL TO REFRESH ============ */
-.app-ptr {
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(-60px);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1500;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
-  transition: transform .25s ease, opacity .2s;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.app-ptr.visible { opacity: 1; }
-
-.app-ptr.spinning svg {
-  animation: spin .8s linear infinite;
-}
-
-/* ============ 6. TOAST (bottom sheet style) ============ */
+/* ============ APP TOAST ============ */
 .app-toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--app-nav-safe) + 12px);
+  bottom: calc(var(--app-nav-safe) + 20px);
   transform: translateX(-50%) translateY(20px);
   min-width: 220px;
   max-width: calc(100vw - 40px);
@@ -216,7 +160,7 @@ body.is-app .app-bottom-nav { display: flex; }
   font-weight: 700;
   text-align: center;
   box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
-  z-index: 2000;
+  z-index: 100000;
   opacity: 0;
   transition: opacity .25s, transform .25s;
   pointer-events: none;
@@ -234,33 +178,3 @@ body.is-app .app-bottom-nav { display: flex; }
 .app-toast.success { background: #065f46; }
 .app-toast.error   { background: #991b1b; }
 .app-toast.info    { background: var(--ink); }
-
-/* ============ 7. HAPTIC (اهتزاز خفيف) ============ */
-.haptic-pulse {
-  animation: hapticPulse .18s ease;
-}
-
-@keyframes hapticPulse {
-  50% { transform: scale(.96); }
-}
-
-/* ============ 8. SMOOTH SCROLL + MOMENTUM ============ */
-body {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-/* ============ 9. ACTIVE STATES (زي التطبيقات) ============ */
-button:active,
-a.icon-btn:active,
-.add-btn:active,
-.app-nav-item:active {
-  transform: scale(.95);
-  transition: transform .1s;
-}
-
-/* ============ 10. HIDE SCROLLBAR (اختياري) ============ */
-body.is-app::-webkit-scrollbar,
-.app-page::-webkit-scrollbar {
-  display: none;
-}
