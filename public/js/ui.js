@@ -7,7 +7,9 @@ export function showToast(message, type = 'info') {
   if (!container) {
     container = document.createElement('div');
     container.id = 'toastContainer';
-    container.style.cssText = `position:fixed;top:100px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;`;
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-atomic', 'true');
+    container.style.cssText = `position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;width:calc(100% - 32px);max-width:400px;`;
     document.body.appendChild(container);
   }
 
@@ -15,13 +17,14 @@ export function showToast(message, type = 'info') {
   const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
 
   const toast = document.createElement('div');
+  toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
   toast.style.cssText = `background:#0a0e17;color:#fff;padding:14px 24px;border-radius:12px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 40px rgba(0,0,0,.25);border-right:4px solid ${colors[type]};font-family:'Cairo',sans-serif;min-width:260px;pointer-events:auto;animation:toastIn .4s ease;`;
   toast.innerHTML = `<span style="color:${colors[type]};font-weight:900">${icons[type]}</span><span>${message}</span>`;
   container.appendChild(toast);
 
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-20px)';
+    toast.style.transform = 'translateY(20px)';
     toast.style.transition = '.3s';
     setTimeout(() => toast.remove(), 300);
   }, 3500);
@@ -39,7 +42,7 @@ export function showLoading(message = 'جاري التحميل...') {
     if (!document.getElementById('loaderStyles')) {
       const s = document.createElement('style');
       s.id = 'loaderStyles';
-      s.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes toastIn{from{opacity:0;transform:translateY(-20px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}';
+      s.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes toastIn{from{opacity:0;transform:translateY(20px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}';
       document.head.appendChild(s);
     }
   } else {
