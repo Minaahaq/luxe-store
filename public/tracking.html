@@ -13,39 +13,25 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/tracking.css">
 </head>
-<body>
+<body class="dark-theme">
 
 <!-- ============================================
      HEADER
 ============================================ -->
 <header class="main-header" id="mainHeader">
-  <div class="container header-inner">
+  <div class="header-inner">
     <a href="index.html" class="brand">
       <div class="brand-name">LUXE</div>
-      <div class="brand-tag">Premium Store</div>
+      <div class="brand-tag">PREMIUM STORE</div>
     </a>
 
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
-    </div>
-
     <div class="header-actions">
-      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">🔍</button>
-      <a href="tracking.html" class="icon-btn active" title="تتبع الشحنة" aria-label="تتبع الشحنة">📦</a>
-      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+      <a href="tracking.html" class="icon-btn active" title="تتبع الشحنة">📦</a>
+      <a href="cart.html" class="icon-btn" title="السلة">
         🛍<span class="badge" data-cart-badge>0</span>
       </a>
       <div id="userArea"></div>
       <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">☰</button>
-    </div>
-  </div>
-
-  <div class="mobile-search-overlay" id="mobileSearchOverlay">
-    <div class="container">
-      <div class="search-bar mobile">
-        <input type="text" id="mobileSearchInput" placeholder="ابحث عن منتج، ماركة، فئة..." autocomplete="off">
-        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
-      </div>
     </div>
   </div>
 </header>
