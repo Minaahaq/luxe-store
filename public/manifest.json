@@ -1,22 +1,17 @@
 {
   "name": "LUXE Store",
   "short_name": "LUXE",
-  "description": "متجر الفخامة الأول",
+  "description": "منتجات مختارة من علامات تجارية عالمية",
   "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0a0e17",
   "theme_color": "#0a0e17",
-  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
   "icons": [
-    {
-      "src": "/assets/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/assets/icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
+    { "src": "/assets/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
