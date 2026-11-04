@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <!-- شيلنا style.css نهائياً عشان مفيش تعارض في الألوان -->
   <link rel="stylesheet" href="css/tracking.css">
 </head>
 <body class="dark-theme">
@@ -63,7 +64,7 @@
 </div>
 
 <!-- ============================================
-     HERO — سينمائي
+     HERO
 ============================================ -->
 <section class="track-hero" id="trackHero">
   <div class="track-hero-bg" aria-hidden="true">
@@ -246,7 +247,7 @@ async function copyToClipboard(text) {
 }
 
 /* ============================================================
-   👇 دالة النزول التلقائي للداتا (Auto Scroll to Data)
+   👇 النزول التلقائي للداتا (Auto Scroll)
 ============================================================ */
 function focusResult() {
   const resultContainer = $('#resultContainer');
@@ -254,16 +255,17 @@ function focusResult() {
   
   if (!resultContainer) return;
 
-  // 1. تصغير الـ Hero (عشان الداتا تبان)
+  // تصغير الـ Hero
   hero?.classList.add('hero-minimized');
 
-  // 2. النزول للكارت بسموث
+  // النزول للكارت بسموث
   setTimeout(() => {
     resultContainer.scrollIntoView({ 
       behavior: 'smooth', 
       block: 'start' 
     });
-    // 3. تأثير Fade in للكارت
+    
+    // تأثير Fade in للكارت
     const card = resultContainer.querySelector('.track-card');
     if (card) {
       card.animate(
@@ -330,7 +332,7 @@ async function renderUserArea() {
 }
 
 /* ============================================================
-   MOBILE NAV / SEARCH
+   MOBILE NAV
 ============================================================ */
 function setupMobileNav() {
   const toggle = $('#mobileNavToggle'), drawer = $('#mobileNavDrawer');
@@ -436,7 +438,7 @@ function renderSkeleton() {
 }
 
 /* ============================================================
-   TRACK
+   TRACK LOGIC
 ============================================================ */
 async function trackShipment({ silent = false } = {}) {
   const input = $('#trackingInput');
@@ -463,7 +465,7 @@ async function trackShipment({ silent = false } = {}) {
 
   if (id === lastTrackedId && currentOrder?.trackingId === id && !silent) {
     renderTracking(currentOrder);
-    focusResult(); // النزول للداتا لو الرقم متكرر
+    focusResult();
     return;
   }
 
@@ -481,7 +483,6 @@ async function trackShipment({ silent = false } = {}) {
     result.innerHTML = renderSkeleton();
     announce('جاري البحث');
     
-    // ننزل للـ Skeleton عشان المستخدم يشوف التحميل
     setTimeout(() => {
       $('#resultContainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
@@ -494,7 +495,6 @@ async function trackShipment({ silent = false } = {}) {
     addRecentTrack(id);
     renderTracking(res.data);
     
-    // 👇 هنا السحر: بعد ما الداتا تتحمل، ننزل ليها
     if (!silent) focusResult();
     
     startAutoRefresh(res.data);
