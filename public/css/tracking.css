@@ -1265,3 +1265,73 @@ body.dark-theme span,
 body.dark-theme label {
   color: inherit;
 }
+
+
+/* ============================================================
+   🔥 ANIMATIONS للـ Auto Scroll + Hero Minimize
+============================================================ */
+
+/* 1. تأثير تصغير الـ Hero لما الداتا تظهر */
+.track-hero {
+  transition: padding 0.4s ease, opacity 0.3s ease;
+}
+.track-hero.hero-minimized {
+  padding: 20px 0 10px !important;
+}
+.track-hero.hero-minimized .track-hero-eyebrow,
+.track-hero.hero-minimized .track-hero-title .track-hero-sub,
+.track-hero.hero-minimized .track-hero-desc,
+.track-hero.hero-minimized .track-hero-marquee,
+.track-hero.hero-minimized .recent-tracks {
+  display: none !important;
+}
+.track-hero.hero-minimized .track-hero-title {
+  font-size: 28px !important;
+  margin-bottom: 16px !important;
+}
+.track-hero.hero-minimized .track-hero-title br {
+  display: none !important;
+}
+.track-hero.hero-minimized .hero-search {
+  max-width: 100% !important;
+}
+
+/* 2. مسافة تحت الهيدر عشان الكارت ميختفيش تحته */
+.result-container {
+  scroll-margin-top: 90px; /* مساحة الهيدر الثابت */
+}
+
+/* 3. سموث سكرول للصفحة */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 4. تأثير Fade in للكارت */
+.track-card {
+  animation: cardSlideIn 0.6s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+}
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 5. Skeleton animation */
+.track-skeleton {
+  animation: fadeIn 0.3s ease;
+}
+
+/* 6. Responsive: تصغير الهيرو على الموبايل أصلاً */
+@media (max-width: 768px) {
+  .track-hero.hero-minimized .track-hero-title {
+    font-size: 24px !important;
+  }
+  .result-container {
+    scroll-margin-top: 70px;
+  }
+}
