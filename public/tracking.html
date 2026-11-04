@@ -10,7 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/tracking.css">
 </head>
 <body class="dark-theme">
@@ -66,8 +65,7 @@
 <!-- ============================================
      HERO — سينمائي
 ============================================ -->
-<section class="track-hero">
-  <!-- خلفية gradient + نقاط -->
+<section class="track-hero" id="trackHero">
   <div class="track-hero-bg" aria-hidden="true">
     <div class="track-hero-grid"></div>
     <div class="track-hero-glow"></div>
@@ -89,7 +87,6 @@
       كل خطوة في رحلة طلبك، من المستودع لباب بيتك — بشفافية كاملة
     </p>
 
-    <!-- Search box مدمج في الـ hero -->
     <div class="hero-search">
       <div class="hero-search-input-wrap">
         <span class="hero-search-icon">🔍</span>
@@ -118,17 +115,12 @@
     <div class="recent-tracks" id="recentTracks"></div>
   </div>
 
-  <!-- شريط متحرك أسفل الـ hero -->
   <div class="track-hero-marquee" aria-hidden="true">
     <div class="marquee-track">
-      <span>✦ شحن سريع</span>
-      <span>✦ تتبع مباشر</span>
-      <span>✦ توصيل آمن</span>
-      <span>✦ دعم 24/7</span>
-      <span>✦ شحن سريع</span>
-      <span>✦ تتبع مباشر</span>
-      <span>✦ توصيل آمن</span>
-      <span>✦ دعم 24/7</span>
+      <span>✦ شحن سريع</span><span>✦ تتبع مباشر</span>
+      <span>✦ توصيل آمن</span><span>✦ دعم 24/7</span>
+      <span>✦ شحن سريع</span><span>✦ تتبع مباشر</span>
+      <span>✦ توصيل آمن</span><span>✦ دعم 24/7</span>
     </div>
   </div>
 </section>
@@ -136,7 +128,7 @@
 <!-- ============================================
      RESULT AREA
 ============================================ -->
-<div class="container">
+<div class="container result-container" id="resultContainer">
   <div id="liveRegion" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <div class="tracking-result" id="trackingResult" role="region" aria-label="نتيجة التتبع"></div>
 </div>
@@ -254,6 +246,38 @@ async function copyToClipboard(text) {
 }
 
 /* ============================================================
+   👇 دالة النزول التلقائي للداتا (Auto Scroll to Data)
+============================================================ */
+function focusResult() {
+  const resultContainer = $('#resultContainer');
+  const hero = $('#trackHero');
+  
+  if (!resultContainer) return;
+
+  // 1. تصغير الـ Hero (عشان الداتا تبان)
+  hero?.classList.add('hero-minimized');
+
+  // 2. النزول للكارت بسموث
+  setTimeout(() => {
+    resultContainer.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'start' 
+    });
+    // 3. تأثير Fade in للكارت
+    const card = resultContainer.querySelector('.track-card');
+    if (card) {
+      card.animate(
+        [
+          { opacity: 0, transform: 'translateY(30px)' },
+          { opacity: 1, transform: 'translateY(0)' }
+        ],
+        { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'forwards' }
+      );
+    }
+  }, 100);
+}
+
+/* ============================================================
    USER AREA
 ============================================================ */
 async function renderUserArea() {
@@ -335,25 +359,6 @@ function setupMobileNav() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) close();
   });
-}
-
-function setupMobileSearch() {
-  const btn = $('#mobileSearchBtn'), overlay = $('#mobileSearchOverlay');
-  const closeBtn = $('#closeSearchBtn'), input = $('#mobileSearchInput');
-  const desktopInput = $('#searchInput');
-
-  btn?.addEventListener('click', () => {
-    overlay.classList.add('active');
-    setTimeout(() => input?.focus(), 100);
-  });
-  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
-
-  const go = (val) => {
-    const q = (val || '').trim();
-    if (q) window.location.href = `index.html?search=${encodeURIComponent(q)}`;
-  };
-  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(e.target.value); });
-  desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(e.target.value); });
 }
 
 /* ============================================================
@@ -458,6 +463,7 @@ async function trackShipment({ silent = false } = {}) {
 
   if (id === lastTrackedId && currentOrder?.trackingId === id && !silent) {
     renderTracking(currentOrder);
+    focusResult(); // النزول للداتا لو الرقم متكرر
     return;
   }
 
@@ -474,6 +480,11 @@ async function trackShipment({ silent = false } = {}) {
     btnLoading.style.display = 'inline-flex';
     result.innerHTML = renderSkeleton();
     announce('جاري البحث');
+    
+    // ننزل للـ Skeleton عشان المستخدم يشوف التحميل
+    setTimeout(() => {
+      $('#resultContainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   }
 
   try {
@@ -482,12 +493,19 @@ async function trackShipment({ silent = false } = {}) {
     lastTrackedId = id;
     addRecentTrack(id);
     renderTracking(res.data);
+    
+    // 👇 هنا السحر: بعد ما الداتا تتحمل، ننزل ليها
+    if (!silent) focusResult();
+    
     startAutoRefresh(res.data);
     announce(`الحالة: ${STATUS_MAP[res.data.status]?.label || '—'}`);
   } catch (err) {
     if (err.name === 'AbortError') return;
     console.error(err);
-    if (!silent) renderNotFound(err.message);
+    if (!silent) {
+      renderNotFound(err.message);
+      focusResult();
+    }
     stopAutoRefresh();
   } finally {
     if (!silent) {
@@ -546,7 +564,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ============================================================
-   RENDER TRACKING — التصميم الجديد
+   RENDER TRACKING
 ============================================================ */
 function renderTracking(order) {
   const result = $('#trackingResult');
@@ -563,7 +581,6 @@ function renderTracking(order) {
     estimatedDelivery = formatDate(est);
   }
 
-  /* ---------- الخط الأفقي (Horizontal Timeline) ---------- */
   const trackHTML = `
     <div class="h-timeline" role="list">
       <div class="h-timeline-line" aria-hidden="true">
@@ -589,7 +606,6 @@ function renderTracking(order) {
       }).join('')}
     </div>`;
 
-  /* ---------- الترويسة العلوية ---------- */
   const safeId = escapeHTML(order.trackingId);
   const orderNum = escapeHTML(order.orderNumber || '—');
   const city = escapeHTML(addr.city || '—');
@@ -598,8 +614,6 @@ function renderTracking(order) {
 
   result.innerHTML = `
     <article class="track-card">
-
-      <!-- Header -->
       <header class="track-card-head">
         <div class="track-card-head-left">
           <div class="track-badge ${st.cls}">
@@ -621,7 +635,6 @@ function renderTracking(order) {
         </div>
       </header>
 
-      <!-- Horizontal Timeline -->
       <div class="track-body">
         ${order.status === 'cancelled' ? `
           <div class="cancelled-state">
@@ -631,7 +644,6 @@ function renderTracking(order) {
           </div>` : trackHTML}
       </div>
 
-      <!-- Quick Info Row -->
       <div class="track-info-row">
         <div class="track-info-item">
           <div class="track-info-label">المستلم</div>
@@ -647,20 +659,12 @@ function renderTracking(order) {
         </div>
       </div>
 
-      <!-- Actions -->
       <div class="track-actions">
-        <button class="track-btn ghost" id="refreshBtn" type="button">
-          <span>🔄</span> تحديث
-        </button>
-        <button class="track-btn ghost" id="shareBtn" type="button">
-          <span>🔗</span> مشاركة
-        </button>
-        <button class="track-btn ghost" id="printBtn" type="button">
-          <span>🖨</span> طباعة
-        </button>
+        <button class="track-btn ghost" id="refreshBtn" type="button"><span>🔄</span> تحديث</button>
+        <button class="track-btn ghost" id="shareBtn" type="button"><span>🔗</span> مشاركة</button>
+        <button class="track-btn ghost" id="printBtn" type="button"><span>🖨</span> طباعة</button>
       </div>
 
-      <!-- Products -->
       ${order.items?.length ? `
         <section class="track-section">
           <h3 class="track-section-title">📦 محتويات الشحنة</h3>
@@ -680,7 +684,6 @@ function renderTracking(order) {
           </div>
         </section>` : ''}
 
-      <!-- Address -->
       <section class="track-section">
         <h3 class="track-section-title">📍 عنوان التوصيل</h3>
         <div class="track-address">
@@ -694,7 +697,6 @@ function renderTracking(order) {
           <div class="track-address-line">${escapeHTML(addr.area || '')}${addr.area && addr.city ? '، ' : ''}${city}</div>
         </div>
       </section>
-
     </article>
   `;
 
@@ -829,7 +831,6 @@ document.addEventListener('keydown', (e) => {
     renderUserArea();
     updateCartBadge();
     setupMobileNav();
-    setupMobileSearch();
     setupOffline();
     await init();
   } catch (err) {
