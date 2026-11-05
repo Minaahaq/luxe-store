@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="LUXE Store — منتجات مختارة بعناية من علامات تجارية عالمية.">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LUXE">
+
+  <title>LUXE Store</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="/assets/icon-192x192.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style1.css">
+</head>
+
+<body>
+
+<a href="#productsSection" class="skip-link">تخطي إلى المنتجات</a>
+
+<!-- ═══════════════════════════════════════════
+     SHIPPING BAR
+═══════════════════════════════════════════ -->
+<div class="shipping-bar" id="shippingBar">
+  <div class="shipping-progress">
+    <div class="shipping-fill" id="shippingFill"></div>
+  </div>
+  <span class="shipping-text" id="shippingText">
+    أضف <strong>500 ج.م</strong> للحصول على شحن مجاني
+  </span>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════ -->
+<header class="main-header" id="mainHeader">
+  <div class="container header-inner">
+    <a href="index.html" class="brand" aria-label="LUXE">
+      <div class="brand-name">LUXE</div>
+    </a>
+
+    <div class="search-bar" style="position:relative">
+      <label for="searchInput" class="sr-only">ابحث</label>
+      <input type="search" id="searchInput" placeholder="ابحث..." autocomplete="off">
+      <div class="search-suggestions" id="searchSuggestions" hidden></div>
+    </div>
+
+    <div class="header-actions">
+      <button class="icon-btn mobile-search-btn" id="mobileSearchBtn" type="button" aria-label="بحث">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+
+      <button class="icon-btn install-app-btn" id="installBtn" type="button" aria-label="تثبيت" style="display:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+
+      <a href="tracking.html" class="icon-btn" title="تتبع الطلب" aria-label="تتبع الطلب">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      </a>
+
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="تبديل الوضع">
+        <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+
+      <a href="cart.html" class="icon-btn" title="السلة" aria-label="السلة">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        <span class="badge" data-cart-badge>0</span>
+      </a>
+
+      <div id="userArea"></div>
+
+      <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="القائمة" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-search-overlay" id="mobileSearchOverlay">
+    <div class="container">
+      <div class="search-bar mobile">
+        <input type="search" id="mobileSearchInput" placeholder="ابحث..." autocomplete="off">
+        <button class="close-search-btn" id="closeSearchBtn" type="button" aria-label="إغلاق">✕</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     MOBILE NAV DRAWER
+═══════════════════════════════════════════ -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+<nav class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="القائمة الرئيسية" aria-hidden="true">
+  <div class="mobile-drawer-head">
+    <div class="brand-name" style="font-size:20px;letter-spacing:4px">LUXE</div>
+    <button class="close-btn" id="mobileNavClose" type="button" aria-label="إغلاق">✕</button>
+  </div>
+  <div class="mobile-drawer-nav">
+    <a href="index.html">الرئيسية</a>
+    <a href="products.html">المنتجات</a>
+    <a href="orders.html">طلباتي</a>
+    <a href="tracking.html">تتبع الشحنة</a>
+    <a href="profile.html">حسابي</a>
+    <a href="wishlist.html">المفضلة ❤️</a>
+  </div>
+  <div class="mobile-drawer-footer">
+    <a href="cart.html" class="mobile-cart-link">
+      السلة <span class="badge-inline" data-cart-badge>0</span>
+    </a>
+    <div id="mobileUserArea"></div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-label">مجموعة 2025</div>
+      <h1>قطع مختارة<br><span>بعناية</span></h1>
+      <p>منتجات من علامات تجارية عالمية، بجودة تستحق الاقتناء.</p>
+      <a href="#productsSection" class="btn-hero">تسوق الآن</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     DEAL BANNER (Countdown)
+═══════════════════════════════════════════ -->
+<div class="container">
+  <div class="deal-banner" id="dealBanner">
+    <div class="deal-icon">🔥</div>
+    <div class="deal-text">
+      <strong>عرض محدود!</strong>
+      <span>خصم 25% ينتهي خلال</span>
+    </div>
+    <div class="countdown" id="countdown">
+      <div class="cd-unit"><span id="cdHours">00</span><small>ساعة</small></div>
+      <span>:</span>
+      <div class="cd-unit"><span id="cdMins">00</span><small>دقيقة</small></div>
+      <span>:</span>
+      <div class="cd-unit"><span id="cdSecs">00</span><small>ثانية</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PRODUCTS
+═══════════════════════════════════════════ -->
+<section class="section" id="productsSection">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">المجموعة</div>
+        <h2>منتجات <span>مختارة</span></h2>
+      </div>
+    </div>
+
+    <div class="filters-wrap" id="filtersWrap" role="tablist"></div>
+
+    <div class="products-grid" id="productsGrid" aria-live="polite" aria-busy="true">
+      <div class="product-card skeleton-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card skeleton-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card skeleton-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+      <div class="product-card skeleton-card">
+        <div class="skeleton" style="aspect-ratio:1/1;width:100%"></div>
+        <div class="product-body">
+          <div class="skeleton" style="height:12px;margin-bottom:10px;width:60%"></div>
+          <div class="skeleton" style="height:16px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:20px;width:40%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     RECENTLY VIEWED
+═══════════════════════════════════════════ -->
+<section class="section" id="recentSection" hidden>
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <div class="section-eyebrow">تاني؟</div>
+        <h2>شاهدتها <span>مؤخراً</span></h2>
+      </div>
+    </div>
+    <div class="recent-scroll" id="recentGrid"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-brand-name">LUXE</div>
+        <p>منتجات مختارة من علامات تجارية عالمية.</p>
+      </div>
+      <div class="footer-col">
+        <h4>تسوق</h4>
+        <a href="#" data-filter="الكل">كل المنتجات</a>
+        <a href="#" data-filter="إلكترونيات">إلكترونيات</a>
+        <a href="#" data-filter="أزياء">أزياء</a>
+        <a href="#" data-filter="عطور">عطور</a>
+      </div>
+      <div class="footer-col">
+        <h4>خدمة العملاء</h4>
+        <a href="tracking.html">تتبع الشحنة</a>
+        <a href="#">الاستبدال والإرجاع</a>
+        <a href="#">الأسئلة الشائعة</a>
+        <a href="#">اتصل بنا</a>
+      </div>
+      <div class="footer-col">
+        <h4>الشركة</h4>
+        <a href="#">من نحن</a>
+        <a href="#">الخصوصية</a>
+        <a href="#">الشروط</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 LUXE Store</div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     FLOATING ELEMENTS
+═══════════════════════════════════════════ -->
+<a href="cart.html" class="float-cart" aria-label="السلة">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+  <span class="badge" data-cart-badge>0</span>
+</a>
+
+<button class="notif-btn" id="notifBtn" hidden>🔔 فعّل إشعارات العروض</button>
+
+<!-- ═══════════════════════════════════════════
+     QUICK VIEW MODAL
+═══════════════════════════════════════════ -->
+<div class="quick-view-overlay" id="quickViewOverlay" hidden>
+  <div class="quick-view-modal" role="dialog" aria-modal="true" aria-labelledby="qvTitle">
+    <button class="qv-close" id="qvClose" aria-label="إغلاق">✕</button>
+    <div class="qv-grid">
+      <div class="qv-image"><img id="qvImage" alt="" loading="lazy"></div>
+      <div class="qv-info">
+        <span class="qv-cat" id="qvCat"></span>
+        <h2 id="qvTitle"></h2>
+        <div class="qv-rating" id="qvRating"></div>
+        <div class="qv-price" id="qvPrice"></div>
+        <p class="qv-desc" id="qvDesc"></p>
+        <div class="qv-actions">
+          <button class="btn-hero" id="qvAddBtn">أضف للسلة</button>
+          <a href="#" id="qvDetailsLink" class="qv-details-link">عرض التفاصيل ←</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     COMPARE BAR
+═══════════════════════════════════════════ -->
+<div class="compare-bar" id="compareBar" hidden>
+  <div class="compare-items" id="compareItems"></div>
+  <a href="compare.html" class="btn-compare" id="compareBtn">قارن (0)</a>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN SCRIPT
+═══════════════════════════════════════════ -->
+<script type="module">
+import { api, getCurrentUser, logout } from './js/api.js';
+import { showToast, updateCartBadge } from './js/ui.js';
+
+/* ═══ DOM HELPERS ═══ */
+const $  = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+}[c]));
+
+const debounce = (fn, delay = 250) => {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), delay); };
+};
+
+const formatPrice = (n) => Number(n || 0).toLocaleString('en-US');
+
+const normalizeArabic = (s) => String(s ?? '')
+  .toLowerCase().replace(/[إأآٱ]/g, 'ا').replace(/ى/g, 'ي')
+  .replace(/ة/g, 'ه').replace(/[ًٌٍَُِّْ]/g, '').replace(/ـ/g, '').trim();
+
+const PLACEHOLDER_IMG = `data:image/svg+xml;utf8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
+    <rect width="400" height="400" fill="#f4f2ed"/>
+    <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-family="sans-serif"
+          font-size="40" font-weight="900" fill="#c9a961" letter-spacing="8">LUXE</text>
+  </svg>
+`)}`;
+
+/* ═══ STATE ═══ */
+let allProducts = [];
+let currentCategory = 'الكل';
+let searchQuery = '';
+
+const CART_KEY = 'luxe_cart';
+const WISH_KEY = 'luxe_wishlist';
+const RECENT_KEY = 'luxe_recent';
+const COMPARE_KEY = 'luxe_compare';
+const THEME_KEY = 'luxe_theme';
+const SEARCH_HISTORY_KEY = 'luxe_searches';
+const FREE_SHIPPING = 500;
+
+const storage = {
+  get(k, fb = null) {
+    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fb; }
+    catch { return fb; }
+  },
+  set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+    catch { return false; }
+  },
+};
+
+/* ═══ CART ═══ */
+function getCart() { return storage.get(CART_KEY, []); }
+function saveCart(cart) {
+  storage.set(CART_KEY, cart);
+  updateCartBadge();
+  updateShippingBar();
+}
+
+function addToCart(product) {
+  const cart = getCart();
+  const found = cart.find(i => String(i.id) === String(product.id));
+  if (found) found.qty = (found.qty || 1) + 1;
+  else cart.push({
+    id: product.id, name: product.name, price: Number(product.price) || 0,
+    thumbnail: product.thumbnail || '', qty: 1,
+  });
+  saveCart(cart);
+}
+
+function removeFromCart(id) {
+  saveCart(getCart().filter(i => String(i.id) !== String(id)));
+}
+
+function getCartTotal() {
+  return getCart().reduce((s, i) => s + i.price * (i.qty || 1), 0);
+}
+
+function customUpdateBadge() {
+  const count = getCart().reduce((s, i) => s + (i.qty || 1), 0);
+  $$('[data-cart-badge]').forEach(el => {
+    el.textContent = count;
+    el.style.display = count > 0 ? '' : 'none';
+  });
+}
+
+/* ═══ SHIPPING BAR ═══ */
+function updateShippingBar() {
+  const total = getCartTotal();
+  const remaining = Math.max(0, FREE_SHIPPING - total);
+  const percent = Math.min(100, (total / FREE_SHIPPING) * 100);
+
+  const bar = $('#shippingBar');
+  const fill = $('#shippingFill');
+  const text = $('#shippingText');
+  if (!bar) return;
+
+  fill.style.width = percent + '%';
+
+  if (remaining === 0) {
+    bar.classList.add('completed');
+    text.innerHTML = '🎉 مبروك! حصلت على شحن مجاني';
+  } else {
+    bar.classList.remove('completed');
+    text.innerHTML = `أضف <strong>${formatPrice(remaining)} ج.م</strong> للحصول على شحن مجاني`;
+  }
+}
+
+/* ═══ WISHLIST ═══ */
+function getWishlist() { return storage.get(WISH_KEY, []); }
+
+function toggleWishlist(product) {
+  const list = getWishlist();
+  const idx = list.findIndex(p => String(p.id) === String(product.id));
+  if (idx >= 0) list.splice(idx, 1);
+  else list.push({ id: product.id, name: product.name, price: product.price, thumbnail: product.thumbnail });
+  storage.set(WISH_KEY, list);
+  return idx < 0;
+}
+
+/* ═══ RECENTLY VIEWED ═══ */
+function addRecentViewed(product) {
+  let list = storage.get(RECENT_KEY, []);
+  list = list.filter(p => String(p.id) !== String(product.id));
+  list.unshift({
+    id: product.id, name: product.name, price: product.price,
+    thumbnail: product.thumbnail, category: product.category,
+  });
+  storage.set(RECENT_KEY, list.slice(0, 8));
+}
+
+function renderRecentlyViewed() {
+  const list = storage.get(RECENT_KEY, []);
+  const section = $('#recentSection');
+  if (!section) return;
+
+  if (list.length < 2) { section.hidden = true; return; }
+  section.hidden = false;
+
+  $('#recentGrid').innerHTML = list.map(p => `
+    <a href="product.html?id=${encodeURIComponent(p.id)}" class="recent-card">
+      <img src="${escapeHtml(p.thumbnail || PLACEHOLDER_IMG)}" alt="${escapeHtml(p.name)}" loading="lazy">
+      <div class="recent-info">
+        <div class="recent-name">${escapeHtml(p.name)}</div>
+        <div class="recent-price">${formatPrice(p.price)} ج.م</div>
+      </div>
+    </a>
+  `).join('');
+}
+
+/* ═══ COMPARE ═══ */
+function getCompare() { return storage.get(COMPARE_KEY, []); }
+
+function toggleCompare(product) {
+  const list = getCompare();
+  const idx = list.findIndex(p => String(p.id) === String(product.id));
+  if (idx >= 0) list.splice(idx, 1);
+  else {
+    if (list.length >= 3) { showToast('أقصى عدد للمقارنة 3', 'warning'); return; }
+    list.push({
+      id: product.id, name: product.name, price: product.price,
+      thumbnail: product.thumbnail, brand: product.brand,
+    });
+  }
+  storage.set(COMPARE_KEY, list);
+  showToast(idx < 0 ? 'أُضيف للمقارنة' : 'حُذف من المقارنة', 'success');
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  const list = getCompare();
+  const bar = $('#compareBar');
+  if (!bar) return;
+  if (!list.length) { bar.hidden = true; return; }
+
+  bar.hidden = false;
+  $('#compareItems').innerHTML = list.map(p => `
+    <div class="compare-item">
+      <img src="${escapeHtml(p.thumbnail || PLACEHOLDER_IMG)}" alt="">
+      <span>${escapeHtml(p.name)}</span>
+    </div>
+  `).join('');
+  $('#compareBtn').textContent = `قارن (${list.length})`;
+}
+
+/* ═══ THEME ═══ */
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  const icon = $('#themeIcon');
+  if (icon) icon.style.transform = theme === 'dark' ? 'rotate(180deg)' : 'rotate(0)';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  const prefersDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+  $('#themeToggle')?.addEventListener('click', () => {
+    applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+}
+
+/* ═══ COUNTDOWN ═══ */
+function startCountdown(endTime) {
+  const el = { h: $('#cdHours'), m: $('#cdMins'), s: $('#cdSecs') };
+  if (!el.h) return;
+
+  const tick = () => {
+    const diff = Math.max(0, endTime - Date.now());
+    if (diff === 0) {
+      $('#dealBanner').style.display = 'none';
+      clearInterval(timer);
+      return;
+    }
+    el.h.textContent = String(Math.floor(diff / 3.6e6)).padStart(2, '0');
+    el.m.textContent = String(Math.floor((diff % 3.6e6) / 6e4)).padStart(2, '0');
+    el.s.textContent = String(Math.floor((diff % 6e4) / 1000)).padStart(2, '0');
+  };
+  tick();
+  const timer = setInterval(tick, 1000);
+}
+
+/* ═══ SEARCH SUGGESTIONS ═══ */
+function saveSearch(q) {
+  if (!q || q.length < 2) return;
+  const list = storage.get(SEARCH_HISTORY_KEY, []).filter(s => s !== q);
+  list.unshift(q);
+  storage.set(SEARCH_HISTORY_KEY, list.slice(0, 8));
+}
+
+function showSuggestions(query) {
+  const el = $('#searchSuggestions');
+  if (!el) return;
+
+  if (!query || query.length < 2) { el.hidden = true; return; }
+
+  const q = normalizeArabic(query);
+  const results = [];
+
+  allProducts
+    .filter(p => normalizeArabic(p.name).includes(q) || normalizeArabic(p.brand || '').includes(q))
+    .slice(0, 5)
+    .forEach(p => results.push({
+      type: 'product', label: p.name, sub: p.brand,
+      image: p.thumbnail, id: p.id,
+    }));
+
+  const cats = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  cats.filter(c => normalizeArabic(c).includes(q)).slice(0, 3)
+    .forEach(c => results.push({ type: 'category', label: c, icon: '📂' }));
+
+  const history = storage.get(SEARCH_HISTORY_KEY, []);
+  history.filter(s => normalizeArabic(s).includes(q)).slice(0, 3)
+    .forEach(s => results.push({ type: 'history', label: s, icon: '🕐' }));
+
+  if (!results.length) { el.hidden = true; return; }
+
+  el.innerHTML = results.map(r => `
+    <button class="suggestion-item" data-type="${r.type}" data-value="${escapeHtml(r.label)}" data-id="${r.id || ''}">
+      ${r.image
+        ? `<img src="${escapeHtml(r.image)}" alt="" width="36" height="36" style="border-radius:6px;object-fit:cover">`
+        : `<span class="suggestion-icon">${r.icon || '🔍'}</span>`}
+      <span class="suggestion-label">${escapeHtml(r.label)}</span>
+      ${r.sub ? `<span class="suggestion-sub">${escapeHtml(r.sub)}</span>` : ''}
+    </button>
+  `).join('');
+  el.hidden = false;
+}
+
+/* ═══ TOAST ═══ */
+function showUndoToast(message, onUndo) {
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-undo';
+  toast.innerHTML = `
+    <span>${escapeHtml(message)}</span>
+    <button class="toast-undo-btn">تراجع</button>
+  `;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  let dismissed = false;
+  const dismiss = (wasUndo) => {
+    if (dismissed) return;
+    dismissed = true;
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+    if (wasUndo) onUndo();
+  };
+  toast.querySelector('.toast-undo-btn').addEventListener('click', () => dismiss(true));
+  setTimeout(() => dismiss(false), 5000);
+}
+
+/* ═══ USER AREA ═══ */
+async function renderUserArea() {
+  const userArea = $('#userArea');
+  const mobileUserArea = $('#mobileUserArea');
+  const user = await getCurrentUser();
+
+  if (user) {
+    const name = user.displayName || user.email?.split('@')[0] || 'User';
+    const initial = escapeHtml(name.charAt(0).toUpperCase());
+
+    userArea.innerHTML = `
+      <button class="user-chip" id="userChip" type="button">
+        <span>${escapeHtml(name)}</span>
+        <div class="user-avatar">${initial}</div>
+      </button>`;
+
+    $('#userChip').addEventListener('click', async () => {
+      if (!window.confirm('هل تريد تسجيل الخروج؟')) return;
+      try {
+        await logout();
+        showToast('تم تسجيل الخروج', 'info');
+        setTimeout(() => location.reload(), 800);
+      } catch { showToast('فشل تسجيل الخروج', 'error'); }
+    });
+
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="profile.html" class="mobile-user-chip">
+          <div class="user-avatar">${initial}</div>
+          <div class="user-info">
+            <div class="user-name">${escapeHtml(name)}</div>
+            <div class="user-role">عرض الحساب</div>
+          </div>
+        </a>`;
+    }
+  } else {
+    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    if (mobileUserArea) {
+      mobileUserArea.innerHTML = `
+        <a href="login.html" class="mobile-user-chip">
+          <div class="user-avatar">👤</div>
+          <div class="user-info">
+            <div class="user-name">تسجيل الدخول</div>
+            <div class="user-role">ابدأ التسوق</div>
+          </div>
+        </a>`;
+    }
+  }
+}
+
+/* ═══ MOBILE NAV ═══ */
+function setupMobileNav() {
+  const toggle = $('#mobileNavToggle');
+  const drawer = $('#mobileNavDrawer');
+  const overlay = $('#mobileNavOverlay');
+  const closeBtn = $('#mobileNavClose');
+
+  const open = () => {
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    drawer.setAttribute('aria-hidden', 'false');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('active');
+    drawer.setAttribute('aria-hidden', 'true');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  };
+
+  toggle?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  overlay?.addEventListener('click', close);
+  $$('a', drawer).forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) close();
+  });
+}
+
+/* ═══ MOBILE SEARCH ═══ */
+function setupMobileSearch() {
+  const btn = $('#mobileSearchBtn');
+  const overlay = $('#mobileSearchOverlay');
+  const closeBtn = $('#closeSearchBtn');
+  const input = $('#mobileSearchInput');
+  const desktopInput = $('#searchInput');
+
+  const applySearch = debounce((val) => {
+    searchQuery = val;
+    desktopInput.value = val;
+    renderProducts();
+    if (val) saveSearch(val);
+  }, 200);
+
+  btn?.addEventListener('click', () => {
+    overlay.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    overlay.classList.remove('active');
+    input.value = ''; desktopInput.value = ''; searchQuery = '';
+    renderProducts();
+  });
+
+  input?.addEventListener('input', (e) => applySearch(e.target.value.trim()));
+
+  desktopInput?.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    showSuggestions(val);
+    applySearch(val);
+  });
+
+  // Suggestions click
+  $('#searchSuggestions')?.addEventListener('click', (e) => {
+    const item = e.target.closest('.suggestion-item');
+    if (!item) return;
+    const { type, value, id } = item.dataset;
+    if (type === 'product') {
+      location.href = `product.html?id=${id}`;
+    } else {
+      desktopInput.value = value;
+      searchQuery = value;
+      renderProducts();
+    }
+    $('#searchSuggestions').hidden = true;
+  });
+
+  // Hide suggestions on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-bar')) {
+      const el = $('#searchSuggestions');
+      if (el) el.hidden = true;
+    }
+  });
+}
+
+/* ═══ QUICK VIEW ═══ */
+let qvProduct = null;
+
+function openQuickView(product) {
+  qvProduct = product;
+  addRecentViewed(product);
+
+  const overlay = $('#quickViewOverlay');
+  $('#qvImage').src = product.thumbnail || PLACEHOLDER_IMG;
+  $('#qvImage').alt = product.name;
+  $('#qvTitle').textContent = product.name;
+  $('#qvCat').textContent = product.category || 'عام';
+  $('#qvPrice').innerHTML = `<strong>${formatPrice(product.price)}</strong> ج.م`;
+  $('#qvDesc').textContent = product.description || 'منتج مختار بعناية من LUXE.';
+  $('#qvRating').textContent = product.rating ? `★ ${product.rating.toFixed(1)} / 5` : '';
+  $('#qvDetailsLink').href = `product.html?id=${encodeURIComponent(product.id)}`;
+  overlay.hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('#qvClose').focus();
+}
+
+function closeQuickView() {
+  $('#quickViewOverlay').hidden = true;
+  document.body.style.overflow = '';
+}
+
+/* ═══ PRODUCTS RENDER ═══ */
+async function loadProducts() {
+  const grid = $('#productsGrid');
+  try {
+    const res = await api.products.getAll();
+    allProducts = Array.isArray(res?.data) ? res.data : [];
+    renderFilters();
+    renderProducts();
+    renderRecentlyViewed();
+
+    const urlParams = new URLSearchParams(location.search);
+    const s = urlParams.get('search');
+    if (s) {
+      $('#searchInput').value = s;
+      searchQuery = s;
+      renderProducts();
+    }
+  } catch (err) {
+    console.error(err);
+    grid.setAttribute('aria-busy', 'false');
+    grid.innerHTML = `<div class="empty-state"><p>حدث خطأ في تحميل المنتجات</p><p style="font-size:12px;opacity:.6">${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+function renderFilters() {
+  const cats = ['الكل', ...new Set(allProducts.map(p => p.category).filter(Boolean))];
+  const wrap = $('#filtersWrap');
+  wrap.innerHTML = cats.map(cat => {
+    const count = cat === 'الكل' ? allProducts.length : allProducts.filter(p => p.category === cat).length;
+    const active = cat === currentCategory;
+    return `<button class="filter-btn ${active ? 'active' : ''}" role="tab" aria-selected="${active}" data-cat="${escapeHtml(cat)}">${escapeHtml(cat)} <span style="opacity:.6;font-size:12px;margin-right:4px">(${count})</span></button>`;
+  }).join('');
+
+  $$('.filter-btn', wrap).forEach(btn => {
+    btn.addEventListener('click', () => filterByCategory(btn.dataset.cat));
+  });
+}
+
+function filterByCategory(cat) {
+  currentCategory = cat;
+  renderFilters();
+  renderProducts();
+  $('#productsSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function buildProductCardHTML(p) {
+  const img = p.thumbnail || (p.images && p.images[0]) || PLACEHOLDER_IMG;
+  const price = Number(p.price || 0);
+  const oldPrice = Number(p.oldPrice || 0);
+  const discount = oldPrice > price ? Math.round(((oldPrice - price) / oldPrice) * 100) : 0;
+  const rating = Number(p.rating || 0);
+  const fullStars = Math.round(rating);
+  const stock = Number(p.stock || 0);
+  const stockClass = stock > 10 ? 'in' : stock > 0 ? 'low' : 'out';
+  const stockText = stock > 10 ? 'متوفر' : stock > 0 ? `متبقي ${stock}` : 'نفذ';
+  const isOut = stock <= 0;
+  const safeId = escapeHtml(p.id);
+
+  let urgentBadge = '';
+  if (stock > 0 && stock <= 3) {
+    urgentBadge = `<span class="badge-pill badge-urgent">⚡ باقي ${stock} بس</span>`;
+  }
+
+  return `
+    <div class="product-card" data-product-id="${safeId}">
+      <button class="wish-btn" data-wish-id="${safeId}" aria-label="أضف للمفضلة">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
+      <a href="product.html?id=${safeId}" style="display:block">
+        <div class="product-media">
+          <img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)}" loading="lazy"
+               onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
+          <div class="product-badges">
+            ${discount > 0 ? `<span class="badge-pill badge-discount">-${discount}%</span>` : ''}
+            ${p.isFeatured ? `<span class="badge-pill badge-featured">مميز</span>` : ''}
+            ${urgentBadge}
+            ${isOut ? `<span class="badge-pill badge-out">نفذ</span>` : ''}
+          </div>
+        </div>
+      </a>
+      <div class="product-body">
+        <span class="product-cat">${escapeHtml(p.category || 'عام')}</span>
+        <h3 class="product-title"><a href="product.html?id=${safeId}" style="color:inherit">${escapeHtml(p.name)}</a></h3>
+        ${rating > 0 ? `
+          <div class="product-rating">
+            <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
+            <span class="rating-count">${rating.toFixed(1)}</span>
+          </div>` : ''}
+        <div class="product-stock ${stockClass}">${stockText}</div>
+        <div class="product-footer">
+          <div>
+            <div class="price-main">${formatPrice(price)}<span class="currency">ج.م</span></div>
+            ${oldPrice > price ? `<div class="price-old">${formatPrice(oldPrice)} ج.م</div>` : ''}
+          </div>
+          <button class="add-btn" data-id="${safeId}" ${isOut ? 'disabled aria-disabled="true"' : ''} aria-label="أضف للسلة">+</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderProducts() {
+  let filtered = allProducts;
+
+  if (currentCategory !== 'الكل') {
+    filtered = filtered.filter(p => p.category === currentCategory);
+  }
+
+  if (searchQuery) {
+    const q = normalizeArabic(searchQuery);
+    filtered = filtered.filter(p =>
+      normalizeArabic(p.name).includes(q) ||
+      normalizeArabic(p.brand || '').includes(q) ||
+      normalizeArabic(p.category || '').includes(q)
+    );
+  }
+
+  const grid = $('#productsGrid');
+  grid.setAttribute('aria-busy', 'false');
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><p>لا توجد نتائج</p><p style="font-size:12px;opacity:.6">جرّب كلمة أخرى</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(buildProductCardHTML).join('');
+
+  // Update wishlist state
+  const wishlist = getWishlist();
+  wishlist.forEach(w => {
+    const btn = grid.querySelector(`.wish-btn[data-wish-id="${w.id}"]`);
+    if (btn) btn.classList.add('active');
+  });
+}
+
+/* ═══ GRID EVENT DELEGATION ═══ */
+function bindGridEvents() {
+  const grid = $('#productsGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', (e) => {
+    // Add to cart
+    const addBtn = e.target.closest('.add-btn');
+    if (addBtn && !addBtn.disabled) {
+      e.preventDefault();
+      const product = allProducts.find(p => String(p.id) === addBtn.dataset.id);
+      if (!product) return;
+      addToCart(product);
+      showUndoToast(`تمت إضافة ${product.name}`, () => removeFromCart(product.id));
+      const original = addBtn.textContent;
+      addBtn.style.background = '#10b981';
+      addBtn.textContent = '✓';
+      setTimeout(() => { addBtn.style.background = ''; addBtn.textContent = original; }, 1200);
+      return;
+    }
+
+    // Wishlist
+    const wishBtn = e.target.closest('.wish-btn');
+    if (wishBtn) {
+      e.preventDefault();
+      const product = allProducts.find(p => String(p.id) === wishBtn.dataset.wishId);
+      if (!product) return;
+      const added = toggleWishlist(product);
+      wishBtn.classList.toggle('active', added);
+      showToast(added ? 'أُضيف للمفضلة ❤️' : 'حُذف من المفضلة', added ? 'success' : 'info');
+      return;
+    }
+
+    // Quick view (on image click)
+    const media = e.target.closest('.product-media');
+    if (media && media.closest('.product-card')) {
+      e.preventDefault();
+      const card = media.closest('.product-card');
+      const product = allProducts.find(p => String(p.id) === card.dataset.productId);
+      if (product) openQuickView(product);
+      return;
+    }
+  });
+}
+
+/* ═══ QUICK VIEW EVENTS ═══ */
+function bindQuickViewEvents() {
+  $('#qvClose')?.addEventListener('click', closeQuickView);
+  $('#quickViewOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'quickViewOverlay') closeQuickView();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('#quickViewOverlay').hidden) closeQuickView();
+  });
+
+  $('#qvAddBtn')?.addEventListener('click', () => {
+    if (qvProduct) {
+      addToCart(qvProduct);
+      showUndoToast(`تمت إضافة ${qvProduct.name}`, () => removeFromCart(qvProduct.id));
+      closeQuickView();
+    }
+  });
+}
+
+/* ═══ FOOTER FILTERS ═══ */
+function bindFooterFilters() {
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-filter]');
+    if (!link) return;
+    e.preventDefault();
+    filterByCategory(link.dataset.filter);
+  });
+}
+
+/* ═══ NOTIFICATIONS ═══ */
+function setupNotificationButton() {
+  const btn = $('#notifBtn');
+  if (!btn) return;
+
+  if (!('Notification' in window) || Notification.permission === 'granted') {
+    btn.hidden = true;
+    return;
+  }
+
+  btn.hidden = false;
+  btn.addEventListener('click', async () => {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      btn.hidden = true;
+      showToast('تم تفعيل الإشعارات ✅', 'success');
+    } else {
+      showToast('تم رفض الإذن', 'info');
+    }
+  });
+}
+
+/* ═══ SCROLL REVEAL ═══ */
+function setupScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  $$('.section').forEach(el => {
+    el.classList.add('scroll-reveal');
+    observer.observe(el);
+  });
+}
+
+/* ═══ HEADER SCROLL ═══ */
+window.addEventListener('scroll', () => {
+  $('#mainHeader').classList.toggle('scrolled', window.scrollY > 30);
+}, { passive: true });
+
+/* ═══ INIT ═══ */
+async function init() {
+  initTheme();
+  setupMobileNav();
+  setupMobileSearch();
+  bindGridEvents();
+  bindQuickViewEvents();
+  bindFooterFilters();
+  setupNotificationButton();
+  setupScrollReveal();
+  await renderUserArea();
+  customUpdateBadge();
+  updateShippingBar();
+  updateCompareBar();
+  startCountdown(Date.now() + 6 * 3600 * 1000);
+  await loadProducts();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+
+<!-- ═══ SERVICE WORKER ═══ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('✅ SW registered'))
+        .catch(err => console.warn('SW failed:', err));
+    });
+  }
+</script>
+
+<!-- ═══ PWA INSTALL ═══ -->
+<script>
+  let deferredPrompt = null;
+  const installBtn = document.getElementById('installBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.style.display = 'flex';
+  });
+
+  installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    if (installBtn) installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+</script>
+
+</body>
+</html>
