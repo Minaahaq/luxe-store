@@ -9,59 +9,162 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
-  
-  <!-- مكتبة الرسومات البيانية -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
   <style>
-    :root {
-      --gold: #c9a961; --gold-hover: #b89850;
-      --bg-dark: #0f1115; --surface-dark: #171a21; --surface-hover: #1f232c;
-      --border: #2a2f3a; --text: #e6e8ee; --muted: #8a90a2;
-      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    /* ===== إضافات تحليل الأرباح ===== */
+    .mini-stat-box .num.profit { color: #10b981; }
+    .mini-stat-box .num.loss   { color: #c62828; }
+    .mini-stat-box .num.cost   { color: #d97706; }
+    .mini-stat-box .num.revenue{ color: var(--gold-dark); }
+
+    .mini-stat-box .lbl-sub {
+      font-size: 10.5px;
+      font-weight: 700;
+      margin-top: 3px;
+      opacity: .8;
     }
-    body, .admin-layout, .admin-main { background-color: var(--bg-dark) !important; color: var(--text) !important; }
-    .admin-sidebar { background-color: var(--surface-dark) !important; border-left: 1px solid var(--border) !important; }
+    .mini-stat-box .lbl-sub.good { color: #10b981; }
+    .mini-stat-box .lbl-sub.bad  { color: #c62828; }
 
-    /* KPI Cards */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
-    .kpi-card { background: var(--surface-dark); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; transition: transform 0.2s; }
-    .kpi-card:hover { transform: translateY(-3px); border-color: rgba(201, 169, 97, 0.3); }
-    .kpi-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; background: rgba(255,255,255,0.03); }
-    .kpi-info h3 { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
-    .kpi-info .val { font-size: 28px; font-weight: 900; color: var(--text); }
-    .kpi-info .val span { font-size: 14px; color: var(--muted); font-weight: 600; }
+    /* تنبيهات */
+    .dash-alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .dash-alert.warn {
+      background: #ffebee;
+      border: 1px solid #ef9a9a;
+      color: #c62828;
+    }
+    .dash-alert.info {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      color: #1565c0;
+    }
+    .dash-alert a {
+      color: inherit;
+      text-decoration: underline;
+      font-weight: 800;
+    }
 
-    /* Charts Grid */
-    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px; }
-    @media (max-width: 992px) { .charts-grid { grid-template-columns: 1fr; } }
-    
-    .chart-card { background: var(--surface-dark); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-    .chart-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-    .chart-card h3::before { content: ''; display: block; width: 4px; height: 16px; background: var(--gold); border-radius: 4px; }
+    /* جدول الأكثر ربحية */
+    .profit-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0eee8;
+    }
+    .profit-row:last-child { border-bottom: none; }
 
-    /* Tables & Lists */
-    .list-card { background: var(--surface-dark); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
-    .list-card h3 { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-    .list-card h3::before { content: ''; display: block; width: 4px; height: 16px; background: var(--gold); border-radius: 4px; }
+    .profit-row .rank {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
 
-    .recent-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .recent-item:last-child { border-bottom: none; padding-bottom: 0; }
-    .recent-item .info h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
-    .recent-item .info p { font-size: 12px; color: var(--muted); }
-    .recent-item .price { font-weight: 900; color: var(--gold); font-size: 16px; }
+    .profit-row img {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      flex-shrink: 0;
+    }
 
-    .top-product { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); }
-    .top-product:last-child { border-bottom: none; padding-bottom: 0; }
-    .top-product img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); }
-    .top-product .info { flex: 1; }
-    .top-product .info h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
-    .top-product .info p { font-size: 12px; color: var(--muted); }
-    .top-product .sold { font-weight: 900; color: var(--gold); background: rgba(201, 169, 97, 0.1); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+    .profit-row .info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profit-row .info h5 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+
+    .profit-row .info span {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .profit-row .amount {
+      text-align: left;
+      flex-shrink: 0;
+    }
+
+    .profit-row .amount .profit-val {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      color: #10b981;
+      line-height: 1.1;
+    }
+    .profit-row .amount .profit-val.neg { color: #c62828; }
+
+    .profit-row .amount .margin-chip {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 50px;
+      font-size: 10.5px;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+    .margin-chip.high { background: #e8f5e9; color: #2e7d32; }
+    .margin-chip.low  { background: #fff3e0; color: #ef6c00; }
+    .margin-chip.neg  { background: #ffebee; color: #c62828; }
+
+    /* link جديد للـ analytics */
+    .analytics-link-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, var(--ink), var(--ink-3));
+      border-radius: 14px;
+      color: #fff;
+      text-decoration: none;
+      margin-top: 16px;
+      transition: .3s;
+    }
+    .analytics-link-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(10,14,23,.25);
+    }
+    .analytics-link-card .icon { font-size: 28px; }
+    .analytics-link-card .text { flex: 1; }
+    .analytics-link-card .text h4 { font-size: 14px; font-weight: 800; color: var(--gold); margin-bottom: 2px; }
+    .analytics-link-card .text p  { font-size: 12px; color: #a0a5b5; }
+    .analytics-link-card .arrow { font-size: 20px; color: var(--gold); }
+
+    @media (max-width: 768px) {
+      .mini-stat-box .num { font-size: 16px; }
+      .profit-row { padding: 10px 0; gap: 10px; }
+      .profit-row img { width: 36px; height: 36px; }
+      .profit-row .info h5 { font-size: 12px; }
+      .profit-row .amount .profit-val { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
 
+<!-- Loading / Access check -->
 <div id="statusPage" class="admin-status-page">
   <div class="admin-status-box">
     <div class="emoji" id="statusEmoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
@@ -70,308 +173,685 @@
   </div>
 </div>
 
+<!-- Main Admin Layout -->
 <div class="admin-layout" id="adminLayout" style="display:none">
+
+  <!-- SIDEBAR -->
   <aside class="admin-sidebar" id="adminSidebar">
-    <div class="admin-brand"><div class="admin-brand-name">LUXE</div><div class="admin-brand-tag">Admin Panel</div></div>
+    <div class="admin-brand">
+      <div class="admin-brand-name">LUXE</div>
+      <div class="admin-brand-tag">Admin Panel</div>
+    </div>
+
     <nav class="admin-nav">
-      <a href="dashboard.html" class="admin-nav-item active"><span class="icon">📊</span><span>لوحة التحكم</span></a>
-      <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
-      <a href="orders.html" class="admin-nav-item"><span class="icon">🛒</span><span>الطلبات</span></a>
-      <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
-      <a href="coupons.html" class="admin-nav-item"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
-      <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
+      <a href="dashboard.html" class="admin-nav-item active">
+        <span class="icon">📊</span>
+        <span>لوحة التحكم</span>
+      </a>
+      <a href="products.html" class="admin-nav-item">
+        <span class="icon">📦</span>
+        <span>المنتجات</span>
+      </a>
+      <a href="orders.html" class="admin-nav-item">
+        <span class="icon">🛒</span>
+        <span>الطلبات</span>
+      </a>
+      <a href="analytics.html" class="admin-nav-item">
+        <span class="icon">📈</span>
+        <span>تحليل الأرباح</span>
+      </a>
+      <a href="users.html" class="admin-nav-item">
+        <span class="icon">👥</span>
+        <span>المستخدمين</span>
+      </a>
+      <a href="coupons.html" class="admin-nav-item">
+        <span class="icon">🎟️</span>
+        <span>أكواد الخصم</span>
+      </a>
+      <a href="../index.html" class="admin-nav-item">
+        <span class="icon">🏠</span>
+        <span>المتجر</span>
+      </a>
     </nav>
+
     <div class="admin-sidebar-footer">
-      <button class="admin-logout" id="logoutBtn"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
+      <button class="admin-logout" id="logoutBtn" type="button">
+        <span class="icon">🚪</span>
+        <span>تسجيل الخروج</span>
+      </button>
     </div>
   </aside>
+
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+  <!-- MAIN -->
   <main class="admin-main">
     <div class="admin-topbar">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="mobile-menu-btn-admin" id="mobileMenuBtn">☰</button>
+      <div class="topbar-left">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn" type="button" aria-label="القائمة">☰</button>
         <div>
-          <h1 class="admin-page-title">نظرة عامة</h1>
-          <p class="admin-page-subtitle">مرحباً بك في لوحة تحكم LUXE</p>
+          <h1 class="admin-page-title">لوحة التحكم</h1>
+          <p class="admin-page-subtitle">نظرة عامة على المتجر</p>
         </div>
       </div>
-      <div class="admin-user-badge">
-        <div class="avatar" id="adminInitial">A</div>
-        <div class="info"><div class="name" id="adminName">Admin</div><div class="role">مدير</div></div>
-      </div>
-    </div>
-
-    <!-- 1. KPIs -->
-    <div class="kpi-grid" id="kpiGrid">
-      <!-- سيتم ملؤها بالجافاسكريبت -->
-    </div>
-
-    <!-- 2. Charts -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <h3>📈 إيرادات آخر 7 أيام</h3>
-        <div style="height: 250px; position: relative;">
-          <canvas id="salesChart"></canvas>
-        </div>
-      </div>
-      <div class="chart-card">
-        <h3>📊 الطلبات حسب الحالة</h3>
-        <div style="height: 250px; position: relative; display:flex; justify-content:center;">
-          <canvas id="statusChart"></canvas>
+      <div class="admin-topbar-actions">
+        <button class="refresh-dashboard-btn" id="refreshBtn" type="button" aria-label="تحديث">
+          🔄 <span>تحديث</span>
+        </button>
+        <div class="admin-user-badge">
+          <div class="avatar" id="adminInitial">A</div>
+          <div class="info">
+            <div class="name" id="adminName">Admin</div>
+            <div class="role">مدير</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. Recent & Top -->
-    <div class="charts-grid" style="grid-template-columns: 1fr 1fr;">
-      <div class="list-card">
-        <h3>🛒 آخر الطلبات</h3>
-        <div id="recentOrdersList"></div>
+    <!-- تنبيهات -->
+    <div class="dash-alert warn" id="lossAlert"></div>
+    <div class="dash-alert info" id="costAlert"></div>
+
+    <!-- STATS — mini-stat-box style -->
+    <div class="mini-stats-row" id="statsGrid">
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+      <div class="mini-stat-box"><div class="num skeleton" style="width:60px;height:26px;border-radius:6px"></div><div class="lbl skeleton" style="width:80px;height:11px;border-radius:4px;margin-top:6px"></div></div>
+    </div>
+
+    <!-- 2-COL GRID -->
+    <div class="admin-grid-2">
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2>🛒 آخر الطلبات</h2>
+          <a href="orders.html" class="link">عرض الكل ←</a>
+        </div>
+        <div id="recentOrders">
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px"></div>
+        </div>
       </div>
-      <div class="list-card">
-        <h3>⭐ الأكثر مبيعاً</h3>
-        <div id="topProductsList"></div>
+
+      <div class="admin-card">
+        <div class="admin-card-header">
+          <h2>💰 الأكثر ربحية</h2>
+          <a href="analytics.html" class="link">تحليل كامل ←</a>
+        </div>
+        <div id="topProfit">
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px;margin-bottom:10px"></div>
+          <div class="skeleton" style="height:52px"></div>
+        </div>
       </div>
     </div>
+
+    <!-- Orders by status chart -->
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <h2>📊 الطلبات حسب الحالة</h2>
+      </div>
+      <div id="ordersChart">
+        <div class="skeleton" style="height:180px;border-radius:14px"></div>
+      </div>
+    </div>
+
+    <!-- Link to full analytics -->
+    <a href="analytics.html" class="analytics-link-card">
+      <span class="icon">📈</span>
+      <div class="text">
+        <h4>تحليل الأرباح الكامل</h4>
+        <p>شوف الإيرادات، التكلفة، صافي الربح، وربحية كل منتج بالتفصيل</p>
+      </div>
+      <span class="arrow">←</span>
+    </a>
 
   </main>
+</div>
+
+<!-- Confirm Modal -->
+<div class="confirm-modal-overlay" id="confirmModal">
+  <div class="confirm-modal-box">
+    <div class="confirm-icon" id="confirmIcon">🚪</div>
+    <h3 id="confirmTitle">تسجيل الخروج</h3>
+    <p id="confirmMessage">هل تريد تسجيل الخروج من لوحة التحكم؟</p>
+    <div class="confirm-actions">
+      <button class="confirm-btn-cancel" id="confirmCancelBtn" type="button">إلغاء</button>
+      <button class="confirm-btn-ok" id="confirmOkBtn" type="button">نعم، سجل خروج</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { api, getCurrentUser, logout } from '../js/api.js';
 
-const $ = (id) => document.getElementById(id);
-let salesChart = null;
-let statusChart = null;
+/* ===========================================
+   Helpers
+=========================================== */
+function formatMoney(n) {
+  return (Math.round(n) || 0).toLocaleString('ar-EG') + ' ج.م';
+}
 
-// Helpers
+function formatNumber(n) {
+  return (Math.round(n) || 0).toLocaleString('ar-EG');
+}
+
+function getMarginClass(pct) {
+  if (pct >= 30) return 'high';
+  if (pct > 0) return 'low';
+  return 'neg';
+}
+
 function showStatus(emoji, title, message, isLoading = false) {
-  $('statusTitle').textContent = title; $('statusMessage').textContent = message;
-  $('statusPage').style.display = 'flex'; $('adminLayout').style.display = 'none';
-  const e = $('statusEmoji'); e.textContent = emoji; e.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
-}
-function showLayout() { $('statusPage').style.display = 'none'; $('adminLayout').style.display = 'grid'; }
-function showToast(msg, type = 'info') {
-  let c = $('toastContainer') || document.createElement('div');
-  if (!c.id) { c.id = 'toastContainer'; c.className = 'toast-container'; document.body.appendChild(c); }
-  const t = document.createElement('div'); t.className = 'toast ' + type;
-  t.innerHTML = `<span style="font-weight:900">${type === 'success' ? '✓' : 'ℹ'}</span><span>${msg}</span>`;
-  c.appendChild(t); setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+  const page = document.getElementById('statusPage');
+  const emojiEl = document.getElementById('statusEmoji');
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
+
+  page.style.display = 'flex';
+  document.getElementById('adminLayout').style.display = 'none';
+
+  emojiEl.textContent = emoji;
+  emojiEl.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
+  emojiEl.style.display = 'inline-block';
 }
 
+function showLayout() {
+  document.getElementById('statusPage').style.display = 'none';
+  document.getElementById('adminLayout').style.display = 'grid';
+}
+
+function showToast(message, type = 'info') {
+  let c = document.getElementById('toastContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastContainer';
+    c.className = 'toast-container';
+    document.body.appendChild(c);
+  }
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(-20px)';
+    t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+/* ===========================================
+   Confirm Modal
+=========================================== */
+function showConfirm({ icon = '⚠️', title, message, okText = 'تأكيد' }) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmIcon').textContent = icon;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOkBtn').textContent = okText;
+
+    modal.classList.add('active');
+
+    const cleanup = (result) => {
+      modal.classList.remove('active');
+      document.getElementById('confirmCancelBtn').removeEventListener('click', onCancel);
+      document.getElementById('confirmOkBtn').removeEventListener('click', onOk);
+      modal.removeEventListener('click', onOverlay);
+      resolve(result);
+    };
+
+    const onCancel = () => cleanup(false);
+    const onOk = () => cleanup(true);
+    const onOverlay = (e) => { if (e.target.id === 'confirmModal') cleanup(false); };
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', onCancel);
+    document.getElementById('confirmOkBtn').addEventListener('click', onOk);
+    modal.addEventListener('click', onOverlay);
+  });
+}
+
+/* ===========================================
+   Access Check
+=========================================== */
 async function checkAdminAccess() {
   try {
     const user = await getCurrentUser();
-    if (!user) { showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول'); setTimeout(() => window.location.href = '../login.html', 1500); return null; }
+
+    if (!user) {
+      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول الأول');
+      setTimeout(() => window.location.href = '../login.html?redirect=admin/dashboard.html', 1500);
+      return null;
+    }
+
     const meRes = await api.auth.me();
-    if (!meRes.user || meRes.user.role !== 'admin') { showStatus('⛔', 'غير مصرح', 'للأدمن فقط'); setTimeout(() => window.location.href = '../index.html', 2500); return null; }
-    const name = meRes.user.name || 'Admin';
-    $('adminName').textContent = name; $('adminInitial').textContent = name.charAt(0).toUpperCase();
-    return meRes.user;
-  } catch (err) { showStatus('⚠️', 'خطأ', err.message); return null; }
+    const userData = meRes.user;
+
+    if (!userData || userData.role !== 'admin') {
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط.');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+      return null;
+    }
+
+    const name = userData.name || user.displayName || 'Admin';
+    document.getElementById('adminName').textContent = name;
+    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
+
+    return userData;
+  } catch (err) {
+    console.error(err);
+    showStatus('⚠️', 'حدث خطأ', err.message || 'تعذّر التحقق من الصلاحيات');
+    return null;
+  }
 }
 
-// ===========================================
-// Load Dashboard Data
-// ===========================================
-async function loadDashboard() {
+/* ===========================================
+   Compute analytics from orders + products
+=========================================== */
+function computeProfitAnalytics(orders, productsMap) {
+  let revenue = 0;
+  let cost = 0;
+  let missingCostCount = 0;
+  const perProduct = {};
+
+  orders.forEach(order => {
+    // تجاهل الملغي
+    const st = (order.status || '').toLowerCase();
+    if (st === 'cancelled' || st === 'canceled') return;
+
+    const items = order.items || order.products || [];
+    items.forEach(item => {
+      const pid = item.productId || item.product_id || item.product?.id || item.id;
+      const product = productsMap[pid];
+
+      const qty = Number(item.quantity || item.qty || 1);
+      const unitPrice = Number(
+        item.price || item.unitPrice || item.unit_price || product?.price || 0
+      );
+      const unitCost = Number(product?.costPrice ?? product?.cost_price ?? 0);
+
+      revenue += unitPrice * qty;
+      cost += unitCost * qty;
+
+      if (!product || unitCost === 0) missingCostCount++;
+
+      const key = pid || `u_${item.name || ''}`;
+      if (!perProduct[key]) {
+        perProduct[key] = {
+          id: key,
+          name: product?.name || item.name || 'منتج محذوف',
+          thumbnail: product?.thumbnail || item.thumbnail || '',
+          qty: 0, revenue: 0, cost: 0,
+        };
+      }
+      perProduct[key].qty += qty;
+      perProduct[key].revenue += unitPrice * qty;
+      perProduct[key].cost += unitCost * qty;
+    });
+  });
+
+  const profit = revenue - cost;
+  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+  const rows = Object.values(perProduct)
+    .map(r => ({
+      ...r,
+      profit: r.revenue - r.cost,
+      margin: r.revenue > 0 ? ((r.revenue - r.cost) / r.revenue) * 100 : 0,
+    }))
+    .sort((a, b) => b.profit - a.profit);
+
+  // ربح متوقع من المخزون الحالي
+  let potentialProfit = 0;
+  Object.values(productsMap).forEach(p => {
+    const price = Number(p.price) || 0;
+    const c = Number(p.costPrice ?? p.cost_price ?? 0);
+    const stock = Number(p.stock) || 0;
+    potentialProfit += (price - c) * stock;
+  });
+
+  return { revenue, cost, profit, margin, rows, missingCostCount, potentialProfit };
+}
+
+/* ===========================================
+   Load Stats + Profit KPIs
+=========================================== */
+async function loadStats() {
   try {
-    // 1. جلب الإحصائيات
+    // نجيب stats + orders + products في نفس الوقت
     const [statsRes, ordersRes, productsRes] = await Promise.all([
       api.admin.getStats(),
       api.admin.getAllOrders(),
-      api.products.getAll()
+      api.products.getAll(),
     ]);
 
     const stats = statsRes.data;
     const orders = ordersRes.data || [];
     const products = productsRes.data || [];
 
-    renderKPIs(stats, orders);
-    renderRecentOrders(orders);
-    renderTopProducts(products);
-    renderCharts(orders);
+    const productsMap = {};
+    products.forEach(p => { productsMap[p.id] = p; });
+
+    const analytics = computeProfitAnalytics(orders, productsMap);
+
+    // تحديث البطاقات
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="mini-stat-box">
+        <div class="num">${formatNumber(stats.products)}</div>
+        <div class="lbl">منتج في المتجر</div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num">${formatNumber(stats.orders)}</div>
+        <div class="lbl">إجمالي الطلبات</div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num revenue">${formatMoney(analytics.revenue)}</div>
+        <div class="lbl">إجمالي الإيراد</div>
+        <div class="lbl-sub">${formatNumber(stats.users)} مستخدم مسجل</div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num cost">${formatMoney(analytics.cost)}</div>
+        <div class="lbl">تكلفة البضاعة المبيعة</div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num ${analytics.profit >= 0 ? 'profit' : 'loss'}">${formatMoney(analytics.profit)}</div>
+        <div class="lbl">صافي الربح</div>
+        <div class="lbl-sub ${analytics.margin >= 20 ? 'good' : analytics.margin >= 0 ? '' : 'bad'}">
+          هامش ${analytics.margin.toFixed(1)}%
+        </div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num">${formatMoney(analytics.potentialProfit)}</div>
+        <div class="lbl">ربح متوقع من المخزون</div>
+      </div>
+    `;
+
+    // تنبيهات
+    const lossAlert = document.getElementById('lossAlert');
+    const costAlert = document.getElementById('costAlert');
+
+    const lossProducts = products.filter(p =>
+      Number(p.costPrice ?? p.cost_price) > 0 &&
+      Number(p.price) < Number(p.costPrice ?? p.cost_price)
+    );
+
+    if (lossProducts.length) {
+      lossAlert.style.display = 'block';
+      lossAlert.innerHTML = `⚠️ <strong>${lossProducts.length} منتج</strong> بيتباع بخسارة: 
+        ${lossProducts.slice(0, 3).map(p => `«${p.name}»`).join('، ')}
+        ${lossProducts.length > 3 ? ` و${lossProducts.length - 3} غيرهم` : ''}
+        — <a href="products.html">راجعهم</a>`;
+    } else {
+      lossAlert.style.display = 'none';
+    }
+
+    if (analytics.missingCostCount > 0) {
+      costAlert.style.display = 'block';
+      costAlert.innerHTML = `ℹ️ <strong>${analytics.missingCostCount}</strong> عنصر مبيع مفيش له سعر تكلفة محدد — الأرباح ممكن تكون مضخّمة. <a href="products.html">حدّث أسعار التكلفة</a>`;
+    } else {
+      costAlert.style.display = 'none';
+    }
+
+    // نرندر الأكثر ربحية
+    renderTopProfit(analytics.rows);
 
   } catch (err) {
-    console.error(err);
-    showToast('فشل تحميل بيانات لوحة التحكم', 'error');
+    console.error('Stats error:', err);
+    showToast('فشل تحميل الإحصائيات', 'error');
   }
 }
 
-function renderKPIs(stats, orders) {
-  const pendingOrders = orders.filter(o => o.status === 'pending_payment').length;
-  
-  $('kpiGrid').innerHTML = `
-    <div class="kpi-card">
-      <div class="kpi-icon" style="color: var(--gold); background: rgba(201, 169, 97, 0.1);">💰</div>
-      <div class="kpi-info">
-        <h3>إجمالي الإيرادات</h3>
-        <div class="val">${(stats.revenue || 0).toLocaleString('ar-EG')} <span>ج.م</span></div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.1);">🛒</div>
-      <div class="kpi-info">
-        <h3>إجمالي الطلبات</h3>
-        <div class="val">${orders.length} <span>طلب</span></div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon" style="color: var(--warning); background: rgba(245, 158, 11, 0.1);">⏳</div>
-      <div class="kpi-info">
-        <h3>طلبات معلقة</h3>
-        <div class="val">${pendingOrders} <span>في انتظار الدفع</span></div>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">👥</div>
-      <div class="kpi-info">
-        <h3>العملاء</h3>
-        <div class="val">${stats.users} <span>مستخدم مسجل</span></div>
-      </div>
-    </div>
-  `;
-}
+/* ===========================================
+   Render Top Profit Products
+=========================================== */
+function renderTopProfit(rows) {
+  const el = document.getElementById('topProfit');
 
-function renderRecentOrders(orders) {
-  const recent = orders.slice(0, 4);
-  if (recent.length === 0) {
-    $('recentOrdersList').innerHTML = '<p style="color:var(--muted);text-align:center">لا يوجد طلبات بعد</p>';
+  if (!rows || rows.length === 0) {
+    el.innerHTML = `
+      <div class="admin-empty">
+        <div class="emoji">💭</div>
+        <h4>لا يوجد مبيعات بعد</h4>
+        <p>أول ما تبدأ الطلبات هتظهر هنا</p>
+      </div>`;
     return;
   }
 
-  $('recentOrdersList').innerHTML = recent.map(o => `
-    <div class="recent-item">
-      <div class="info">
-        <h4>${o.customer?.name || 'عميل'} <span style="font-size:11px;color:var(--muted);font-weight:normal">#${o.orderNumber}</span></h4>
-        <p>${new Date(o.createdAt).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}</p>
-      </div>
-      <div class="price">${(o.total || 0).toLocaleString('ar-EG')} ج.م</div>
-    </div>
-  `).join('');
+  const top = rows.slice(0, 5);
+
+  el.innerHTML = top.map((r, i) => {
+    const img = r.thumbnail || 'https://via.placeholder.com/42/f4f2ed/c9a961?text=LX';
+    const marginCls = getMarginClass(r.margin);
+    return `
+      <div class="profit-row">
+        <span class="rank">${i + 1}</span>
+        <img src="${img}" alt="${r.name}" onerror="this.src='https://via.placeholder.com/42/f4f2ed/c9a961?text=LX'">
+        <div class="info">
+          <h5>${r.name}</h5>
+          <span>${formatNumber(r.qty)} مبيعة • إيراد ${formatMoney(r.revenue)}</span>
+        </div>
+        <div class="amount">
+          <div class="profit-val ${r.profit < 0 ? 'neg' : ''}">${formatMoney(r.profit)}</div>
+          <span class="margin-chip ${marginCls}">${r.margin.toFixed(0)}%</span>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-function renderTopProducts(products) {
-  const top = products.sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 4);
-  if (top.length === 0) {
-    $('topProductsList').innerHTML = '<p style="color:var(--muted);text-align:center">لا يوجد منتجات</p>';
-    return;
-  }
-  
-  $('topProductsList').innerHTML = top.map(p => `
-    <div class="top-product">
-      <img src="${p.thumbnail || 'https://via.placeholder.com/50'}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/50/f4f2ed/c9a961?text=LX'">
-      <div class="info">
-        <h4>${p.name}</h4>
-        <p>${(p.price || 0).toLocaleString('ar-EG')} ج.م</p>
-      </div>
-      <div class="sold">${p.sold || 0} مبيعة</div>
-    </div>
-  `).join('');
-}
+/* ===========================================
+   Load Recent Orders
+=========================================== */
+const STATUS_MAP = {
+  pending_payment: { label: 'في انتظار الدفع', cls: 'status-pending' },
+  pending:         { label: 'قيد المراجعة',    cls: 'status-pending' },
+  processing:      { label: 'قيد التجهيز',     cls: 'status-processing' },
+  shipped:         { label: 'تم الشحن',        cls: 'status-shipped' },
+  delivered:       { label: 'تم التوصيل',      cls: 'status-delivered' },
+  cancelled:       { label: 'ملغي',            cls: 'status-cancelled' }
+};
 
-function renderCharts(orders) {
-  // 1. Sales Chart (Line)
-  const ctxSales = document.getElementById('salesChart').getContext('2d');
-  const labels = [];
-  const data = [];
+async function loadRecentOrders() {
+  try {
+    const res = await api.admin.getAllOrders();
+    const orders = (res.data || []).slice(0, 6);
 
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    labels.push(d.toLocaleDateString('ar-EG', { weekday: 'short' }));
-    const dayTotal = orders
-      .filter(o => o.createdAt.startsWith(dateStr) && o.status !== 'cancelled')
-      .reduce((sum, o) => sum + (o.total || 0), 0);
-    data.push(dayTotal);
-  }
-
-  if (salesChart) salesChart.destroy();
-  salesChart = new Chart(ctxSales, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'الإيرادات',
-        data,
-        borderColor: '#c9a961',
-        backgroundColor: 'rgba(201, 169, 97, 0.1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#0f1115',
-        pointBorderColor: '#c9a961',
-        pointBorderWidth: 2,
-        pointRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8a90a2' } },
-        x: { grid: { display: false }, ticks: { color: '#8a90a2' } }
-      }
+    if (orders.length === 0) {
+      document.getElementById('recentOrders').innerHTML = `
+        <div class="admin-empty">
+          <div class="emoji">📭</div>
+          <h4>لا يوجد طلبات بعد</h4>
+          <p>ستظهر هنا عندما يقوم العملاء بالشراء</p>
+        </div>`;
+      return;
     }
-  });
 
-  // 2. Status Chart (Doughnut)
-  const ctxStatus = document.getElementById('statusChart').getContext('2d');
-  const statusCounts = {
-    pending_payment: orders.filter(o => o.status === 'pending_payment').length,
-    processing: orders.filter(o => o.status === 'processing').length,
-    shipped: orders.filter(o => o.status === 'shipped').length,
-    delivered: orders.filter(o => o.status === 'delivered').length,
-    cancelled: orders.filter(o => o.status === 'cancelled').length
+    document.getElementById('recentOrders').innerHTML = orders.map(o => {
+      const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+      return `
+        <div class="recent-order-row">
+          <div class="order-num">${o.orderNumber || o.order_number || '—'}</div>
+          <div class="customer">${o.customer?.name || o.userName || '—'}</div>
+          <div class="total">${formatMoney(o.total)}</div>
+          <span class="status-pill ${st.cls}">${st.label}</span>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('Recent orders error:', err);
+    document.getElementById('recentOrders').innerHTML = `
+      <div class="admin-empty">
+        <div class="emoji">⚠️</div>
+        <h4>خطأ في التحميل</h4>
+        <p>${err.message}</p>
+      </div>`;
+  }
+}
+
+/* ===========================================
+   Load Orders Chart
+=========================================== */
+async function loadOrdersChart() {
+  try {
+    const res = await api.admin.getAllOrders();
+    const orders = res.data || [];
+
+    const statuses = ['pending_payment', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const labels = {
+      pending_payment: 'انتظار الدفع',
+      processing: 'قيد التجهيز',
+      shipped: 'تم الشحن',
+      delivered: 'تم التوصيل',
+      cancelled: 'ملغي'
+    };
+
+    const counts = {};
+    statuses.forEach(s => counts[s] = orders.filter(o => o.status === s).length);
+    const maxCount = Math.max(...Object.values(counts), 1);
+
+    document.getElementById('ordersChart').innerHTML = `
+      <div class="simple-bar-chart">
+        ${statuses.map(s => `
+          <div class="bar-item">
+            <div class="value">${counts[s]}</div>
+            <div class="bar" style="height:${(counts[s] / maxCount) * 140}px"></div>
+            <div class="label">${labels[s]}</div>
+          </div>
+        `).join('')}
+      </div>`;
+  } catch (err) {
+    console.error('Chart error:', err);
+    document.getElementById('ordersChart').innerHTML = `
+      <div class="admin-empty">
+        <div class="emoji">⚠️</div>
+        <h4>خطأ في تحميل الرسم</h4>
+        <p>${err.message}</p>
+      </div>`;
+  }
+}
+
+/* ===========================================
+   Logout
+=========================================== */
+async function handleLogout() {
+  const ok = await showConfirm({
+    icon: '🚪',
+    title: 'تسجيل الخروج',
+    message: 'هل تريد تسجيل الخروج من لوحة التحكم؟',
+    okText: 'نعم، سجل خروج'
+  });
+  if (!ok) return;
+
+  try {
+    await logout();
+    window.location.href = '../login.html';
+  } catch (err) {
+    showToast('فشل تسجيل الخروج', 'error');
+  }
+}
+
+/* ===========================================
+   Mobile Menu
+=========================================== */
+function setupMobileMenu() {
+  const btn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('adminSidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  const open = () => {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  const close = () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
   };
 
-  if (statusChart) statusChart.destroy();
-  statusChart = new Chart(ctxStatus, {
-    type: 'doughnut',
-    data: {
-      labels: ['انتظار الدفع', 'قيد التجهيز', 'تم الشحن', 'تم التوصيل', 'ملغي'],
-      datasets: [{
-        data: Object.values(statusCounts),
-        backgroundColor: ['#f59e0b', '#8b5cf6', '#3b82f6', '#10b981', '#ef4444'],
-        borderWidth: 0,
-        hoverOffset: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '70%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#8a90a2', padding: 20, font: { family: 'Cairo' } } }
-      }
-    }
+  btn?.addEventListener('click', open);
+  overlay?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
   });
 }
 
-// Events
-$('logoutBtn').addEventListener('click', async () => {
-  if (!confirm('تسجيل الخروج؟')) return;
-  await logout(); window.location.href = '../login.html';
-});
-$('mobileMenuBtn')?.addEventListener('click', () => {
-  $('adminSidebar').classList.add('open'); $('sidebarOverlay').classList.add('active');
-});
-$('sidebarOverlay')?.addEventListener('click', () => {
-  $('adminSidebar').classList.remove('open'); $('sidebarOverlay').classList.remove('active');
-});
+/* ===========================================
+   Refresh
+=========================================== */
+async function refreshAll() {
+  const btn = document.getElementById('refreshBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('spinning');
+  }
 
-// Init
+  await Promise.all([
+    loadStats(),
+    loadRecentOrders(),
+    loadOrdersChart()
+  ]);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.classList.remove('spinning');
+  }
+  showToast('تم التحديث ✓', 'success');
+}
+
+/* ===========================================
+   Pull to Refresh (Mobile)
+=========================================== */
+let pullStartY = 0;
+let pullDistance = 0;
+let isPulling = false;
+
+document.addEventListener('touchstart', (e) => {
+  if (window.scrollY === 0) {
+    pullStartY = e.touches[0].clientY;
+    isPulling = true;
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isPulling) return;
+  pullDistance = e.touches[0].clientY - pullStartY;
+}, { passive: true });
+
+document.addEventListener('touchend', async () => {
+  if (!isPulling) return;
+  if (pullDistance > 100 && window.scrollY === 0) {
+    await refreshAll();
+  }
+  isPulling = false;
+  pullDistance = 0;
+}, { passive: true });
+
+/* ===========================================
+   Init
+=========================================== */
 async function init() {
   showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
+
   const adminUser = await checkAdminAccess();
   if (!adminUser) return;
+
   showLayout();
-  await loadDashboard();
+  setupMobileMenu();
+
+  document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+  document.getElementById('refreshBtn')?.addEventListener('click', refreshAll);
+
+  await Promise.all([
+    loadStats(),
+    loadRecentOrders(),
+    loadOrdersChart()
+  ]);
 }
+
 init();
 </script>
+
 </body>
 </html>
