@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e17">
+  <title>تحليل الأرباح - LUXE Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    /* ============ KPI Cards ============ */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: .3s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(10,14,23,.08);
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 4px; height: 100%;
+    }
+
+    .kpi-card.revenue::before { background: linear-gradient(180deg, #c9a961, #a8894a); }
+    .kpi-card.cost::before    { background: linear-gradient(180deg, #f59e0b, #d97706); }
+    .kpi-card.profit::before  { background: linear-gradient(180deg, #10b981, #059669); }
+    .kpi-card.orders::before  { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
+    .kpi-card.avg::before     { background: linear-gradient(180deg, #8b5cf6, #6d28d9); }
+
+    .kpi-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
+      opacity: .85;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 700;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .kpi-card.revenue .kpi-value { color: var(--gold-dark); }
+    .kpi-card.cost    .kpi-value { color: #d97706; }
+    .kpi-card.profit  .kpi-value { color: #10b981; }
+    .kpi-card.profit.negative .kpi-value { color: #c62828; }
+    .kpi-card.orders  .kpi-value { color: #1d4ed8; }
+    .kpi-card.avg     .kpi-value { color: #6d28d9; }
+
+    .kpi-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kpi-sub.good { color: #10b981; }
+    .kpi-sub.bad  { color: #c62828; }
+
+    /* ============ Toolbar ============ */
+    .analytics-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .analytics-toolbar select,
+    .analytics-toolbar button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1.5px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      transition: .2s;
+      min-height: 40px;
+    }
+
+    .analytics-toolbar select:focus { outline: none; border-color: var(--gold); }
+
+    .analytics-toolbar button {
+      background: var(--ink);
+      color: var(--gold);
+      border-color: var(--ink);
+    }
+
+    .analytics-toolbar button:hover:not(:disabled) {
+      background: var(--gold);
+      color: var(--ink);
+      border-color: var(--gold);
+    }
+
+    .analytics-toolbar button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+
+    .analytics-toolbar .spacer { flex: 1; }
+
+    /* ============ Alerts ============ */
+    .analytics-alert {
+      display: none;
+      padding: 14px 18px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .analytics-alert.warn {
+      background: #ffebee;
+      border: 1px solid #ef9a9a;
+      color: #c62828;
+    }
+
+    .analytics-alert.info {
+      background: #e3f2fd;
+      border: 1px solid #90caf9;
+      color: #1565c0;
+    }
+
+    .analytics-alert a {
+      color: inherit;
+      text-decoration: underline;
+      font-weight: 800;
+    }
+
+    /* ============ Table ============ */
+    .profit-table-wrap {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .profit-table-head {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .profit-table-head h3 {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .profit-table-head .count {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .profit-table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .profit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .profit-table thead {
+      background: var(--paper-2);
+    }
+
+    .profit-table th {
+      text-align: right;
+      padding: 14px 16px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .profit-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #f0eee8;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .profit-table tbody tr:last-child td { border-bottom: none; }
+
+    .profit-table tbody tr:hover { background: #faf9f6; }
+
+    .profit-table .prod-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 200px;
+      white-space: normal;
+    }
+
+    .profit-table .prod-cell img {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+
+    .profit-table .prod-cell .name {
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .profit-table .prod-cell .sku {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+      margin-top: 2px;
+    }
+
+    .profit-table .num-cell {
+      font-family: 'Tajawal', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .profit-table .num-cell.green { color: #10b981; }
+    .profit-table .num-cell.red   { color: #c62828; }
+    .profit-table .num-cell.gold  { color: var(--gold-dark); }
+
+    .profit-table .margin-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .margin-chip.high { background: #e8f5e9; color: #2e7d32; }
+    .margin-chip.low  { background: #fff3e0; color: #ef6c00; }
+    .margin-chip.neg  { background: #ffebee; color: #c62828; }
+
+    /* Progress bar */
+    .bar-wrap {
+      width: 100%;
+      max-width: 120px;
+      height: 6px;
+      background: #f0eee8;
+      border-radius: 50px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+      border-radius: 50px;
+      transition: width .6s ease;
+    }
+
+    .bar-fill.neg {
+      background: linear-gradient(90deg, #ef4444, #c62828);
+    }
+
+    /* Empty / loading */
+    .analytics-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .analytics-empty .emoji { font-size: 56px; opacity: .5; margin-bottom: 12px; }
+    .analytics-empty h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .analytics-empty p  { font-size: 13px; }
+
+    .analytics-skeleton {
+      height: 100px;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #f4f2ed 25%, #fff 50%, #f4f2ed 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ============ Mobile ============ */
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .kpi-card { padding: 16px; }
+      .kpi-value { font-size: 18px; }
+      .kpi-icon { font-size: 20px; margin-bottom: 6px; }
+
+      .analytics-toolbar { padding: 10px 12px; gap: 8px; }
+      .analytics-toolbar select,
+      .analytics-toolbar button { padding: 8px 12px; font-size: 12px; min-height: 36px; }
+      .analytics-toolbar .spacer { display: none; }
+      .analytics-toolbar button { flex: 1; }
+
+      .profit-table-head { padding: 14px 16px; }
+      .profit-table-head h3 { font-size: 16px; }
+
+      /* Mobile: cards */
+      .profit-table thead { display: none; }
+      .profit-table,
+      .profit-table tbody,
+      .profit-table tr,
+      .profit-table td {
+        display: block;
+        width: 100%;
+      }
+      .profit-table tr {
+        padding: 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      .profit-table tr:last-child { border-bottom: none; }
+      .profit-table td {
+        border: none;
+        padding: 4px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        white-space: normal;
+      }
+      .profit-table td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-left: 12px;
+      }
+      .profit-table td.prod-row {
+        padding-bottom: 10px;
+        border-bottom: 1px dashed var(--line);
+        margin-bottom: 6px;
+      }
+      .profit-table td.prod-row::before { display: none; }
+      .profit-table .prod-cell { min-width: 0; width: 100%; }
+
+      .bar-wrap { max-width: 80px; }
+    }
+
+    @media (max-width: 420px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .kpi-value { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Status page -->
+<div id="statusPage" class="admin-status-page">
+  <div class="admin-status-box">
+    <div class="emoji" id="statusEmoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
+    <h1 id="statusTitle">جاري التحقق...</h1>
+    <p id="statusMessage">من فضلك انتظر</p>
+  </div>
+</div>
+
+<div class="admin-layout" id="adminLayout" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-name">LUXE</div>
+      <div class="admin-brand-tag">Admin Panel</div>
+    </div>
+    <nav class="admin-nav">
+      <a href="dashboard.html" class="admin-nav-item"><span class="icon">📊</span><span>لوحة التحكم</span></a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">📦</span><span>المنتجات</span></a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">🛒</span><span>الطلبات</span></a>
+      <a href="analytics.html" class="admin-nav-item active"><span class="icon">📈</span><span>تحليل الأرباح</span></a>
+      <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
+      <a href="coupons.html" class="admin-nav-item"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
+      <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <button class="admin-logout" id="logoutBtn"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="mobile-menu-btn-admin" id="mobileMenuBtn">☰</button>
+        <div>
+          <h1 class="admin-page-title">تحليل الأرباح</h1>
+          <p class="admin-page-subtitle" id="periodLabel">جاري التحميل...</p>
+        </div>
+      </div>
+      <div class="admin-user-badge">
+        <div class="avatar" id="adminInitial">A</div>
+        <div class="info">
+          <div class="name" id="adminName">Admin</div>
+          <div class="role">مدير</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="analytics-toolbar">
+      <select id="periodFilter">
+        <option value="today">اليوم</option>
+        <option value="week">آخر 7 أيام</option>
+        <option value="month" selected>آخر 30 يوم</option>
+        <option value="year">السنة</option>
+        <option value="all">كل الوقت</option>
+      </select>
+      <select id="statusFilter">
+        <option value="paid">الطلبات المدفوعة فقط</option>
+        <option value="delivered">الموصّلة فقط</option>
+        <option value="all">كل الطلبات (عدا الملغية)</option>
+      </select>
+      <div class="spacer"></div>
+      <button id="refreshBtn">🔄 تحديث</button>
+      <button id="exportBtn">📥 تصدير CSV</button>
+    </div>
+
+    <!-- Alerts -->
+    <div class="analytics-alert warn" id="missingCostAlert"></div>
+    <div class="analytics-alert info" id="infoAlert"></div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="analytics-skeleton"></div>
+      <div class="analytics-skeleton"></div>
+      <div class="analytics-skeleton"></div>
+      <div class="analytics-skeleton"></div>
+      <div class="analytics-skeleton"></div>
+    </div>
+
+    <!-- Products profitability table -->
+    <div class="profit-table-wrap">
+      <div class="profit-table-head">
+        <h3>🏆 ربحية المنتجات</h3>
+        <span class="count" id="profitTableCount">—</span>
+      </div>
+      <div class="profit-table-scroll">
+        <table class="profit-table" id="profitTable" style="display:none">
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>الكمية المبيعة</th>
+              <th>الإيراد</th>
+              <th>تكلفة البضاعة</th>
+              <th>صافي الربح</th>
+              <th>هامش الربح</th>
+            </tr>
+          </thead>
+          <tbody id="profitTableBody"></tbody>
+        </table>
+        <div id="profitTableEmpty" class="analytics-empty" style="display:none">
+          <div class="emoji">📭</div>
+          <h3>لا توجد مبيعات في الفترة المختارة</h3>
+          <p>جرّب تغيير الفترة أو تأكد من وجود طلبات مكتملة</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script type="module">
+import { api, getCurrentUser, logout } from '../js/api.js';
+
+let allProductsMap = {};
+let allOrders = [];
+let computedRows = [];
+
+// ===========================================
+// Helpers
+// ===========================================
+function formatMoney(n) {
+  return (Math.round(n) || 0).toLocaleString('ar-EG') + ' ج.م';
+}
+
+function formatNumber(n) {
+  return (Math.round(n) || 0).toLocaleString('ar-EG');
+}
+
+function getMarginClass(pct) {
+  if (pct >= 30) return 'high';
+  if (pct > 0) return 'low';
+  return 'neg';
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  try {
+    return new Date(d).toLocaleDateString('ar-EG', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+  } catch { return '—'; }
+}
+
+function showStatus(emoji, title, message, isLoading = false) {
+  const e = document.getElementById('statusEmoji');
+  e.textContent = emoji;
+  e.style.animation = isLoading ? 'spin 1s linear infinite' : 'none';
+  document.getElementById('statusTitle').textContent = title;
+  document.getElementById('statusMessage').textContent = message;
+  document.getElementById('statusPage').style.display = 'flex';
+  document.getElementById('adminLayout').style.display = 'none';
+}
+
+function showLayout() {
+  document.getElementById('statusPage').style.display = 'none';
+  document.getElementById('adminLayout').style.display = 'grid';
+}
+
+function showToast(message, type = 'info') {
+  let c = document.getElementById('toastContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastContainer';
+    c.className = 'toast-container';
+    document.body.appendChild(c);
+  }
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-weight:900">${icons[type]}</span><span>${message}</span>`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(-20px)';
+    t.style.transition = '.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 3000);
+}
+
+// ===========================================
+// Access check
+// ===========================================
+async function checkAdminAccess() {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      showStatus('🔒', 'غير مصرح', 'لازم تسجل دخول');
+      setTimeout(() => window.location.href = '../login.html?redirect=admin/analytics.html', 1500);
+      return null;
+    }
+    const meRes = await api.auth.me();
+    const userData = meRes.user;
+    if (!userData || userData.role !== 'admin') {
+      showStatus('⛔', 'غير مصرح', 'الصفحة دي للأدمن فقط');
+      setTimeout(() => window.location.href = '../index.html', 2500);
+      return null;
+    }
+    const name = userData.name || user.displayName || 'Admin';
+    document.getElementById('adminName').textContent = name;
+    document.getElementById('adminInitial').textContent = name.charAt(0).toUpperCase();
+    return userData;
+  } catch (err) {
+    console.error(err);
+    showStatus('⚠️', 'خطأ', err.message);
+    return null;
+  }
+}
+
+// ===========================================
+// Load data
+// ===========================================
+async function loadData() {
+  try {
+    const [prodRes, ordRes] = await Promise.all([
+      api.products.getAll(),
+      api.admin.getAllOrders(),
+    ]);
+
+    allProductsMap = {};
+    (prodRes.data || []).forEach(p => { allProductsMap[p.id] = p; });
+    allOrders = ordRes.data || ordRes.orders || ordRes || [];
+
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('kpiGrid').innerHTML = `
+      <div class="analytics-empty" style="grid-column:1/-1">
+        <div class="emoji">⚠️</div>
+        <h3>خطأ في التحميل</h3>
+        <p>${err.message}</p>
+      </div>`;
+    document.getElementById('profitTableCount').textContent = '—';
+  }
+}
+
+// ===========================================
+// Period filtering
+// ===========================================
+function getPeriodCutoff(period) {
+  const now = Date.now();
+  const ranges = {
+    today: 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
+    month: 30 * 24 * 60 * 60 * 1000,
+    year: 365 * 24 * 60 * 60 * 1000,
+  };
+  return period === 'all' ? 0 : now - ranges[period];
+}
+
+function filterOrders(orders, period, statusFilter) {
+  const cutoff = getPeriodCutoff(period);
+
+  return orders.filter(o => {
+    const ts = new Date(o.createdAt || o.created_at || o.date || 0).getTime();
+    if (cutoff && ts < cutoff) return false;
+
+    const status = (o.status || '').toLowerCase();
+    if (status === 'cancelled' || status === 'canceled') return false;
+
+    if (statusFilter === 'delivered') {
+      return status === 'delivered';
+    }
+    if (statusFilter === 'paid') {
+      return ['delivered', 'shipped', 'processing', 'paid', 'completed'].includes(status);
+    }
+    return true;
+  });
+}
+
+// ===========================================
+// Compute analytics
+// ===========================================
+function computeAnalytics(orders) {
+  let revenue = 0;
+  let cost = 0;
+  let itemsSold = 0;
+  const perProduct = {};
+  let missingCostCount = 0;
+
+  orders.forEach(order => {
+    const items = order.items || order.products || [];
+    items.forEach(item => {
+      const productId = item.productId || item.product_id || item.product?.id || item.id;
+      const product = allProductsMap[productId];
+
+      const qty = Number(item.quantity || item.qty || 1);
+      const unitPrice = Number(
+        item.price ||
+        item.unitPrice ||
+        item.unit_price ||
+        product?.price ||
+        0
+      );
+      const unitCost = Number(product?.costPrice ?? product?.cost_price ?? 0);
+
+      const lineRevenue = unitPrice * qty;
+      const lineCost = unitCost * qty;
+
+      revenue += lineRevenue;
+      cost += lineCost;
+      itemsSold += qty;
+
+      if (!product || unitCost === 0) missingCostCount++;
+
+      const pid = productId || `unknown_${item.name || ''}`;
+      if (!perProduct[pid]) {
+        perProduct[pid] = {
+          id: pid,
+          name: product?.name || item.name || item.title || 'منتج محذوف',
+          sku: product?.sku || item.sku || '—',
+          thumbnail: product?.thumbnail || item.thumbnail || item.image || '',
+          qty: 0, revenue: 0, cost: 0,
+        };
+      }
+      perProduct[pid].qty += qty;
+      perProduct[pid].revenue += lineRevenue;
+      perProduct[pid].cost += lineCost;
+    });
+  });
+
+  const profit = revenue - cost;
+  const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+  const orderCount = orders.length;
+  const aov = orderCount > 0 ? revenue / orderCount : 0;
+
+  const rows = Object.values(perProduct).map(r => ({
+    ...r,
+    profit: r.revenue - r.cost,
+    margin: r.revenue > 0 ? ((r.revenue - r.cost) / r.revenue) * 100 : 0,
+  })).sort((a, b) => b.profit - a.profit);
+
+  return {
+    revenue, cost, profit, margin, orderCount, aov, itemsSold,
+    rows, missingCostCount,
+  };
+}
+
+// ===========================================
+// Render
+// ===========================================
+function renderAll() {
+  const period = document.getElementById('periodFilter').value;
+  const statusFilter = document.getElementById('statusFilter').value;
+
+  const periodNames = {
+    today: 'اليوم',
+    week: 'آخر 7 أيام',
+    month: 'آخر 30 يوم',
+    year: 'السنة',
+    all: 'كل الوقت',
+  };
+  document.getElementById('periodLabel').textContent = `${periodNames[period]} — ${formatDate(new Date())}`;
+
+  const filtered = filterOrders(allOrders, period, statusFilter);
+  const stats = computeAnalytics(filtered);
+
+  renderKPIs(stats);
+  renderTable(stats.rows);
+  renderAlerts(stats);
+
+  computedRows = stats.rows;
+}
+
+function renderKPIs(stats) {
+  const profitClass = stats.profit >= 0 ? '' : 'negative';
+  const marginGood = stats.margin >= 20 ? 'good' : stats.margin >= 0 ? '' : 'bad';
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card revenue">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">إجمالي الإيراد</div>
+      <div class="kpi-value">${formatMoney(stats.revenue)}</div>
+      <div class="kpi-sub">${formatNumber(stats.itemsSold)} قطعة مبيعة</div>
+    </div>
+
+    <div class="kpi-card cost">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">تكلفة البضاعة المبيعة</div>
+      <div class="kpi-value">${formatMoney(stats.cost)}</div>
+      <div class="kpi-sub">COGS</div>
+    </div>
+
+    <div class="kpi-card profit ${profitClass}">
+      <div class="kpi-icon">${stats.profit >= 0 ? '📈' : '📉'}</div>
+      <div class="kpi-label">صافي الربح</div>
+      <div class="kpi-value">${formatMoney(stats.profit)}</div>
+      <div class="kpi-sub ${marginGood}">هامش ${stats.margin.toFixed(1)}%</div>
+    </div>
+
+    <div class="kpi-card orders">
+      <div class="kpi-icon">🛒</div>
+      <div class="kpi-label">عدد الطلبات</div>
+      <div class="kpi-value">${formatNumber(stats.orderCount)}</div>
+      <div class="kpi-sub">طلب مُحصّل</div>
+    </div>
+
+    <div class="kpi-card avg">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-label">متوسط قيمة الطلب</div>
+      <div class="kpi-value">${formatMoney(stats.aov)}</div>
+      <div class="kpi-sub">AOV</div>
+    </div>
+  `;
+}
+
+function renderTable(rows) {
+  const table = document.getElementById('profitTable');
+  const tbody = document.getElementById('profitTableBody');
+  const empty = document.getElementById('profitTableEmpty');
+  const countEl = document.getElementById('profitTableCount');
+
+  if (!rows.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    countEl.textContent = '0 منتج';
+    return;
+  }
+
+  table.style.display = 'table';
+  empty.style.display = 'none';
+  countEl.textContent = `${rows.length} منتج`;
+
+  const maxProfit = Math.max(...rows.map(r => Math.abs(r.profit)), 1);
+
+  tbody.innerHTML = rows.map(r => {
+    const img = r.thumbnail || 'https://via.placeholder.com/40/f4f2ed/c9a961?text=LX';
+    const profitColor = r.profit >= 0 ? 'green' : 'red';
+    const marginCls = getMarginClass(r.margin);
+    const barWidth = Math.min(100, (Math.abs(r.profit) / maxProfit) * 100);
+    const barCls = r.profit < 0 ? 'neg' : '';
+
+    return `
+      <tr>
+        <td class="prod-row" data-label="المنتج">
+          <div class="prod-cell">
+            <img src="${img}" alt="${r.name}" onerror="this.src='https://via.placeholder.com/40/f4f2ed/c9a961?text=LX'">
+            <div>
+              <div class="name">${r.name}</div>
+              <div class="sku">${r.sku}</div>
+            </div>
+          </div>
+        </td>
+        <td data-label="الكمية" class="num-cell">${formatNumber(r.qty)}</td>
+        <td data-label="الإيراد" class="num-cell gold">${formatMoney(r.revenue)}</td>
+        <td data-label="التكلفة" class="num-cell">${formatMoney(r.cost)}</td>
+        <td data-label="الربح" class="num-cell ${profitColor}">
+          ${formatMoney(r.profit)}
+          <div class="bar-wrap"><div class="bar-fill ${barCls}" style="width:${barWidth}%"></div></div>
+        </td>
+        <td data-label="الهامش">
+          <span class="margin-chip ${marginCls}">${r.margin.toFixed(1)}%</span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAlerts(stats) {
+  const missing = document.getElementById('missingCostAlert');
+  const info = document.getElementById('infoAlert');
+
+  if (stats.missingCostCount > 0) {
+    missing.style.display = 'block';
+    missing.innerHTML = `⚠️ <strong>${stats.missingCostCount}</strong> عنصر مبيع مفيش له سعر تكلفة محدد. الأرباح محسوبة على أساس تكلفة = 0، ممكن تكون مضخّمة. <a href="products.html">حدّث أسعار التكلفة</a>.`;
+  } else {
+    missing.style.display = 'none';
+  }
+
+  if (allOrders.length === 0) {
+    info.style.display = 'block';
+    info.innerHTML = `ℹ️ لسه مفيش طلبات. لما تبدأ الطلبات تجيلك هتلاقي التحليلات هنا.`;
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+// ===========================================
+// Export CSV
+// ===========================================
+function exportCSV() {
+  if (!computedRows.length) {
+    showToast('مفيش بيانات للتصدير', 'warning');
+    return;
+  }
+
+  const headers = ['المنتج', 'SKU', 'الكمية المبيعة', 'الإيراد', 'التكلفة', 'الربح', 'الهامش %'];
+
+  const rows = computedRows.map(r => [
+    `"${(r.name || '').replace(/"/g, '""')}"`,
+    `"${(r.sku || '').replace(/"/g, '""')}"`,
+    r.qty,
+    r.revenue,
+    r.cost,
+    r.profit,
+    r.margin.toFixed(1),
+  ]);
+
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+
+  const period = document.getElementById('periodFilter').value;
+  const date = new Date().toISOString().split('T')[0];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `تقرير-أرباح-${period}-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+
+  showToast('تم تصدير التقرير ✓', 'success');
+}
+
+// ===========================================
+// Events
+// ===========================================
+document.getElementById('periodFilter').addEventListener('change', renderAll);
+document.getElementById('statusFilter').addEventListener('change', renderAll);
+
+document.getElementById('refreshBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true;
+  btn.textContent = '🔄 جاري التحديث...';
+  await loadData();
+  btn.disabled = false;
+  btn.textContent = '🔄 تحديث';
+  showToast('تم التحديث ✓', 'success');
+});
+
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  if (!confirm('تسجيل الخروج؟')) return;
+  await logout();
+  window.location.href = '../login.html';
+});
+
+// Mobile menu
+document.getElementById('mobileMenuBtn')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+});
+document.getElementById('sidebarOverlay')?.addEventListener('click', () => {
+  document.getElementById('adminSidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+});
+
+// ===========================================
+// Init
+// ===========================================
+async function init() {
+  showStatus('⏳', 'جاري التحقق...', 'بنشوف صلاحياتك', true);
+  const adminUser = await checkAdminAccess();
+  if (!adminUser) return;
+  showLayout();
+  await loadData();
+}
+
+init();
+</script>
+
+</body>
+</html>
