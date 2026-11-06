@@ -6,6 +6,9 @@ const { verifyAdmin } = require('../middleware/auth');
 // Stats
 router.get('/stats', verifyAdmin, adminController.getStats);
 
+// 🆕 Analytics (اختياري بس مفيد — أسرع من تحميل كل حاجة في الفرونت)
+router.get('/analytics', verifyAdmin, adminController.getAnalytics);
+
 // Products
 router.post('/products', verifyAdmin, adminController.addProduct);
 router.put('/products/:id', verifyAdmin, adminController.updateProduct);
