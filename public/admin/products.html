@@ -6,6 +6,53 @@
   <title>إدارة المنتجات - LUXE Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/admin.css">
+  <style>
+    /* ===== إضافات أرباح ===== */
+    .mini-stats-row { flex-wrap: wrap; }
+    .mini-stat-box .num.profit { color: #2e7d32; }
+    .mini-stat-box .num.margin { color: #1565c0; }
+    .loss-banner {
+      display: none;
+      background: #ffebee;
+      border: 1px solid #ef9a9a;
+      color: #c62828;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+    .margin-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-inline-start: 4px;
+    }
+    .margin-badge.high { background: #e8f5e9; color: #2e7d32; }
+    .margin-badge.low  { background: #fff3e0; color: #ef6c00; }
+    .margin-badge.neg  { background: #ffebee; color: #c62828; }
+    .margin-badge.none { background: #f0f0f0; color: #888; }
+    .admin-table tr.loss-row { background: #fff5f5; }
+    .profit-preview {
+      padding: 10px 14px;
+      background: #f9f7f2;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+    }
+    .profit-preview.positive { color: #2e7d32; background: #e8f5e9; }
+    .profit-preview.negative { color: #c62828; background: #ffebee; }
+    .profit-preview.neutral  { color: #888; background: #f0f0f0; }
+    @media (max-width: 768px) {
+      .mini-stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
 </head>
 <body>
 
@@ -31,7 +78,7 @@
       <a href="products.html" class="admin-nav-item active"><span class="icon">📦</span><span>المنتجات</span></a>
       <a href="orders.html" class="admin-nav-item"><span class="icon">🛒</span><span>الطلبات</span></a>
       <a href="users.html" class="admin-nav-item"><span class="icon">👥</span><span>المستخدمين</span></a>
-      <a href="coupons.html" class="admin-nav-item active"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
+      <a href="coupons.html" class="admin-nav-item"><span class="icon">🎟️</span><span>أكواد الخصم</span></a>
       <a href="../index.html" class="admin-nav-item"><span class="icon">🏠</span><span>المتجر</span></a>
     </nav>
     <div class="admin-sidebar-footer">
@@ -65,7 +112,18 @@
       <div class="mini-stat-box"><div class="num" id="statInStock">-</div><div class="lbl">متوفرة</div></div>
       <div class="mini-stat-box"><div class="num" id="statLowStock">-</div><div class="lbl">مخزون منخفض</div></div>
       <div class="mini-stat-box"><div class="num" id="statOutStock">-</div><div class="lbl">نفذت</div></div>
+      <div class="mini-stat-box">
+        <div class="num profit" id="statPotentialProfit">-</div>
+        <div class="lbl">ربح متوقع من المخزون</div>
+      </div>
+      <div class="mini-stat-box">
+        <div class="num margin" id="statAvgMargin">-</div>
+        <div class="lbl">متوسط هامش الربح</div>
+      </div>
     </div>
+
+    <!-- Loss alert banner -->
+    <div class="loss-banner" id="lossAlertBanner"></div>
 
     <!-- Toolbar -->
     <div class="admin-toolbar">
@@ -141,8 +199,20 @@
             <input type="number" id="p-price" placeholder="12999" min="1" step="0.01" required>
           </div>
           <div class="admin-form-group">
+            <label>سعر التكلفة (ج.م) <span class="req">*</span></label>
+            <input type="number" id="p-cost" placeholder="9000" min="0" step="0.01" required>
+            <small style="color:var(--text-muted);font-size:11px">اللي اشتريت بيه المنتج</small>
+          </div>
+        </div>
+
+        <div class="admin-form-row">
+          <div class="admin-form-group">
             <label>السعر قبل الخصم</label>
             <input type="number" id="p-oldPrice" placeholder="14999" min="0" step="0.01">
+          </div>
+          <div class="admin-form-group">
+            <label>هامش الربح المتوقع</label>
+            <div class="profit-preview neutral" id="profitPreview">—</div>
           </div>
         </div>
 
@@ -213,6 +283,19 @@ let filteredProducts = [];
 let currentPage = 1;
 const perPage = 8;
 let deleteTargetId = null;
+
+// ===========================================
+// Helpers
+// ===========================================
+function formatMoney(n) {
+  return (Math.round(n) || 0).toLocaleString('ar-EG') + ' ج.م';
+}
+
+function getMarginClass(pct) {
+  if (pct >= 30) return 'high';
+  if (pct > 0) return 'low';
+  return 'neg';
+}
 
 // ===========================================
 // Status
@@ -298,16 +381,56 @@ async function loadProducts() {
   }
 }
 
+// ===========================================
+// Stats + Profits
+// ===========================================
 function updateStats() {
   const total = allProducts.length;
   const inStock = allProducts.filter(p => p.stock > 10).length;
   const lowStock = allProducts.filter(p => p.stock > 0 && p.stock <= 10).length;
   const outStock = allProducts.filter(p => p.stock <= 0).length;
+
   document.getElementById('statTotal').textContent = total;
   document.getElementById('statInStock').textContent = inStock;
   document.getElementById('statLowStock').textContent = lowStock;
   document.getElementById('statOutStock').textContent = outStock;
   document.getElementById('productsCount').textContent = `${total} منتج في المتجر`;
+
+  // حساب الأرباح
+  let potentialProfit = 0;
+  let totalMargin = 0;
+  let marginCount = 0;
+
+  allProducts.forEach(p => {
+    const price = Number(p.price) || 0;
+    const cost = Number(p.costPrice) || 0;
+    const stock = Number(p.stock) || 0;
+    if (price > 0) {
+      potentialProfit += (price - cost) * stock;
+      totalMargin += ((price - cost) / price) * 100;
+      marginCount++;
+    }
+  });
+
+  const avgMargin = marginCount ? (totalMargin / marginCount).toFixed(1) : 0;
+  document.getElementById('statPotentialProfit').textContent = formatMoney(potentialProfit);
+  document.getElementById('statAvgMargin').textContent = avgMargin + '%';
+
+  showLossAlert();
+}
+
+function showLossAlert() {
+  const banner = document.getElementById('lossAlertBanner');
+  const loss = allProducts.filter(p => Number(p.costPrice) > 0 && Number(p.price) < Number(p.costPrice));
+  if (!loss.length) {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    return;
+  }
+  banner.style.display = 'block';
+  banner.innerHTML = `⚠️ <strong>${loss.length} منتج</strong> بيتباع بخسارة: 
+    ${loss.slice(0, 3).map(p => `«${p.name}»`).join('، ')}
+    ${loss.length > 3 ? ` و${loss.length - 3} غيرهم` : ''}`;
 }
 
 function buildCategoryFilter() {
@@ -373,6 +496,8 @@ function renderTable() {
           <th>المنتج</th>
           <th>الفئة</th>
           <th>السعر</th>
+          <th>التكلفة</th>
+          <th>الربح/وحدة</th>
           <th>المخزون</th>
           <th>الحالة</th>
           <th style="text-align:left">إجراءات</th>
@@ -383,8 +508,19 @@ function renderTable() {
           const img = p.thumbnail || (p.images && p.images[0]) || 'https://via.placeholder.com/48';
           const stockCls = p.stock > 10 ? 'in' : p.stock > 0 ? 'low' : 'out';
           const stockText = p.stock > 10 ? `${p.stock} متوفر` : p.stock > 0 ? `${p.stock} متبقي` : 'نفذت';
+
+          const price = Number(p.price) || 0;
+          const cost = Number(p.costPrice) || 0;
+          const hasCost = cost > 0;
+          const unitProfit = price - cost;
+          const unitMargin = price ? ((unitProfit / price) * 100) : 0;
+          const isLoss = hasCost && unitProfit < 0;
+
+          const profitColor = !hasCost ? '#999' : unitProfit > 0 ? '#2e7d32' : unitProfit < 0 ? '#c62828' : '#888';
+          const marginCls = !hasCost ? 'none' : getMarginClass(unitMargin);
+
           return `
-            <tr>
+            <tr class="${isLoss ? 'loss-row' : ''}">
               <td>
                 <div class="product-cell">
                   <img src="${img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/48/f4f2ed/c9a961?text=LX'">
@@ -395,7 +531,16 @@ function renderTable() {
                 </div>
               </td>
               <td><span class="category-tag">${p.category || '—'}</span></td>
-              <td class="price-cell">${(p.price || 0).toLocaleString('ar-EG')} <span class="currency">ج.م</span></td>
+              <td class="price-cell">${price.toLocaleString('ar-EG')} <span class="currency">ج.م</span></td>
+              <td class="price-cell" style="color:var(--text-muted)">
+                ${hasCost ? cost.toLocaleString('ar-EG') + ' ج.م' : '—'}
+              </td>
+              <td style="font-weight:700;color:${profitColor};white-space:nowrap">
+                ${hasCost
+                  ? `${unitProfit.toLocaleString('ar-EG')} ج.م
+                     <span class="margin-badge ${marginCls}">${unitMargin.toFixed(0)}%</span>`
+                  : `<span class="margin-badge none">غير محدد</span>`}
+              </td>
               <td><span class="stock-cell ${stockCls}">${stockText}</span></td>
               <td>
                 <span class="status-badge-admin ${p.isActive !== false ? 'active' : 'inactive'}">
@@ -446,6 +591,35 @@ function renderTable() {
 }
 
 // ===========================================
+// Profit preview (فورم)
+// ===========================================
+function updateProfitPreview() {
+  const price = parseFloat(document.getElementById('p-price').value) || 0;
+  const cost = parseFloat(document.getElementById('p-cost').value) || 0;
+  const el = document.getElementById('profitPreview');
+
+  if (!price) {
+    el.textContent = '—';
+    el.className = 'profit-preview neutral';
+    return;
+  }
+
+  const profit = price - cost;
+  const margin = ((profit / price) * 100).toFixed(1);
+
+  if (profit > 0) {
+    el.className = 'profit-preview positive';
+    el.innerHTML = `📈 ${profit.toLocaleString('ar-EG')} ج.م مكسب (هامش ${margin}%)`;
+  } else if (profit < 0) {
+    el.className = 'profit-preview negative';
+    el.innerHTML = `⚠️ ${profit.toLocaleString('ar-EG')} ج.م خسارة (${margin}%)`;
+  } else {
+    el.className = 'profit-preview neutral';
+    el.textContent = 'لا ربح ولا خسارة';
+  }
+}
+
+// ===========================================
 // Add/Edit Modal
 // ===========================================
 function openAddModal() {
@@ -453,6 +627,8 @@ function openAddModal() {
   document.getElementById('productForm').reset();
   document.getElementById('productId').value = '';
   document.getElementById('p-active').checked = true;
+  document.getElementById('profitPreview').textContent = '—';
+  document.getElementById('profitPreview').className = 'profit-preview neutral';
   document.getElementById('productModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -467,6 +643,7 @@ function openEditModal(id) {
   document.getElementById('p-category').value = p.category || '';
   document.getElementById('p-brand').value = p.brand || '';
   document.getElementById('p-price').value = p.price || '';
+  document.getElementById('p-cost').value = p.costPrice || '';
   document.getElementById('p-oldPrice').value = p.oldPrice || '';
   document.getElementById('p-stock').value = p.stock || 0;
   document.getElementById('p-sku').value = p.sku || '';
@@ -474,6 +651,8 @@ function openEditModal(id) {
   document.getElementById('p-description').value = p.description || '';
   document.getElementById('p-featured').checked = !!p.isFeatured;
   document.getElementById('p-active').checked = p.isActive !== false;
+
+  updateProfitPreview();
 
   document.getElementById('productModal').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -493,6 +672,7 @@ async function saveProduct() {
     category: document.getElementById('p-category').value,
     brand: document.getElementById('p-brand').value.trim(),
     price: parseFloat(document.getElementById('p-price').value),
+    costPrice: parseFloat(document.getElementById('p-cost').value) || 0,
     oldPrice: parseFloat(document.getElementById('p-oldPrice').value) || null,
     stock: parseInt(document.getElementById('p-stock').value) || 0,
     sku: document.getElementById('p-sku').value.trim(),
@@ -505,6 +685,11 @@ async function saveProduct() {
   if (!data.name || !data.category || !data.price || data.stock < 0) {
     showToast('أكمل البيانات المطلوبة', 'error');
     return;
+  }
+
+  if (data.costPrice > 0 && data.costPrice >= data.price) {
+    const ok = confirm(`⚠️ سعر التكلفة (${data.costPrice}) أعلى من أو يساوي سعر البيع (${data.price}).\nالمنتج هيتباع بخسارة. متأكد؟`);
+    if (!ok) return;
   }
 
   data.images = data.thumbnail ? [data.thumbnail] : [];
@@ -524,6 +709,7 @@ async function saveProduct() {
     await loadProducts();
   } catch (err) {
     showToast(err.message || 'فشل الحفظ', 'error');
+  } finally {
     btn.disabled = false;
     btn.textContent = '💾 حفظ المنتج';
   }
@@ -560,6 +746,7 @@ async function confirmDelete() {
     await loadProducts();
   } catch (err) {
     showToast(err.message || 'فشل الحذف', 'error');
+  } finally {
     btn.disabled = false;
     btn.textContent = '🗑 حذف نهائي';
   }
@@ -575,6 +762,9 @@ document.getElementById('modalSaveBtn').addEventListener('click', saveProduct);
 document.getElementById('deleteCloseBtn').addEventListener('click', closeDeleteModal);
 document.getElementById('deleteCancelBtn').addEventListener('click', closeDeleteModal);
 document.getElementById('deleteConfirmBtn').addEventListener('click', confirmDelete);
+
+document.getElementById('p-price').addEventListener('input', updateProfitPreview);
+document.getElementById('p-cost').addEventListener('input', updateProfitPreview);
 
 document.getElementById('searchInput').addEventListener('input', applyFilters);
 document.getElementById('categoryFilter').addEventListener('change', applyFilters);
