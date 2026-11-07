@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e17">
+  <meta name="description" content="تتبع شحنتك على LUXE Store لحظة بلحظة — أدخل رقم التتبع لمتابعة حالة طلبك.">
   <title>تتبع الشحنة - LUXE Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -96,6 +97,8 @@
         spellcheck="false"
         maxlength="20"
         dir="ltr"
+        inputmode="text"
+        aria-label="رقم التتبع"
       >
       <button id="trackBtn" type="button">
         <span class="btn-text">🔍 تتبع</span>
@@ -113,7 +116,7 @@
     </div>
   </div>
 
-  <div class="tracking-result" id="trackingResult"></div>
+  <div class="tracking-result" id="trackingResult" aria-live="polite" aria-atomic="false"></div>
 </div>
 
 <!-- ============================================
@@ -172,39 +175,71 @@ const TIMELINE_STAGES = [
   { key: 'delivered',  label: 'تم التوصيل',       desc: 'تم توصيل الشحنة بنجاح' }
 ];
 
-const RECENT_KEY = 'luxe_recent_tracks';
-const MAX_RECENT = 5;
+const RECENT_KEY  = 'luxe_recent_tracks';
+const MAX_RECENT  = 5;
+const TRACKING_RE = /^TRK-[A-Z0-9]{4,}$/;
+const ETA_DAYS    = 3;
+const DAY_MS      = 24 * 60 * 60 * 1000;
+const FALLBACK_IMG = 'https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE';
+
+/* ============================================
+   UTILS
+============================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+/** Escape HTML to prevent XSS when injecting into innerHTML */
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
+}
+
+/** Safe URL for images — only allow http(s) or relative */
+function safeImg(url) {
+  if (!url || typeof url !== 'string') return FALLBACK_IMG;
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed) || /^(\.{1,2}\/|\/)/.test(trimmed)) return trimmed;
+  return FALLBACK_IMG;
+}
 
 /* ============================================
    STATE
 ============================================ */
 let currentUser = null;
-let currentOrder = null;
+let isTracking  = false;
 
 /* ============================================
    USER AREA
 ============================================ */
 async function renderUserArea() {
-  const userArea = document.getElementById('userArea');
-  const mobileUserArea = document.getElementById('mobileUserArea');
+  const userArea = $('#userArea');
+  const mobileUserArea = $('#mobileUserArea');
   const user = await getCurrentUser();
 
   if (user) {
     const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-    const initial = displayName.charAt(0).toUpperCase();
+    const initial = esc(displayName.charAt(0).toUpperCase());
+    const safeName = esc(displayName);
 
     userArea.innerHTML = `
       <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
-        <span>${displayName}</span>
+        <span>${safeName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
 
-    document.getElementById('userChip').addEventListener('click', () => {
-      if (confirm('هل تريد تسجيل الخروج؟')) {
-        logout().then(() => {
-          showToast('تم تسجيل الخروج', 'info');
-          setTimeout(() => location.reload(), 800);
-        });
+    $('#userChip')?.addEventListener('click', async () => {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      try {
+        await logout();
+        showToast('تم تسجيل الخروج', 'info');
+        setTimeout(() => location.reload(), 800);
+      } catch (err) {
+        showToast('تعذر تسجيل الخروج', 'error');
       }
     });
 
@@ -213,13 +248,16 @@ async function renderUserArea() {
         <a href="profile.html" class="mobile-user-chip">
           <div class="user-avatar">${initial}</div>
           <div class="user-info">
-            <div class="user-name">${displayName}</div>
+            <div class="user-name">${safeName}</div>
             <div class="user-role">عرض الحساب</div>
           </div>
         </a>`;
     }
   } else {
-    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    userArea.innerHTML = `
+      <a href="login.html" class="user-chip" style="padding:6px 16px">
+        <span>دخول</span><div class="user-avatar">👤</div>
+      </a>`;
     if (mobileUserArea) {
       mobileUserArea.innerHTML = `
         <a href="login.html" class="mobile-user-chip">
@@ -237,10 +275,11 @@ async function renderUserArea() {
    MOBILE NAV / SEARCH
 ============================================ */
 function setupMobileNav() {
-  const toggle = document.getElementById('mobileNavToggle');
-  const drawer = document.getElementById('mobileNavDrawer');
-  const overlay = document.getElementById('mobileNavOverlay');
-  const closeBtn = document.getElementById('mobileNavClose');
+  const toggle  = $('#mobileNavToggle');
+  const drawer  = $('#mobileNavDrawer');
+  const overlay = $('#mobileNavOverlay');
+  const closeBtn = $('#mobileNavClose');
+  if (!toggle || !drawer || !overlay) return;
 
   const open = () => {
     drawer.classList.add('open');
@@ -255,30 +294,37 @@ function setupMobileNav() {
     document.body.style.overflow = '';
   };
 
-  toggle?.addEventListener('click', open);
+  toggle.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
-  overlay?.addEventListener('click', close);
-  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+  overlay.addEventListener('click', close);
+  $$('a', drawer).forEach((a) => a.addEventListener('click', close));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) close();
   });
 }
 
 function setupMobileSearch() {
-  const btn = document.getElementById('mobileSearchBtn');
-  const overlay = document.getElementById('mobileSearchOverlay');
-  const closeBtn = document.getElementById('closeSearchBtn');
-  const input = document.getElementById('mobileSearchInput');
-  const desktopInput = document.getElementById('searchInput');
+  const btn      = $('#mobileSearchBtn');
+  const overlay  = $('#mobileSearchOverlay');
+  const closeBtn = $('#closeSearchBtn');
+  const input    = $('#mobileSearchInput');
+  const desktopInput = $('#searchInput');
+  if (!overlay) return;
 
   btn?.addEventListener('click', () => {
     overlay.classList.add('active');
-    setTimeout(() => input.focus(), 100);
+    setTimeout(() => input?.focus(), 100);
   });
   closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
 
+  // Close when clicking the backdrop (outside .container)
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
+
   const goSearch = (val) => {
-    if (val && val.trim()) window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+    const q = (val || '').trim();
+    if (q) window.location.href = `index.html?search=${encodeURIComponent(q)}`;
   };
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
   desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
@@ -289,23 +335,25 @@ function setupMobileSearch() {
 ============================================ */
 function getRecentTracks() {
   try {
-    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
-  } catch (e) { return []; }
+    const raw = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(raw) ? raw.filter((x) => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
 }
 
 function addRecentTrack(trackingId) {
   try {
-    let recent = getRecentTracks();
-    recent = recent.filter(id => id !== trackingId);
-    recent.unshift(trackingId);
-    recent = recent.slice(0, MAX_RECENT);
+    const recent = [trackingId, ...getRecentTracks().filter((id) => id !== trackingId)]
+      .slice(0, MAX_RECENT);
     localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
     renderRecentTracks();
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore quota errors */ }
 }
 
 function renderRecentTracks() {
-  const wrap = document.getElementById('recentTracks');
+  const wrap = $('#recentTracks');
+  if (!wrap) return;
   const recent = getRecentTracks();
 
   if (recent.length === 0) {
@@ -316,31 +364,91 @@ function renderRecentTracks() {
   wrap.innerHTML = `
     <div class="recent-tracks-label">🕐 آخر عمليات تتبع:</div>
     <div class="recent-tracks-list">
-      ${recent.map(id => `
-        <button class="recent-track-chip" data-id="${id}" type="button">
-          <span class="mono">${id}</span>
+      ${recent.map((id) => `
+        <button class="recent-track-chip" data-id="${esc(id)}" type="button">
+          <span class="mono">${esc(id)}</span>
           <span class="chip-arrow">→</span>
         </button>
       `).join('')}
-    </div>
-  `;
+    </div>`;
 
-  wrap.querySelectorAll('.recent-track-chip').forEach(btn => {
+  bindRecentChips(wrap);
+}
+
+function bindRecentChips(root) {
+  $$('.recent-track-chip', root).forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.getElementById('trackingInput').value = btn.dataset.id;
+      const input = $('#trackingInput');
+      if (!input) return;
+      input.value = btn.dataset.id || '';
       trackShipment();
     });
   });
 }
 
 /* ============================================
+   FORMAT TRACKING INPUT
+   - فقط يعالج البادئة دون كسر موضع المؤشر
+============================================ */
+function formatTrackingInput(val) {
+  let v = String(val || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!v) return v;
+
+  // Already prefixed
+  if (v.startsWith('TRK-')) return v;
+
+  // "TRK" without dash -> "TRK-"
+  if (v === 'TRK') return v;
+  if (v.startsWith('TRK') && v.length > 3) return 'TRK-' + v.slice(3);
+
+  // Only auto-prefix if raw alphanumeric and user has typed enough
+  if (v.length > 3 && /^[A-Z0-9]+$/.test(v)) return 'TRK-' + v;
+
+  return v;
+}
+
+/**
+ * Smart input handler: keeps cursor stable by only auto-formatting when
+ * the caret is at the end of the field (typical typing/pasting scenario).
+ */
+function handleTrackingInput(e) {
+  const el = e.target;
+  const { selectionStart, selectionEnd, value } = el;
+  if (selectionStart !== value.length || selectionStart !== selectionEnd) return;
+
+  const formatted = formatTrackingInput(value);
+  if (formatted !== value) {
+    el.value = formatted;
+    const pos = formatted.length;
+    try { el.setSelectionRange(pos, pos); } catch { /* ignore */ }
+  }
+}
+
+/* ============================================
    INIT
 ============================================ */
 async function init() {
-  currentUser = await getCurrentUser();
+  try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
 
-  // Show initial message
-  document.getElementById('trackingResult').innerHTML = `
+  renderInitialMessage();
+  renderRecentTracks();
+
+  const params = new URLSearchParams(window.location.search);
+  const trackParam = params.get('track');
+  if (trackParam) {
+    const input = $('#trackingInput');
+    if (input) input.value = formatTrackingInput(trackParam);
+    setTimeout(() => trackShipment(), 300);
+  }
+
+  const input = $('#trackingInput');
+  input?.addEventListener('input', handleTrackingInput);
+}
+
+function renderInitialMessage() {
+  const result = $('#trackingResult');
+  if (!result) return;
+  result.innerHTML = `
     <div class="tracking-message">
       <div class="emoji">📦</div>
       <h2>أدخل رقم التتبع</h2>
@@ -350,84 +458,51 @@ async function init() {
         : `<div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong></div>`
       }
     </div>`;
-
-  // Render recent
-  renderRecentTracks();
-
-  // Check URL param
-  const params = new URLSearchParams(window.location.search);
-  const trackParam = params.get('track');
-  if (trackParam) {
-    document.getElementById('trackingInput').value = formatTrackingInput(trackParam);
-    setTimeout(() => trackShipment(), 300);
-  }
-
-  // Auto-format input
-  const input = document.getElementById('trackingInput');
-  input.addEventListener('input', (e) => {
-    const cursorPos = e.target.selectionStart;
-    const oldVal = e.target.value;
-    const newVal = formatTrackingInput(oldVal);
-    if (newVal !== oldVal) {
-      e.target.value = newVal;
-      // Keep cursor position stable
-      const diff = newVal.length - oldVal.length;
-      try {
-        e.target.setSelectionRange(cursorPos + diff, cursorPos + diff);
-      } catch (err) { /* ignore */ }
-    }
-  });
-}
-
-/* ============================================
-   FORMAT TRACKING
-============================================ */
-function formatTrackingInput(val) {
-  let v = val.trim().toUpperCase().replace(/\s+/g, '');
-  // If starts with TRK- keep as is
-  if (v.startsWith('TRK-')) return v;
-  // If starts with TRK without dash
-  if (v.startsWith('TRK') && v.length > 3) return 'TRK-' + v.slice(3);
-  // If user just types letters/digits, add prefix when length > 3 and not empty
-  if (v.length > 3 && /^[A-Z0-9]+$/.test(v)) {
-    return 'TRK-' + v;
-  }
-  return v;
 }
 
 /* ============================================
    TRACK
 ============================================ */
 async function trackShipment() {
-  const input = document.getElementById('trackingInput');
-  const btn = document.getElementById('trackBtn');
-  const btnText = btn.querySelector('.btn-text');
-  const btnLoading = btn.querySelector('.btn-loading');
-  const result = document.getElementById('trackingResult');
-  let trackingId = formatTrackingInput(input.value);
+  if (isTracking) return;
+
+  const input      = $('#trackingInput');
+  const btn        = $('#trackBtn');
+  const btnText    = btn?.querySelector('.btn-text');
+  const btnLoading = btn?.querySelector('.btn-loading');
+  const result     = $('#trackingResult');
+  if (!input || !btn || !result) return;
+
+  const trackingId = formatTrackingInput(input.value);
 
   if (!trackingId) {
     showToast('أدخل رقم التتبع الأول', 'warning');
     input.focus();
     return;
   }
-
-  // Validate format
-  if (!/^TRK-[A-Z0-9]{4,}$/.test(trackingId)) {
-    showToast('رقم التتبع غير صحيح — يبدأ بـ TRK- ويتكون من 4 أحرف على الأقل', 'warning');
+  if (!TRACKING_RE.test(trackingId)) {
+    showToast('رقم التتبع غير صحيح — يبدأ بـ TRK- ويتكون من 4 أحرف/أرقام على الأقل', 'warning');
     input.focus();
     return;
   }
 
-  // Update URL
-  const url = new URL(window.location);
-  url.searchParams.set('track', trackingId);
-  window.history.replaceState({}, '', url);
+  // Normalize input value
+  input.value = trackingId;
 
-  // Update UI
+  // Update URL (shareable)
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set('track', trackingId);
+    window.history.replaceState({}, '', url);
+  } catch { /* ignore */ }
+
+  // Loading state
+  isTracking = true;
   btn.disabled = true;
-  btnText.style.display = 'none';
-  btnLoading.style.display = 'inline-flex';
+  btn.classList.add('is-loading');
+  if (btnText) btnText.style.display = 'none';
+  if (btnLoading) btnLoading.style.display = 'inline-flex';
+
   result.innerHTML = `
     <div class="tracking-message">
       <div class="emoji" style="animation:spin 1s linear infinite;display:inline-block">⏳</div>
@@ -436,108 +511,173 @@ async function trackShipment() {
 
   try {
     const res = await api.orders.track(trackingId);
-    currentOrder = res.data;
+    const order = res?.data;
+    if (!order) throw new Error('لا توجد بيانات للشحنة');
     addRecentTrack(trackingId);
-    renderTracking(res.data);
+    renderTracking(order);
   } catch (err) {
-    console.error(err);
-    result.innerHTML = `
-      <div class="tracking-message">
-        <div class="emoji">😕</div>
-        <h2>لم يتم العثور على الشحنة</h2>
-        <p>${err.message || 'تأكد من رقم التتبع وحاول مرة أخرى'}</p>
-        <div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong> ويتكون من 6 أحرف</div>
-        ${getRecentTracks().length > 0 ? `
-          <div style="margin-top:16px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">جرب أرقامك السابقة:</div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
-              ${getRecentTracks().map(id => `<button class="recent-track-chip" data-id="${id}" type="button"><span class="mono">${id}</span></button>`).join('')}
-            </div>
-          </div>` : ''}
-      </div>`;
-
-    // Attach handlers to retry buttons
-    result.querySelectorAll('.recent-track-chip').forEach(b => {
-      b.addEventListener('click', () => {
-        input.value = b.dataset.id;
-        trackShipment();
-      });
-    });
+    console.error('[trackShipment]', err);
+    renderTrackError(err, trackingId);
   } finally {
+    isTracking = false;
     btn.disabled = false;
-    btnText.style.display = 'inline';
-    btnLoading.style.display = 'none';
+    btn.classList.remove('is-loading');
+    if (btnText) btnText.style.display = 'inline';
+    if (btnLoading) btnLoading.style.display = 'none';
   }
+}
+
+function renderTrackError(err, trackingId) {
+  const result = $('#trackingResult');
+  if (!result) return;
+  const message = err?.message || 'تأكد من رقم التتبع وحاول مرة أخرى';
+  const recent = getRecentTracks().filter((id) => id !== trackingId);
+
+  result.innerHTML = `
+    <div class="tracking-message">
+      <div class="emoji">😕</div>
+      <h2>لم يتم العثور على الشحنة</h2>
+      <p>${esc(message)}</p>
+      <div class="hint">رقم التتبع يبدأ بـ <strong>TRK-</strong> ويتكون من 4 أحرف/أرقام على الأقل</div>
+      ${recent.length > 0 ? `
+        <div style="margin-top:16px">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">جرب أرقامك السابقة:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+            ${recent.map((id) => `
+              <button class="recent-track-chip" data-id="${esc(id)}" type="button">
+                <span class="mono">${esc(id)}</span>
+              </button>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>`;
+
+  bindRecentChips(result);
 }
 
 /* ============================================
    RENDER TRACKING
 ============================================ */
+function computeEstimatedDelivery(order) {
+  // Prefer backend-provided ETA when available
+  if (order.estimatedDelivery) {
+    const d = new Date(order.estimatedDelivery);
+    if (!isNaN(d.getTime())) return { date: d, overdue: d < new Date() };
+  }
+  if (!order.createdAt) return null;
+  const created = new Date(order.createdAt);
+  if (isNaN(created.getTime())) return null;
+  const est = new Date(created.getTime() + ETA_DAYS * DAY_MS);
+  return { date: est, overdue: est < new Date() };
+}
+
 function renderTracking(order) {
-  const result = document.getElementById('trackingResult');
-  const st = STATUS_MAP[order.status] || STATUS_MAP.pending;
-  const history = order.trackingHistory || [];
-  const addr = order.shippingAddress || {};
+  const result = $('#trackingResult');
+  if (!result) return;
+
+  const st        = STATUS_MAP[order.status] || STATUS_MAP.pending;
+  const history   = Array.isArray(order.trackingHistory) ? order.trackingHistory : [];
+  const addr      = order.shippingAddress || {};
   const currentIdx = st.stepIdx;
 
-  // Estimated delivery (mock: 3 days from order date)
-  let estimatedDelivery = '';
-  if (order.status !== 'delivered' && order.status !== 'cancelled' && order.createdAt) {
-    const orderDate = new Date(order.createdAt);
-    const estDate = new Date(orderDate.getTime() + 3 * 24 * 60 * 60 * 1000);
-    estimatedDelivery = formatDate(estDate);
-  }
+  const eta = (order.status !== 'delivered' && order.status !== 'cancelled')
+    ? computeEstimatedDelivery(order)
+    : null;
 
   // Build timeline
   const timelineHTML = TIMELINE_STAGES.map((stage, i) => {
-    const isDone = i < currentIdx;
+    const isDone    = i < currentIdx;
     const isCurrent = i === currentIdx;
-    const cls = isDone ? 'done' : isCurrent ? 'current' : '';
-    const histItem = history.find(h => h.status === stage.key);
+    const cls       = isDone ? 'done' : isCurrent ? 'current' : '';
+    // Use the LATEST history entry for this stage
+    const histItem  = [...history].reverse().find((h) => h.status === stage.key);
+    const timeHTML  = histItem?.timestamp
+      ? `<div class="time">${esc(formatDate(histItem.timestamp))}</div>`
+      : '';
     return `
       <div class="ship-step ${cls}">
-        <h4>${stage.label}</h4>
-        <p>${stage.desc}</p>
-        ${histItem && histItem.timestamp ? `<div class="time">${formatDate(histItem.timestamp)}</div>` : ''}
+        <h4>${esc(stage.label)}</h4>
+        <p>${esc(stage.desc)}</p>
+        ${timeHTML}
       </div>`;
   }).join('');
+
+  const etaHTML = eta ? `
+    <div class="estimated-delivery ${eta.overdue ? 'is-overdue' : ''}">
+      <div class="est-label">📅 ${eta.overdue ? 'التوصيل متأخر عن المتوقع' : 'التوصيل المتوقع'}</div>
+      <div class="est-date">${esc(formatDate(eta.overdue ? new Date() : eta.date))}</div>
+    </div>` : '';
+
+  const itemsHTML = (order.items && order.items.length > 0) ? `
+    <div class="ship-items-card">
+      <h3>📦 محتويات الشحنة</h3>
+      ${order.items.map((i) => {
+        const name  = esc(i.name || 'منتج');
+        const qty   = Number(i.qty) || 0;
+        const price = Number(i.price) || 0;
+        const img   = esc(safeImg(i.image));
+        return `
+          <div class="ship-item-row">
+            <img src="${img}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+            <div class="info">
+              <h5>${name}</h5>
+              <span>الكمية: ${qty}</span>
+            </div>
+            <div class="price">${esc(formatPrice(price * qty))}</div>
+          </div>`;
+      }).join('')}
+    </div>` : '';
+
+  const addressHTML = `
+    <div class="ship-info-card">
+      <div class="ship-address-card">
+        <h4>📍 عنوان التوصيل</h4>
+        <p>
+          <strong>${esc(addr.name || '')}</strong><br>
+          ${esc(addr.phone || '')}<br>
+          ${esc(addr.street || '')}${addr.building ? `, مبنى ${esc(addr.building)}` : ''}${addr.apartment ? `, شقة ${esc(addr.apartment)}` : ''}<br>
+          ${esc(addr.area || '')}, ${esc(addr.city || '')}
+        </p>
+      </div>
+    </div>`;
+
+  const cancelledHTML = `
+    <div class="cancelled-box">
+      <div class="cancelled-emoji">❌</div>
+      <h3>تم إلغاء الطلب</h3>
+      <p>هذا الطلب تم إلغاؤه — لو دفعت الشحن مسبقًا، هيرجعلك خلال 3-5 أيام عمل</p>
+    </div>`;
 
   result.innerHTML = `
     <div class="ship-info-card">
       <div class="ship-info-header">
         <div>
           <h3>تفاصيل الشحنة</h3>
-          <div class="order-num">${order.orderNumber || '—'}</div>
+          <div class="order-num">${esc(order.orderNumber || '—')}</div>
         </div>
-        <span class="ship-status-badge ${st.cls}">${st.label}</span>
+        <span class="ship-status-badge ${esc(st.cls)}">${esc(st.label)}</span>
       </div>
 
-      ${estimatedDelivery ? `
-        <div class="estimated-delivery">
-          <div class="est-label">📅 التوصيل المتوقع</div>
-          <div class="est-date">${estimatedDelivery}</div>
-        </div>
-      ` : ''}
+      ${etaHTML}
 
       <div class="ship-info-grid">
         <div class="ship-info-item">
           <div class="label">رقم التتبع</div>
           <div class="value tracking-id-val">
-            <span class="mono">${order.trackingId}</span>
-            <button class="copy-mini-btn" data-copy="${order.trackingId}" type="button" aria-label="نسخ">📋</button>
+            <span class="mono">${esc(order.trackingId || '—')}</span>
+            <button class="copy-mini-btn" data-copy="${esc(order.trackingId || '')}" type="button" aria-label="نسخ رقم التتبع">📋</button>
           </div>
         </div>
         <div class="ship-info-item">
           <div class="label">الحالة</div>
-          <div class="value">${st.label}</div>
+          <div class="value">${esc(st.label)}</div>
         </div>
         <div class="ship-info-item">
           <div class="label">المستلم</div>
-          <div class="value">${order.customer?.name || '—'}</div>
+          <div class="value">${esc(order.customer?.name || '—')}</div>
         </div>
         <div class="ship-info-item">
           <div class="label">الوجهة</div>
-          <div class="value">${addr.city || ''}${addr.area ? `, ${addr.area}` : ''}</div>
+          <div class="value">${esc(addr.city || '')}${addr.area ? `, ${esc(addr.area)}` : ''}</div>
         </div>
       </div>
 
@@ -549,58 +689,32 @@ function renderTracking(order) {
 
     <div class="ship-timeline-card">
       <h3>📊 مراحل الشحنة</h3>
-      ${order.status === 'cancelled' ? `
-        <div class="cancelled-box">
-          <div class="cancelled-emoji">❌</div>
-          <h3>تم إلغاء الطلب</h3>
-          <p>هذا الطلب تم إلغاؤه — لو دفعت الشحن مسبقًا، هيرجعلك خلال 3-5 أيام عمل</p>
-        </div>` : `
-        <div class="ship-timeline">${timelineHTML}</div>
-      `}
+      ${order.status === 'cancelled' ? cancelledHTML : `<div class="ship-timeline">${timelineHTML}</div>`}
     </div>
 
-    ${order.items && order.items.length > 0 ? `
-      <div class="ship-items-card">
-        <h3>📦 محتويات الشحنة</h3>
-        ${order.items.map(i => `
-          <div class="ship-item-row">
-            <img src="${i.image || 'https://via.placeholder.com/56'}" alt="${i.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/56/f4f2ed/c9a961?text=LUXE'">
-            <div class="info">
-              <h5>${i.name}</h5>
-              <span>الكمية: ${i.qty}</span>
-            </div>
-            <div class="price">${formatPrice(i.price * i.qty)}</div>
-          </div>
-        `).join('')}
-      </div>` : ''}
-
-    <div class="ship-info-card">
-      <div class="ship-address-card">
-        <h4>📍 عنوان التوصيل</h4>
-        <p>
-          <strong>${addr.name || ''}</strong><br>
-          ${addr.phone || ''}<br>
-          ${addr.street || ''}${addr.building ? `, مبنى ${addr.building}` : ''}${addr.apartment ? `, شقة ${addr.apartment}` : ''}<br>
-          ${addr.area || ''}, ${addr.city || ''}
-        </p>
-      </div>
-    </div>
+    ${itemsHTML}
+    ${addressHTML}
   `;
 
-  // Attach handlers
-  result.querySelectorAll('.copy-mini-btn').forEach(btn => {
+  bindResultHandlers(result);
+}
+
+function bindResultHandlers(root) {
+  $$('.copy-mini-btn', root).forEach((btn) => {
     btn.addEventListener('click', async () => {
+      const value = btn.dataset.copy || '';
+      if (!value) return;
       try {
-        await navigator.clipboard.writeText(btn.dataset.copy);
+        await navigator.clipboard.writeText(value);
         showToast('تم نسخ رقم التتبع ✓', 'success');
-      } catch (e) {
+      } catch {
         showToast('تعذر النسخ', 'error');
       }
     });
   });
 
-  document.getElementById('refreshTrackBtn')?.addEventListener('click', () => trackShipment());
-  document.getElementById('shareTrackBtn')?.addEventListener('click', shareTracking);
+  $('#refreshTrackBtn', root)?.addEventListener('click', () => trackShipment());
+  $('#shareTrackBtn', root)?.addEventListener('click', shareTracking);
 }
 
 /* ============================================
@@ -608,40 +722,44 @@ function renderTracking(order) {
 ============================================ */
 async function shareTracking() {
   const url = window.location.href;
+  const data = {
+    title: 'تتبع الشحنة - LUXE Store',
+    text: 'تتبع شحنتك على LUXE Store',
+    url
+  };
   try {
     if (navigator.share) {
-      await navigator.share({
-        title: 'تتبع الشحنة - LUXE Store',
-        text: `تتبع شحنتك على LUXE Store`,
-        url
-      });
+      await navigator.share(data);
     } else {
       await navigator.clipboard.writeText(url);
       showToast('تم نسخ رابط التتبع ✓', 'success');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') {
-      showToast('تعذر المشاركة', 'error');
-    }
+    if (err?.name !== 'AbortError') showToast('تعذر المشاركة', 'error');
   }
 }
 
 /* ============================================
    EVENTS
 ============================================ */
-document.getElementById('trackBtn').addEventListener('click', trackShipment);
-document.getElementById('trackingInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') trackShipment();
+$('#trackBtn')?.addEventListener('click', trackShipment);
+$('#trackingInput')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); trackShipment(); }
 });
 
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('mainHeader');
-  if (window.scrollY > 30) header.classList.add('scrolled');
-  else header.classList.remove('scrolled');
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    const header = $('#mainHeader');
+    if (header) header.classList.toggle('scrolled', window.scrollY > 30);
+    scrollTicking = false;
+  });
 }, { passive: true });
 
 /* ============================================
-   INIT
+   BOOTSTRAP
 ============================================ */
 renderUserArea();
 updateCartBadge();
