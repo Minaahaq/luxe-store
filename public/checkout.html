@@ -11,51 +11,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/app-feel.js" defer></script>
-  
-  <style>
-    /* ستايل الشريط السفلي (Sticky Bar) لضمان ظهوره */
-    .sticky-checkout-bar {
-      position: fixed;
-      bottom: 80;
-      left: 0;
-      right: 0;
-      background: #fff;
-      border-top: 1px solid #e5e3dd;
-      padding: 12px 20px;
-      display: none; /* مخفي افتراضياً */
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      z-index: 9999; /* فوق أي عنصر */
-      box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08);
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    }
-    .sticky-checkout-info { display: flex; flex-direction: column; }
-    .sticky-checkout-label { font-size: 11px; color: #6b7280; font-weight: 600; }
-    .sticky-checkout-total { font-family: 'Tajawal', sans-serif; font-size: 20px; font-weight: 900; color: #a8894a; }
-    .sticky-checkout-btn {
-      padding: 12px 24px;
-      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
-      color: #c9a961;
-      border-radius: 14px;
-      font-size: 14px;
-      font-weight: 800;
-      white-space: nowrap;
-      transition: .3s;
-      border: none;
-      cursor: pointer;
-    }
-    .sticky-checkout-btn:hover {
-      background: linear-gradient(135deg, #c9a961 0%, #a8894a 100%);
-      color: #0a0e17;
-    }
-    @media (min-width: 769px) {
-      .sticky-checkout-bar { display: none !important; }
-    }
-    @media (max-width: 768px) {
-      body { padding-bottom: 80px; }
-    }
-  </style>
 </head>
 <body>
 
@@ -148,8 +103,9 @@
 
 <!-- ============================================
      STICKY SUMMARY BAR (MOBILE)
+     شيلنا الـ style="display:none" من هنا
 ============================================ -->
-<div class="sticky-checkout-bar" id="stickySummaryBar" style="display:none">
+<div class="sticky-checkout-bar" id="stickySummaryBar">
   <div class="sticky-checkout-info">
     <div class="sticky-checkout-label">الإجمالي</div>
     <div class="sticky-checkout-total" id="stickyTotal">— ج.م</div>
@@ -1062,21 +1018,27 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 /* ============================================
-   STICKY BAR (RESPONSIVE)
+   STICKY BAR (RESPONSIVE) - FIXED
 ============================================ */
 function setupStickyBar() {
-  const bar = $('#stickySummaryBar');
+  const bar = document.getElementById('stickySummaryBar');
   if (!bar) return;
-  const mq = window.matchMedia('(max-width: 768px)');
-  const sync = () => { 
-    if (mq.matches) {
+  
+  // إظهار الشريط بس على الموبايل
+  if (window.innerWidth <= 768) {
+    bar.style.display = 'flex';
+  } else {
+    bar.style.display = 'none';
+  }
+  
+  // تحديث الحالة لو المستخدم غير حجم الشاشة
+  window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
       bar.style.display = 'flex';
     } else {
       bar.style.display = 'none';
     }
-  };
-  mq.addEventListener?.('change', sync);
-  sync();
+  });
 }
 
 /* ============================================
@@ -1086,7 +1048,7 @@ renderUserArea();
 updateCartBadge();
 setupMobileNav();
 setupMobileSearch();
-setupStickyBar();
+setupStickyBar(); // 👈 شغل الشريط
 initCheckout();
 </script>
 
