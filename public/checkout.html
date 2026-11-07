@@ -1023,24 +1023,27 @@ window.addEventListener('scroll', () => {
 function setupStickyBar() {
   const bar = document.getElementById('stickySummaryBar');
   if (!bar) return;
-  
-  // إظهار الشريط بس على الموبايل
-  if (window.innerWidth <= 768) {
-    bar.style.display = 'flex';
-  } else {
-    bar.style.display = 'none';
-  }
-  
-  // تحديث الحالة لو المستخدم غير حجم الشاشة
-  window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768) {
-      bar.style.display = 'flex';
-    } else {
-      bar.style.display = 'none';
-    }
-  });
-}
 
+  const mobileQuery = window.matchMedia('(max-width: 768px)');
+
+  function updateBar() {
+    if (mobileQuery.matches) {
+      bar.style.setProperty('display', 'flex', 'important');
+      bar.style.setProperty('visibility', 'visible', 'important');
+      bar.style.setProperty('opacity', '1', 'important');
+    } else {
+      bar.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  updateBar();
+
+  if (mobileQuery.addEventListener) {
+    mobileQuery.addEventListener('change', updateBar);
+  } else {
+    mobileQuery.addListener(updateBar);
+  }
+}
 /* ============================================
    BOOTSTRAP
 ============================================ */
