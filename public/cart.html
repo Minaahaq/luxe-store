@@ -7,13 +7,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="سلة المشتريات - LUXE Store">
   <title>السلة - LUXE Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/app-feel.js" defer></script>
 </head>
- <script src="js/app-feel.js" defer></script>
 <body>
 
 <!-- ============================================
@@ -87,7 +88,7 @@
      CART
 ============================================ -->
 <div class="container">
-  <div class="cart-layout" id="cartLayout">
+  <div class="cart-layout" id="cartLayout" aria-live="polite">
     <div class="cart-items-wrap">
       <div style="padding:30px"><div class="skeleton" style="height:100px;border-radius:14px"></div></div>
     </div>
@@ -113,7 +114,7 @@
 <!-- ============================================
      UNDO TOAST CONTAINER
 ============================================ -->
-<div id="undoToastContainer"></div>
+<div id="undoToastContainer" aria-live="polite" aria-atomic="false"></div>
 
 <!-- ============================================
      FOOTER
@@ -153,35 +154,83 @@ import {
 /* ============================================
    CONFIG
 ============================================ */
-const SHIPPING_COST = 200;
-const FREE_SHIPPING_THRESHOLD = 2000; // شحن مجاني بعد 2000 ج.م
+const SHIPPING_COST = 250;
+const FREE_SHIPPING_THRESHOLD = 2000;
+const COUPON_KEY = 'luxe_applied_coupon';
+const FALLBACK_IMG = 'https://via.placeholder.com/100/f4f2ed/c9a961?text=LUXE';
 
+/* ============================================
+   UTILS
+============================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+function safeImg(url, fallback = FALLBACK_IMG) {
+  if (!url || typeof url !== 'string') return fallback;
+  const t = url.trim();
+  if (/^https?:\/\//i.test(t) || /^(\.{1,2}\/|\/)/.test(t)) return t;
+  return fallback;
+}
+
+function safeNum(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/* ============================================
+   STATE
+============================================ */
 let appliedCoupon = null;
+
+// تحميل الكوبون من localStorage بشكل آمن
+try {
+  const saved = localStorage.getItem(COUPON_KEY);
+  if (saved) {
+    const c = JSON.parse(saved);
+    if (c && typeof c.code === 'string' && Number.isFinite(Number(c.discountAmount))) {
+      appliedCoupon = {
+        code: c.code,
+        label: typeof c.label === 'string' ? c.label : '',
+        discountAmount: Math.max(0, Number(c.discountAmount))
+      };
+    }
+  }
+} catch { appliedCoupon = null; }
 
 /* ============================================
    USER AREA
 ============================================ */
 async function renderUserArea() {
-  const userArea = document.getElementById('userArea');
-  const mobileUserArea = document.getElementById('mobileUserArea');
-  const user = await getCurrentUser();
+  const userArea = $('#userArea');
+  const mobileUserArea = $('#mobileUserArea');
+  let user = null;
+  try { user = await getCurrentUser(); } catch { user = null; }
 
   if (user) {
     const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-    const initial = displayName.charAt(0).toUpperCase();
+    const initial = esc(displayName.charAt(0).toUpperCase());
+    const safeName = esc(displayName);
 
     userArea.innerHTML = `
       <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
-        <span>${displayName}</span>
+        <span>${safeName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
 
-    document.getElementById('userChip').addEventListener('click', () => {
-      if (confirm('هل تريد تسجيل الخروج؟')) {
-        logout().then(() => {
-          showToast('تم تسجيل الخروج', 'info');
-          setTimeout(() => location.reload(), 800);
-        });
+    $('#userChip')?.addEventListener('click', async () => {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      try {
+        await logout();
+        showToast('تم تسجيل الخروج', 'info');
+        setTimeout(() => location.replace('login.html'), 500);
+      } catch {
+        showToast('تعذر تسجيل الخروج', 'error');
       }
     });
 
@@ -190,13 +239,16 @@ async function renderUserArea() {
         <a href="profile.html" class="mobile-user-chip">
           <div class="user-avatar">${initial}</div>
           <div class="user-info">
-            <div class="user-name">${displayName}</div>
+            <div class="user-name">${safeName}</div>
             <div class="user-role">عرض الحساب</div>
           </div>
         </a>`;
     }
   } else {
-    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    userArea.innerHTML = `
+      <a href="login.html" class="user-chip" style="padding:6px 16px">
+        <span>دخول</span><div class="user-avatar">👤</div>
+      </a>`;
     if (mobileUserArea) {
       mobileUserArea.innerHTML = `
         <a href="login.html" class="mobile-user-chip">
@@ -214,10 +266,11 @@ async function renderUserArea() {
    MOBILE NAV / SEARCH
 ============================================ */
 function setupMobileNav() {
-  const toggle = document.getElementById('mobileNavToggle');
-  const drawer = document.getElementById('mobileNavDrawer');
-  const overlay = document.getElementById('mobileNavOverlay');
-  const closeBtn = document.getElementById('mobileNavClose');
+  const toggle = $('#mobileNavToggle');
+  const drawer = $('#mobileNavDrawer');
+  const overlay = $('#mobileNavOverlay');
+  const closeBtn = $('#mobileNavClose');
+  if (!toggle || !drawer || !overlay) return;
 
   const open = () => {
     drawer.classList.add('open');
@@ -232,41 +285,51 @@ function setupMobileNav() {
     document.body.style.overflow = '';
   };
 
-  toggle?.addEventListener('click', open);
+  toggle.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
-  overlay?.addEventListener('click', close);
-  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
-  document.addEventListener('keydown', (e) => {
+  overlay.addEventListener('click', close);
+  $$('a', drawer).forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) close();
   });
 }
 
 function setupMobileSearch() {
-  const btn = document.getElementById('mobileSearchBtn');
-  const overlay = document.getElementById('mobileSearchOverlay');
-  const closeBtn = document.getElementById('closeSearchBtn');
-  const input = document.getElementById('mobileSearchInput');
-  const desktopInput = document.getElementById('searchInput');
+  const btn = $('#mobileSearchBtn');
+  const overlay = $('#mobileSearchOverlay');
+  const closeBtn = $('#closeSearchBtn');
+  const input = $('#mobileSearchInput');
+  const desktopInput = $('#searchInput');
+  if (!overlay) return;
 
   btn?.addEventListener('click', () => {
     overlay.classList.add('active');
-    setTimeout(() => input.focus(), 100);
+    setTimeout(() => input?.focus(), 100);
   });
-
   closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
 
-  const goSearch = (val) => {
-    if (val && val.trim()) {
-      window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
-    }
+  const go = v => {
+    const q = (v || '').trim();
+    if (q) window.location.href = `index.html?search=${encodeURIComponent(q)}`;
   };
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
+  desktopInput?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
+}
 
-  input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') goSearch(e.target.value);
-  });
-  desktopInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') goSearch(e.target.value);
-  });
+/* ============================================
+   CALCULATIONS
+============================================ */
+function calculateTotals() {
+  const subtotal = Math.max(0, safeNum(getCartTotal()));
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const discount = appliedCoupon
+    ? Math.min(Math.max(0, safeNum(appliedCoupon.discountAmount)), subtotal)
+    : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+  return { subtotal, shipping, discount, total };
 }
 
 /* ============================================
@@ -274,13 +337,14 @@ function setupMobileSearch() {
 ============================================ */
 function renderCart() {
   const cart = getCart();
-  const layout = document.getElementById('cartLayout');
-  const countText = document.getElementById('cartCountText');
-  const stickyBar = document.getElementById('stickyCheckoutBar');
+  const layout = $('#cartLayout');
+  const countText = $('#cartCountText');
+  const stickyBar = $('#stickyCheckoutBar');
+  if (!layout) return;
 
   if (cart.length === 0) {
     countText.textContent = 'السلة فاضية';
-    stickyBar.style.display = 'none';
+    if (stickyBar) stickyBar.style.display = 'none';
     layout.innerHTML = `
       <div class="empty-cart">
         <div class="emoji">🛒</div>
@@ -294,156 +358,211 @@ function renderCart() {
   const totalItems = getCartCount();
   countText.textContent = `${totalItems} ${totalItems === 1 ? 'منتج' : 'منتجات'} في السلة`;
 
-  const itemsHTML = cart.map(item => `
-    <div class="cart-item" data-id="${item.id}">
-      <a href="product.html?id=${item.id}" class="cart-item-img">
-        <img src="${item.image || 'https://via.placeholder.com/100/f4f2ed/c9a961?text=LUXE'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/100/f4f2ed/c9a961?text=LUXE'">
-      </a>
-      <div class="cart-item-info">
-        <div class="cart-item-cat">${item.category || 'منتج'}</div>
-        <a href="product.html?id=${item.id}" class="cart-item-title" style="color:inherit">${item.name}</a>
-        <div class="cart-item-price">${formatPrice(item.price)} للوحدة</div>
-      </div>
-      <div class="qty-picker">
-        <button data-action="minus" type="button" ${item.qty <= 1 ? 'disabled' : ''} aria-label="تقليل">−</button>
-        <span>${item.qty}</span>
-        <button data-action="plus" type="button" aria-label="زيادة">+</button>
-      </div>
-      <div class="cart-item-total">
-        <div class="subtotal">${(item.price * item.qty).toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
-        <button class="remove-btn" data-action="remove" type="button" title="حذف" aria-label="حذف">🗑</button>
-      </div>
-    </div>
-  `).join('');
+  const itemsHTML = cart.map(item => {
+    const name = esc(item.name || 'منتج');
+    const cat = esc(item.category || 'منتج');
+    const img = esc(safeImg(item.image));
+    const id = esc(item.id);
+    const qty = Math.max(1, Math.floor(safeNum(item.qty, 1)));
+    const price = Math.max(0, safeNum(item.price, 0));
+    const stock = Math.max(0, Math.floor(safeNum(item.stock, 0)));
+    const canIncrease = stock <= 0 || qty < stock;
 
-  const subtotal = getCartTotal();
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = subtotal + shipping - discount;
+    return `
+      <div class="cart-item" data-id="${id}">
+        <a href="product.html?id=${encodeURIComponent(item.id)}" class="cart-item-img">
+          <img src="${img}" alt="${name}" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+        </a>
+        <div class="cart-item-info">
+          <div class="cart-item-cat">${cat}</div>
+          <a href="product.html?id=${encodeURIComponent(item.id)}" class="cart-item-title" style="color:inherit">${name}</a>
+          <div class="cart-item-price">${formatPrice(price)} للوحدة</div>
+          ${stock > 0 && qty >= stock ? `<div class="cart-item-warning" style="color:#f59e0b;font-size:12px;margin-top:4px">الحد الأقصى ${stock}</div>` : ''}
+        </div>
+        <div class="qty-picker">
+          <button data-action="minus" type="button" ${qty <= 1 ? 'disabled' : ''} aria-label="تقليل الكمية">−</button>
+          <span aria-live="polite">${qty}</span>
+          <button data-action="plus" type="button" ${canIncrease ? '' : 'disabled'} aria-label="زيادة الكمية">+</button>
+        </div>
+        <div class="cart-item-total">
+          <div class="subtotal">${formatPrice(price * qty)}</div>
+          <button class="remove-btn" data-action="remove" type="button" title="حذف" aria-label="حذف">🗑</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const { subtotal, shipping, discount, total } = calculateTotals();
 
   const freeShipProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
   const remainingForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  layout.innerHTML = `
+  const freeShipHTML = subtotal < FREE_SHIPPING_THRESHOLD
+    ? `<div class="free-shipping-progress">
+        <div class="free-ship-label">
+          🚚 أضف <strong>${formatPrice(remainingForFreeShipping)}</strong> للحصول على شحن مجاني
+        </div>
+        <div class="free-ship-bar">
+          <div class="free-ship-fill" style="width:${freeShipProgress}%"></div>
+        </div>
+      </div>`
+    : `<div class="free-ship-success">🎉 مبروك! حصلت على شحن مجاني</div>`;
+
+  const couponHTML = appliedCoupon
+    ? `<div class="coupon-applied">
+        <span>✓ ${esc(appliedCoupon.label || 'خصم مطبق')} مطبق</span>
+        <button id="removeCouponBtn" type="button">إزالة</button>
+      </div>`
+    : `<div class="coupon-input-wrap">
+        <input type="text" id="couponInput" placeholder="كود الخصم" autocomplete="off" maxlength="30">
+        <button id="applyCouponBtn" type="button">تطبيق</button>
+      </div>`;
+
+  const summaryHTML = `
     <div class="cart-items-wrap">${itemsHTML}</div>
     <div class="cart-summary">
       <h3>ملخص الطلب</h3>
-
-      ${subtotal < FREE_SHIPPING_THRESHOLD ? `
-        <div class="free-shipping-progress">
-          <div class="free-ship-label">
-            🚚 أضف <strong>${formatPrice(remainingForFreeShipping)}</strong> للحصول على شحن مجاني
-          </div>
-          <div class="free-ship-bar">
-            <div class="free-ship-fill" style="width:${freeShipProgress}%"></div>
-          </div>
-        </div>
-      ` : `
-        <div class="free-ship-success">🎉 مبروك! حصلت على شحن مجاني</div>
-      `}
+      ${freeShipHTML}
 
       <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
       <div class="summary-row">
         <span>الشحن</span>
-        <span class="val">${shipping === 0 ? '<span style="color:var(--success);font-weight:800">مجاني</span>' : formatPrice(shipping)}</span>
+        <span class="val">${shipping === 0
+          ? '<span style="color:var(--success);font-weight:800">مجاني</span>'
+          : formatPrice(shipping)}</span>
       </div>
 
       ${discount > 0 ? `
         <div class="summary-row">
-          <span>خصم (${appliedCoupon.label})</span>
+          <span>خصم (${esc(appliedCoupon.label || '')})</span>
           <span class="val" style="color:var(--success);font-weight:800">- ${formatPrice(discount)}</span>
-        </div>
-      ` : ''}
+        </div>` : ''}
 
       <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
 
-      <!-- Coupon -->
-      <div class="coupon-box">
-        ${appliedCoupon ? `
-          <div class="coupon-applied">
-            <span>✓ ${appliedCoupon.label} مطبق</span>
-            <button id="removeCouponBtn" type="button">إزالة</button>
-          </div>
-        ` : `
-          <div class="coupon-input-wrap">
-            <input type="text" id="couponInput" placeholder="كود الخصم" autocomplete="off">
-            <button id="applyCouponBtn" type="button">تطبيق</button>
-          </div>
-        `}
-      </div>
+      <div class="coupon-box">${couponHTML}</div>
 
       <button class="checkout-btn" id="checkoutBtn" type="button">إتمام الشراء →</button>
       <a href="index.html" class="continue-link">← متابعة التسوق</a>
-    </div>
-  `;
+    </div>`;
 
-  // Attach handlers
-  layout.querySelectorAll('.cart-item').forEach(row => {
+  layout.innerHTML = summaryHTML;
+
+  // Sticky bar (mobile)
+  if (stickyBar) {
+    stickyBar.style.display = '';
+    const st = $('#stickyTotal');
+    if (st) st.textContent = formatPrice(total);
+  }
+
+  bindCartEvents(cart, subtotal);
+}
+
+/* ============================================
+   EVENTS
+============================================ */
+function bindCartEvents(cart, subtotal) {
+  $$('.cart-item').forEach(row => {
     const id = row.dataset.id;
-    const item = cart.find(c => c.id === id);
+    const item = cart.find(c => String(c.id) === String(id));
+    if (!item) return;
 
     row.querySelector('[data-action="minus"]')?.addEventListener('click', () => {
-      if (item.qty > 1) {
-        updateCartQty(id, item.qty - 1);
-        updateCartBadge();
-        renderCart();
-      }
-    });
-    row.querySelector('[data-action="plus"]')?.addEventListener('click', () => {
-      updateCartQty(id, item.qty + 1);
-      updateCartBadge();
+      const newQty = Math.max(1, (Number(item.qty) || 1) - 1);
+      if (newQty === item.qty) return;
+      updateCartQty(id, newQty);
       renderCart();
     });
+
+    row.querySelector('[data-action="plus"]')?.addEventListener('click', () => {
+      const stock = Math.max(0, Math.floor(safeNum(item.stock, 0)));
+      const newQty = (Number(item.qty) || 1) + 1;
+      if (stock > 0 && newQty > stock) {
+        showToast(`الحد الأقصى ${stock} قطعة`, 'warning');
+        return;
+      }
+      updateCartQty(id, newQty);
+      renderCart();
+    });
+
     row.querySelector('[data-action="remove"]')?.addEventListener('click', () => {
       showUndoToast(item, id);
     });
   });
 
-  // Update sticky bar (mobile)
-  document.getElementById('stickyTotal').textContent = formatPrice(total);
+  $('#checkoutBtn')?.addEventListener('click', handleCheckout);
+  $('#stickyCheckoutBtn')?.addEventListener('click', handleCheckout);
 
-  // Checkout handlers
-  document.getElementById('checkoutBtn')?.addEventListener('click', handleCheckout);
-  document.getElementById('stickyCheckoutBtn')?.addEventListener('click', handleCheckout);
-
-  // Coupon Apply Logic
-  document.getElementById('applyCouponBtn')?.addEventListener('click', async () => {
-    const codeInput = document.getElementById('couponInput');
-    const code = codeInput.value.trim().toUpperCase();
-    if (!code) return;
-
-    const btn = document.getElementById('applyCouponBtn');
-    const originalText = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = 'جاري التحقق...';
-    
-    try {
-      // السيرفر بيتحقق من الكود ويحسب الخصم
-      const res = await api.coupons.validate(code, subtotal);
-      
-      // تخزين بيانات الخصم اللي راجعة من السيرفر
-      appliedCoupon = {
-        code: res.data.code,
-        label: res.data.type === 'percentage' ? `خصم ${res.data.value}%` : `خصم ${res.data.value} ج.م`,
-        discountAmount: res.data.discount
-      };
-      
-      showToast('تم تطبيق كود الخصم بنجاح ✓', 'success');
-      renderCart();
-    } catch (err) {
-      showToast(err.message || 'كود الخصم غير صالح أو منتهي', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = originalText;
-    }
+  $('#applyCouponBtn')?.addEventListener('click', applyCoupon);
+  $('#couponInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
   });
 
-  // Remove Coupon
-  document.getElementById('removeCouponBtn')?.addEventListener('click', () => {
+  $('#removeCouponBtn')?.addEventListener('click', () => {
     appliedCoupon = null;
+    try { localStorage.removeItem(COUPON_KEY); } catch {}
     showToast('تم إزالة الخصم', 'info');
     renderCart();
   });
+}
+
+/* ============================================
+   COUPON
+============================================ */
+async function applyCoupon() {
+  const input = $('#couponInput');
+  const btn = $('#applyCouponBtn');
+  if (!input || !btn) return;
+
+  const code = input.value.trim().toUpperCase();
+  if (!code) {
+    showToast('أدخل كود الخصم', 'warning');
+    input.focus();
+    return;
+  }
+  if (!/^[A-Z0-9_-]{3,30}$/.test(code)) {
+    showToast('كود غير صالح', 'warning');
+    return;
+  }
+
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'جاري التحقق...';
+
+  try {
+    const currentSubtotal = Math.max(0, safeNum(getCartTotal()));
+    const res = await api.coupons.validate(code, currentSubtotal);
+
+    const data = res?.data;
+    if (!data || !Number.isFinite(Number(data.discount))) {
+      throw new Error('بيانات الخصم غير صالحة');
+    }
+
+    const discountValue = Math.max(0, Number(data.discount));
+    if (discountValue <= 0) {
+      throw new Error('كود الخصم غير فعّال لهذا الطلب');
+    }
+
+    appliedCoupon = {
+      code: String(data.code || code),
+      label: data.type === 'percentage'
+        ? `خصم ${Number(data.value) || 0}%`
+        : `خصم ${formatPrice(discountValue)}`,
+      discountAmount: discountValue
+    };
+
+    try {
+      localStorage.setItem(COUPON_KEY, JSON.stringify(appliedCoupon));
+    } catch {}
+
+    showToast('تم تطبيق كود الخصم بنجاح ✓', 'success');
+    renderCart();
+  } catch (err) {
+    console.error('[applyCoupon]', err);
+    showToast(err?.message || 'كود الخصم غير صالح أو منتهي', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
 }
 
 /* ============================================
@@ -451,32 +570,50 @@ function renderCart() {
 ============================================ */
 function showUndoToast(item, id) {
   removeFromCart(id);
-  updateCartBadge();
 
-  const container = document.getElementById('undoToastContainer');
+  const container = $('#undoToastContainer');
+  if (!container) { renderCart(); return; }
   container.innerHTML = '';
 
   const toast = document.createElement('div');
   toast.className = 'undo-toast';
-  toast.innerHTML = `
-    <div class="undo-toast-text">تم حذف "${item.name.substring(0, 25)}${item.name.length > 25 ? '...' : ''}"</div>
-    <button class="undo-btn" type="button">تراجع</button>
-    <div class="undo-progress"></div>
-  `;
+  toast.setAttribute('role', 'status');
+
+  const textEl = document.createElement('div');
+  textEl.className = 'undo-toast-text';
+  const displayName = String(item.name || '');
+  textEl.textContent = `تم حذف "${displayName.substring(0, 25)}${displayName.length > 25 ? '...' : ''}"`;
+  textEl.title = displayName;
+
+  const undoBtn = document.createElement('button');
+  undoBtn.className = 'undo-btn';
+  undoBtn.type = 'button';
+  undoBtn.textContent = 'تراجع';
+
+  const progressEl = document.createElement('div');
+  progressEl.className = 'undo-progress';
+
+  toast.append(textEl, undoBtn, progressEl);
   container.appendChild(toast);
 
   const timeout = setTimeout(() => {
     toast.classList.add('out');
-    setTimeout(() => toast.remove(), 300);
+    setTimeout(() => toast.parentNode?.removeChild(toast), 300);
   }, 5000);
 
-  toast.querySelector('.undo-btn').addEventListener('click', () => {
+  undoBtn.addEventListener('click', async () => {
     clearTimeout(timeout);
-    addToCart(item);
-    updateCartBadge();
-    toast.remove();
-    showToast('تم استرجاع المنتج ✓', 'success');
-    renderCart();
+    undoBtn.disabled = true;
+    try {
+      const qty = Math.max(1, Math.floor(safeNum(item.qty, 1)));
+      await addToCart(item, qty);
+      toast.parentNode?.removeChild(toast);
+      showToast('تم استرجاع المنتج ✓', 'success');
+      renderCart();
+    } catch (err) {
+      showToast(err?.message || 'تعذر الاسترجاع', 'error');
+      undoBtn.disabled = false;
+    }
   });
 
   renderCart();
@@ -487,13 +624,42 @@ function showUndoToast(item, id) {
 ============================================ */
 async function handleCheckout() {
   const cart = getCart();
-  const outOfStock = cart.filter(i => i.stock !== undefined && i.qty > i.stock);
-  if (outOfStock.length > 0) {
-    showToast(`"${outOfStock[0].name}" — الكمية المطلوبة أكبر من المتاح`, 'error');
+
+  if (cart.length === 0) {
+    showToast('السلة فاضية', 'warning');
     return;
   }
 
-  const user = await getCurrentUser();
+  // تحقق من المخزون (لو الـ stock محفوظ)
+  const outOfStock = cart.find(i => {
+    const s = Number(i.stock);
+    const q = Number(i.qty) || 0;
+    return Number.isFinite(s) && s >= 0 && q > s;
+  });
+  if (outOfStock) {
+    showToast(`"${outOfStock.name}" — الكمية المطلوبة أكبر من المتاح`, 'error');
+    return;
+  }
+
+  // تحقق من المخزون مع السيرفر (إن أمكن)
+  try {
+    if (typeof api.cart?.validate === 'function') {
+      const check = await api.cart.validate(cart.map(i => ({
+        productId: i.id, qty: Number(i.qty) || 0
+      })));
+      if (check?.data?.issues?.length) {
+        showToast(check.data.issues[0].message || 'راجع كميات السلة', 'error');
+        return;
+      }
+    }
+  } catch (err) {
+    // نتجاهل الخطأ ونكمل — السيرفر هيتحقق عند إنشاء الطلب
+    console.warn('[checkout validate]', err);
+  }
+
+  // تحقق من تسجيل الدخول
+  let user = null;
+  try { user = await getCurrentUser(); } catch { user = null; }
   if (!user) {
     showToast('لازم تسجل دخول الأول', 'warning');
     setTimeout(() => {
@@ -502,12 +668,18 @@ async function handleCheckout() {
     return;
   }
 
-  // حفظ الكوبون في الـ localStorage عشان صفحة الـ Checkout تستخدمه
-  if (appliedCoupon) {
-    localStorage.setItem('luxe_applied_coupon', JSON.stringify(appliedCoupon));
-  } else {
-    localStorage.removeItem('luxe_applied_coupon');
-  }
+  // حفظ الكوبون (كود فقط — السيرفر يعيد الحساب)
+  try {
+    if (appliedCoupon?.code) {
+      localStorage.setItem(COUPON_KEY, JSON.stringify({
+        code: appliedCoupon.code,
+        label: appliedCoupon.label,
+        discountAmount: appliedCoupon.discountAmount
+      }));
+    } else {
+      localStorage.removeItem(COUPON_KEY);
+    }
+  } catch {}
 
   window.location.href = 'checkout.html';
 }
@@ -515,14 +687,18 @@ async function handleCheckout() {
 /* ============================================
    HEADER SCROLL
 ============================================ */
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('mainHeader');
-  if (window.scrollY > 30) header.classList.add('scrolled');
-  else header.classList.remove('scrolled');
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    $('#mainHeader')?.classList.toggle('scrolled', window.scrollY > 30);
+    scrollTicking = false;
+  });
 }, { passive: true });
 
 /* ============================================
-   INIT
+   BOOTSTRAP
 ============================================ */
 renderUserArea();
 updateCartBadge();
