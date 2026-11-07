@@ -5,7 +5,7 @@ const { evaluateCoupon, consumeCoupon } = require('./coupon.controller');
 // ===========================================
 // Constants
 // ===========================================
-const SHIPPING_COST = 200;
+const SHIPPING_COST = 250;
 const PHONE_RE = /^01[0-9]{9}$/;
 const COUPON_USAGES = 'coupon_usages';
 
