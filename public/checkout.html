@@ -11,6 +11,51 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/app-feel.js" defer></script>
+  
+  <style>
+    /* ستايل الشريط السفلي (Sticky Bar) لضمان ظهوره */
+    .sticky-checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #e5e3dd;
+      padding: 12px 20px;
+      display: none; /* مخفي افتراضياً */
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      z-index: 9999; /* فوق أي عنصر */
+      box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08);
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .sticky-checkout-info { display: flex; flex-direction: column; }
+    .sticky-checkout-label { font-size: 11px; color: #6b7280; font-weight: 600; }
+    .sticky-checkout-total { font-family: 'Tajawal', sans-serif; font-size: 20px; font-weight: 900; color: #a8894a; }
+    .sticky-checkout-btn {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #0a0e17 0%, #1c2233 100%);
+      color: #c9a961;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      transition: .3s;
+      border: none;
+      cursor: pointer;
+    }
+    .sticky-checkout-btn:hover {
+      background: linear-gradient(135deg, #c9a961 0%, #a8894a 100%);
+      color: #0a0e17;
+    }
+    @media (min-width: 769px) {
+      .sticky-checkout-bar { display: none !important; }
+    }
+    @media (max-width: 768px) {
+      body { padding-bottom: 80px; }
+    }
+  </style>
 </head>
 <body>
 
@@ -163,14 +208,12 @@ const FALLBACK_IMG          = 'https://via.placeholder.com/48/f4f2ed/c9a961?text
 const $  = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-/** Escape HTML — يحمي من XSS */
 function esc(v) {
   return String(v ?? '').replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
 
-/** صورة آمنة */
 function safeImg(url) {
   if (!url || typeof url !== 'string') return FALLBACK_IMG;
   const t = url.trim();
@@ -178,14 +221,13 @@ function safeImg(url) {
   return FALLBACK_IMG;
 }
 
-/** نسخ آمن مع fallback */
 async function copyText(text) {
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
       return true;
     }
-  } catch { /* fallthrough */ }
+  } catch { }
   try {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -199,7 +241,6 @@ async function copyText(text) {
   } catch { return false; }
 }
 
-/** debounce */
 function debounce(fn, ms = 300) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
@@ -223,7 +264,6 @@ try {
   const saved = localStorage.getItem(COUPON_KEY);
   if (saved) {
     const c = JSON.parse(saved);
-    // تحقق من الشكل لتجنّب XSS/قيم فاسدة
     if (c && typeof c.code === 'string' && Number.isFinite(Number(c.discountAmount))) {
       appliedCoupon = { code: c.code, discountAmount: Math.max(0, Number(c.discountAmount)) };
     }
@@ -401,7 +441,6 @@ async function initCheckout() {
 
   loadDraft();
 
-  // محاولة جلب بيانات المستخدم لتعبئة العنوان
   try {
     const meRes = await api.auth.me();
     const u = meRes?.user || meRes?.data?.user || meRes?.data || null;
@@ -413,7 +452,6 @@ async function initCheckout() {
       };
     }
   } catch (err) {
-    // لو التوكن منتهي، وجّه للدخول
     if (err?.status === 401 || err?.code === 'UNAUTHORIZED') {
       showToast('انتهت الجلسة، سجل دخول من جديد', 'warning');
       setTimeout(() => window.location.replace('login.html?redirect=checkout.html'), 800);
@@ -438,7 +476,6 @@ function renderCheckout() {
   const subtotal = getCartTotal();
   const shipping = SHIPPING_COST;
 
-  // الخصم: نعرضه فقط، السيرفر هو المرجع النهائي
   const discount = appliedCoupon ? Math.min(appliedCoupon.discountAmount, subtotal) : 0;
   const total = Math.max(0, subtotal + shipping - discount);
 
@@ -699,7 +736,6 @@ function renderCheckout() {
       ${sidebarHTML}
     </div>`;
 
-  // Sticky
   const stickyTotal = $('#stickyTotal');
   const stickyBtn = $('#stickyActionBtn');
   if (stickyTotal) stickyTotal.textContent = formatPrice(total);
@@ -756,7 +792,6 @@ function setupAutoSave() {
     const el = document.getElementById(id);
     if (!el) return;
     el.addEventListener('input', () => {
-      // حفظ تدريجي لبيانات الشحن/الدفع
       if (currentStep === 1) {
         checkoutData.shippingAddress = {
           name:       $('#f-name')?.value.trim() || '',
@@ -817,7 +852,6 @@ function goNext() {
 }
 
 function goBack() {
-  // حفظ التعديلات قبل الرجوع
   if (currentStep === 1) { try { saveAddress(); saveDraft(); } catch {} }
   if (currentStep === 2) { try { savePayment(); saveDraft(); } catch {} }
 
@@ -887,9 +921,7 @@ function savePayment() {
 async function placeOrder() {
   if (isPlacingOrder) return;
 
-  // إعادة تحقق نهائي قبل الإرسال
   if (!checkoutData.shippingAddress?.name || !checkoutData.paymentRefNumber) {
-    // نحاول حفظ من الحقول لو الخطوة الحالية هي المصدر
     if (currentStep === 1) saveAddress();
     if (currentStep === 2) savePayment();
   }
@@ -932,7 +964,6 @@ async function placeOrder() {
       couponCode: appliedCoupon ? appliedCoupon.code : null
     });
 
-    // تنظيف فقط بعد نجاح السيرفر
     try { localStorage.removeItem(CART_KEY); } catch {}
     try { localStorage.removeItem(COUPON_KEY); } catch {}
     clearDraft();
@@ -1009,7 +1040,6 @@ function showSuccessPage(order, cart) {
       </div>
     </div>`;
 
-  // ربط الأزرار بأمان (بدل onclick inline)
   $('#goTrack')?.addEventListener('click', () => {
     const id = order?.trackingId ? encodeURIComponent(order.trackingId) : '';
     window.location.href = id ? `tracking.html?track=${id}` : 'tracking.html';
@@ -1038,7 +1068,13 @@ function setupStickyBar() {
   const bar = $('#stickySummaryBar');
   if (!bar) return;
   const mq = window.matchMedia('(max-width: 768px)');
-  const sync = () => { bar.style.display = mq.matches ? 'flex' : 'none'; };
+  const sync = () => { 
+    if (mq.matches) {
+      bar.style.display = 'flex';
+    } else {
+      bar.style.display = 'none';
+    }
+  };
   mq.addEventListener?.('change', sync);
   sync();
 }
