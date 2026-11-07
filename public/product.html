@@ -8,13 +8,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="format-detection" content="telephone=no">
+  <meta name="description" content="تفاصيل المنتج - LUXE Store">
   <title>تفاصيل المنتج - LUXE Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/app-feel.js" defer></script>
 </head>
-<script src="js/app-feel.js" defer></script>
 <body>
 
 <!-- ============================================
@@ -44,7 +45,6 @@
     </div>
   </div>
 
-  <!-- Mobile search overlay -->
   <div class="mobile-search-overlay" id="mobileSearchOverlay">
     <div class="container">
       <div class="search-bar mobile">
@@ -83,7 +83,7 @@
      BREADCRUMB
 ============================================ -->
 <div class="container">
-  <div class="breadcrumb" id="breadcrumb">
+  <div class="breadcrumb" id="breadcrumb" aria-label="مسار التنقل">
     <a href="index.html">الرئيسية</a>
     <span class="sep">/</span>
     <span class="current">جاري التحميل...</span>
@@ -94,7 +94,7 @@
      PRODUCT DETAIL
 ============================================ -->
 <div class="container">
-  <div class="product-detail" id="productDetail">
+  <div class="product-detail" id="productDetail" aria-live="polite">
     <div class="skeleton" style="aspect-ratio:1;border-radius:var(--radius-lg)"></div>
     <div>
       <div class="skeleton" style="height:20px;width:80px;margin-bottom:16px"></div>
@@ -167,38 +167,100 @@
 import { api, getCurrentUser, logout } from './js/api.js';
 import { showToast, addToCart, updateCartBadge } from './js/ui.js';
 
+/* ============================================
+   CONFIG
+============================================ */
+const FALLBACK_IMG = 'https://via.placeholder.com/600/f4f2ed/c9a961?text=LUXE';
+const FALLBACK_SMALL = 'https://via.placeholder.com/400/f4f2ed/c9a961?text=LUXE';
+
+/* ============================================
+   UTILS
+============================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/** Escape HTML — حماية من XSS */
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+/** صورة آمنة — تقبل http(s) أو نسبية فقط */
+function safeImg(url, fallback = FALLBACK_IMG) {
+  if (!url || typeof url !== 'string') return fallback;
+  const t = url.trim();
+  if (/^https?:\/\//i.test(t) || /^(\.{1,2}\/|\/)/.test(t)) return t;
+  return fallback;
+}
+
+/** Number آمن */
+function safeNum(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/** نسخ آمن مع fallback */
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fallthrough */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch { return false; }
+}
+
+/* ============================================
+   STATE
+============================================ */
 let product = null;
 let currentQty = 1;
 let currentImageIndex = 0;
+let productImages = [];
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('id');
-const initialImageIdx = parseInt(params.get('image') || '0') || 0;
+const initialImageIdx = Math.max(0, parseInt(params.get('image') || '0', 10) || 0);
 
 /* ============================================
    USER AREA
 ============================================ */
 async function renderUserArea() {
-  const userArea = document.getElementById('userArea');
-  const mobileUserArea = document.getElementById('mobileUserArea');
-  const user = await getCurrentUser();
+  const userArea = $('#userArea');
+  const mobileUserArea = $('#mobileUserArea');
+  let user = null;
+  try { user = await getCurrentUser(); } catch { user = null; }
 
   if (user) {
     const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-    const initial = displayName.charAt(0).toUpperCase();
+    const initial = esc(displayName.charAt(0).toUpperCase());
+    const safeName = esc(displayName);
 
     userArea.innerHTML = `
       <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
-        <span>${displayName}</span>
+        <span>${safeName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
 
-    document.getElementById('userChip').addEventListener('click', () => {
-      if (confirm('هل تريد تسجيل الخروج؟')) {
-        logout().then(() => {
-          showToast('تم تسجيل الخروج', 'info');
-          setTimeout(() => location.reload(), 800);
-        });
+    $('#userChip')?.addEventListener('click', async () => {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      try {
+        await logout();
+        showToast('تم تسجيل الخروج', 'info');
+        setTimeout(() => location.replace('login.html'), 500);
+      } catch {
+        showToast('تعذر تسجيل الخروج', 'error');
       }
     });
 
@@ -207,13 +269,16 @@ async function renderUserArea() {
         <a href="profile.html" class="mobile-user-chip">
           <div class="user-avatar">${initial}</div>
           <div class="user-info">
-            <div class="user-name">${displayName}</div>
+            <div class="user-name">${safeName}</div>
             <div class="user-role">عرض الحساب</div>
           </div>
         </a>`;
     }
   } else {
-    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    userArea.innerHTML = `
+      <a href="login.html" class="user-chip" style="padding:6px 16px">
+        <span>دخول</span><div class="user-avatar">👤</div>
+      </a>`;
     if (mobileUserArea) {
       mobileUserArea.innerHTML = `
         <a href="login.html" class="mobile-user-chip">
@@ -231,10 +296,11 @@ async function renderUserArea() {
    MOBILE NAV / SEARCH
 ============================================ */
 function setupMobileNav() {
-  const toggle = document.getElementById('mobileNavToggle');
-  const drawer = document.getElementById('mobileNavDrawer');
-  const overlay = document.getElementById('mobileNavOverlay');
-  const closeBtn = document.getElementById('mobileNavClose');
+  const toggle = $('#mobileNavToggle');
+  const drawer = $('#mobileNavDrawer');
+  const overlay = $('#mobileNavOverlay');
+  const closeBtn = $('#mobileNavClose');
+  if (!toggle || !drawer || !overlay) return;
 
   const open = () => {
     drawer.classList.add('open');
@@ -249,172 +315,248 @@ function setupMobileNav() {
     document.body.style.overflow = '';
   };
 
-  toggle?.addEventListener('click', open);
+  toggle.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
-  overlay?.addEventListener('click', close);
-  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
-  document.addEventListener('keydown', (e) => {
+  overlay.addEventListener('click', close);
+  $$('a', drawer).forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) close();
   });
 }
 
 function setupMobileSearch() {
-  const btn = document.getElementById('mobileSearchBtn');
-  const overlay = document.getElementById('mobileSearchOverlay');
-  const closeBtn = document.getElementById('closeSearchBtn');
-  const input = document.getElementById('mobileSearchInput');
-  const desktopInput = document.getElementById('searchInput');
+  const btn = $('#mobileSearchBtn');
+  const overlay = $('#mobileSearchOverlay');
+  const closeBtn = $('#closeSearchBtn');
+  const input = $('#mobileSearchInput');
+  const desktopInput = $('#searchInput');
+  if (!overlay) return;
 
   btn?.addEventListener('click', () => {
     overlay.classList.add('active');
-    setTimeout(() => input.focus(), 100);
+    setTimeout(() => input?.focus(), 100);
+  });
+  closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('active');
   });
 
-  closeBtn?.addEventListener('click', () => {
-    overlay.classList.remove('active');
-  });
+  const go = v => {
+    const q = (v || '').trim();
+    if (q) window.location.href = `index.html?search=${encodeURIComponent(q)}`;
+  };
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
+  desktopInput?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
+}
 
-  input?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.value.trim()) {
-      window.location.href = `index.html?search=${encodeURIComponent(e.target.value.trim())}`;
-    }
-  });
+/* ============================================
+   NORMALIZE PRODUCT (حماية من بيانات غير متوقعة)
+============================================ */
+function normalizeProduct(raw) {
+  if (!raw || typeof raw !== 'object') return null;
 
-  desktopInput?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.value.trim()) {
-      window.location.href = `index.html?search=${encodeURIComponent(e.target.value.trim())}`;
-    }
-  });
+  const images = Array.isArray(raw.images)
+    ? raw.images.filter(x => typeof x === 'string' && x.trim()).map(safeImg)
+    : [];
+  if (images.length === 0 && raw.thumbnail) {
+    images.push(safeImg(raw.thumbnail));
+  }
+  if (images.length === 0) {
+    images.push(FALLBACK_IMG);
+  }
+
+  const specs = (raw.specs && typeof raw.specs === 'object' && !Array.isArray(raw.specs))
+    ? raw.specs
+    : {};
+
+  return {
+    id: raw.id,
+    name: String(raw.name || 'منتج بدون اسم'),
+    category: String(raw.category || 'عام'),
+    brand: raw.brand ? String(raw.brand) : '',
+    sku: raw.sku ? String(raw.sku) : '',
+    description: raw.description ? String(raw.description) : '',
+    price: safeNum(raw.price, 0),
+    oldPrice: safeNum(raw.oldPrice, 0),
+    stock: Math.max(0, Math.floor(safeNum(raw.stock, 0))),
+    rating: Math.max(0, Math.min(5, safeNum(raw.rating, 0))),
+    reviewsCount: Math.max(0, Math.floor(safeNum(raw.reviewsCount, 0))),
+    specs,
+    images,
+    thumbnail: images[0]
+  };
 }
 
 /* ============================================
    PRODUCT LOADING
 ============================================ */
-if (!productId) {
-  document.getElementById('productDetail').innerHTML = `
-    <div class="empty-state" style="grid-column:1/-1">
-      <div class="emoji">❌</div>
-      <h3>المنتج غير موجود</h3>
-      <p>لم يتم تحديد منتج</p>
-      <a href="index.html" class="btn-hero" style="margin-top:20px">العودة للرئيسية</a>
-    </div>`;
-  document.getElementById('stickyBar').style.display = 'none';
-} else {
-  loadProduct();
+function showEmptyState(title, message) {
+  const detail = $('#productDetail');
+  if (detail) {
+    detail.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="emoji">😕</div>
+        <h3>${esc(title)}</h3>
+        <p>${esc(message)}</p>
+        <a href="index.html" class="btn-hero" style="margin-top:20px">العودة للرئيسية</a>
+      </div>`;
+  }
+  const bar = $('#stickyBar');
+  if (bar) bar.style.display = 'none';
 }
 
 async function loadProduct() {
+  if (!productId) {
+    showEmptyState('المنتج غير موجود', 'لم يتم تحديد منتج');
+    return;
+  }
+
   try {
     const res = await api.products.getById(productId);
-    product = res.data;
+    const normalized = normalizeProduct(res?.data);
+    if (!normalized) throw new Error('بيانات المنتج غير صالحة');
+
+    product = normalized;
+    currentImageIndex = Math.min(initialImageIdx, product.images.length - 1);
+
     renderProduct();
     renderBreadcrumb();
-    loadRelated();
+    updateStickyBar();
+
     document.title = `${product.name} - LUXE Store`;
+
+    // related — best effort
+    loadRelated().catch(err => console.error('Related error:', err));
   } catch (err) {
-    console.error(err);
-    document.getElementById('productDetail').innerHTML = `
-      <div class="empty-state" style="grid-column:1/-1">
-        <div class="emoji">😕</div>
-        <h3>المنتج غير موجود</h3>
-        <p>${err.message}</p>
-        <a href="index.html" class="btn-hero" style="margin-top:20px">العودة للرئيسية</a>
-      </div>`;
-    document.getElementById('stickyBar').style.display = 'none';
+    console.error('[loadProduct]', err);
+    showEmptyState('المنتج غير موجود', err?.message || 'تأكد من الرابط وحاول مرة أخرى');
   }
 }
 
+/* ============================================
+   RENDER
+============================================ */
 function renderBreadcrumb() {
-  document.getElementById('breadcrumb').innerHTML = `
+  const bc = $('#breadcrumb');
+  if (!bc || !product) return;
+  bc.innerHTML = `
     <a href="index.html">الرئيسية</a>
     <span class="sep">/</span>
-    <a href="index.html">${product.category || 'المنتجات'}</a>
+    <a href="index.html?category=${encodeURIComponent(product.category)}">${esc(product.category)}</a>
     <span class="sep">/</span>
-    <span class="current" title="${product.name}">${product.name}</span>`;
+    <span class="current" title="${esc(product.name)}">${esc(product.name)}</span>`;
 }
 
 function renderProduct() {
-  const detail = document.getElementById('productDetail');
-  const images = (product.images && product.images.length > 0)
-    ? product.images
-    : [product.thumbnail || 'https://via.placeholder.com/600/f4f2ed/c9a961?text=LUXE'];
+  const detail = $('#productDetail');
+  if (!detail || !product) return;
 
-  currentImageIndex = Math.min(Math.max(initialImageIdx, 0), images.length - 1);
-
-  const discount = product.oldPrice && product.oldPrice > product.price
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100) : 0;
-  const stockClass = product.stock > 10 ? 'in' : product.stock > 0 ? 'low' : 'out';
-  const stockText = product.stock > 10 ? 'متوفر في المخزون' : product.stock > 0 ? `متبقي ${product.stock} فقط — اطلب سريعاً!` : 'نفذت الكمية';
+  const images = product.images;
   const isOut = product.stock <= 0;
-  const rating = product.rating || 0;
-  const fullStars = Math.round(rating);
-  const maxQty = Math.max(1, product.stock);
+  const hasDiscount = product.oldPrice > product.price && product.price > 0;
+  const discount = hasDiscount
+    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : 0;
 
-  const specs = product.specs || {};
-  const specsHTML = Object.keys(specs).length > 0 ? `
+  const stockClass = product.stock > 10 ? 'in' : product.stock > 0 ? 'low' : 'out';
+  const stockText = product.stock > 10
+    ? 'متوفر في المخزون'
+    : product.stock > 0
+      ? `متبقي ${product.stock} فقط — اطلب سريعاً!`
+      : 'نفذت الكمية';
+
+  const fullStars = Math.round(product.rating);
+
+  const specsHTML = Object.keys(product.specs).length > 0 ? `
     <ul class="specs-list">
-      ${Object.entries(specs).map(([k, v]) => `<li class="spec-row"><span class="spec-key">${k}</span><span class="spec-val">${v}</span></li>`).join('')}
+      ${Object.entries(product.specs).map(([k, v]) => `
+        <li class="spec-row">
+          <span class="spec-key">${esc(k)}</span>
+          <span class="spec-val">${esc(v)}</span>
+        </li>`).join('')}
     </ul>` : '';
+
+  const priceStr = product.price.toLocaleString('ar-EG');
+  const oldPriceStr = product.oldPrice.toLocaleString('ar-EG');
 
   detail.innerHTML = `
     <div class="gallery">
       <div class="gallery-main" id="galleryMain">
-        <img src="${images[currentImageIndex]}" alt="${product.name}" id="mainImage" onerror="this.src='https://via.placeholder.com/600/f4f2ed/c9a961?text=LUXE'">
+        <img
+          src="${esc(images[currentImageIndex])}"
+          alt="${esc(product.name)}"
+          id="mainImage"
+          onerror="this.onerror=null;this.src='${FALLBACK_IMG}'"
+        >
         ${images.length > 1 ? `
-          <button class="gallery-nav prev" id="galleryPrev" type="button" aria-label="السابق">‹</button>
-          <button class="gallery-nav next" id="galleryNext" type="button" aria-label="التالي">›</button>
+          <button class="gallery-nav prev" id="galleryPrev" type="button" aria-label="الصورة السابقة">‹</button>
+          <button class="gallery-nav next" id="galleryNext" type="button" aria-label="الصورة التالية">›</button>
           <div class="gallery-counter" id="galleryCounter">${currentImageIndex + 1} / ${images.length}</div>
         ` : ''}
       </div>
       ${images.length > 1 ? `
         <div class="gallery-thumbs">
-          ${images.map((img, i) => `<div class="gallery-thumb ${i === currentImageIndex ? 'active' : ''}" data-idx="${i}"><img src="${img}" alt="صورة ${i + 1}"></div>`).join('')}
+          ${images.map((img, i) => `
+            <div class="gallery-thumb ${i === currentImageIndex ? 'active' : ''}" data-idx="${i}">
+              <img src="${esc(img)}" alt="صورة ${i + 1}" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+            </div>`).join('')}
         </div>` : ''}
     </div>
 
     <div class="product-info">
       <div class="product-head-row">
-        <span class="product-cat-tag">${product.category || 'عام'}</span>
+        <span class="product-cat-tag">${esc(product.category)}</span>
         <button class="share-btn" id="shareBtn" type="button" aria-label="مشاركة">
           <span>↗</span> مشاركة
         </button>
       </div>
 
-      <h1>${product.name}</h1>
+      <h1>${esc(product.name)}</h1>
 
       <div class="product-meta-row">
         <div class="rating-block">
           <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
-          <span>${rating.toFixed(1)}</span>
-          <span>(${product.reviewsCount || 0} تقييم)</span>
+          <span>${product.rating.toFixed(1)}</span>
+          <span>(${product.reviewsCount} تقييم)</span>
         </div>
-        <span class="divider">|</span>
-        <span>SKU: ${product.sku || '—'}</span>
-        ${product.brand ? `<span class="divider">|</span><span>${product.brand}</span>` : ''}
+        ${product.sku ? `<span class="divider">|</span><span>SKU: ${esc(product.sku)}</span>` : ''}
+        ${product.brand ? `<span class="divider">|</span><span>${esc(product.brand)}</span>` : ''}
       </div>
 
       <div class="product-price-block">
-        <div class="big-price">${product.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
-        ${product.oldPrice ? `<div class="big-old">${product.oldPrice.toLocaleString('ar-EG')} ج.م</div>` : ''}
+        <div class="big-price">${priceStr}<span class="currency">ج.م</span></div>
+        ${hasDiscount ? `<div class="big-old">${oldPriceStr} ج.م</div>` : ''}
         ${discount > 0 ? `<div class="big-discount">-${discount}%</div>` : ''}
       </div>
 
-      <div class="stock-indicator ${stockClass}">${stockText}</div>
+      <div class="stock-indicator ${stockClass}">${esc(stockText)}</div>
 
-      ${product.description ? `<p class="product-description">${product.description}</p>` : ''}
+      ${product.description ? `<p class="product-description">${esc(product.description)}</p>` : ''}
 
       ${specsHTML}
 
       <div class="qty-and-actions">
         <div class="qty-selector">
-          <button id="qtyMinus" type="button" ${isOut ? 'disabled' : ''}>−</button>
-          <input type="number" id="qtyInput" value="1" min="1" max="${maxQty}" ${isOut ? 'disabled' : ''}>
-          <button id="qtyPlus" type="button" ${isOut ? 'disabled' : ''}>+</button>
+          <button id="qtyMinus" type="button" ${isOut ? 'disabled' : ''} aria-label="تقليل الكمية">−</button>
+          <input
+            type="number"
+            id="qtyInput"
+            value="${currentQty}"
+            min="1"
+            max="${Math.max(1, product.stock)}"
+            ${isOut ? 'disabled' : ''}
+            aria-label="الكمية"
+          >
+          <button id="qtyPlus" type="button" ${isOut ? 'disabled' : ''} aria-label="زيادة الكمية">+</button>
         </div>
 
         <div class="action-buttons">
-          <button class="btn-add-cart" id="addToCartBtn" type="button" ${isOut ? 'disabled' : ''}>🛍 ${isOut ? 'نفذت الكمية' : 'أضف للسلة'}</button>
-          <button class="btn-buy-now" id="buyNowBtn" type="button" ${isOut ? 'disabled' : ''}>⚡ اشتري الآن</button>
+          <button class="btn-add-cart" id="addToCartBtn" type="button" ${isOut ? 'disabled' : ''}>
+            🛍 ${isOut ? 'نفذت الكمية' : 'أضف للسلة'}
+          </button>
+          <button class="btn-buy-now" id="buyNowBtn" type="button" ${isOut ? 'disabled' : ''}>
+            ⚡ اشتري الآن
+          </button>
         </div>
       </div>
 
@@ -426,35 +568,37 @@ function renderProduct() {
       </div>
     </div>`;
 
-  // Update sticky bar
-  updateStickyBar();
+  bindProductEvents(images);
+}
 
+/* ============================================
+   EVENTS
+============================================ */
+function bindProductEvents(images) {
   // Gallery thumbs
-  document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+  $$('.gallery-thumb').forEach(thumb => {
     thumb.addEventListener('click', () => {
-      const idx = parseInt(thumb.dataset.idx);
-      setActiveImage(idx);
+      const idx = parseInt(thumb.dataset.idx, 10);
+      if (Number.isFinite(idx)) setActiveImage(idx);
     });
   });
 
-  // Gallery prev/next
-  document.getElementById('galleryPrev')?.addEventListener('click', () => {
+  $('#galleryPrev')?.addEventListener('click', () => {
     setActiveImage((currentImageIndex - 1 + images.length) % images.length);
   });
-  document.getElementById('galleryNext')?.addEventListener('click', () => {
+  $('#galleryNext')?.addEventListener('click', () => {
     setActiveImage((currentImageIndex + 1) % images.length);
   });
 
-  // Swipe on gallery (touch)
-  const galleryMain = document.getElementById('galleryMain');
+  // Swipe
+  const galleryMain = $('#galleryMain');
   if (galleryMain && images.length > 1) {
     let startX = 0;
-    galleryMain.addEventListener('touchstart', (e) => {
+    galleryMain.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
     }, { passive: true });
-    galleryMain.addEventListener('touchend', (e) => {
-      const endX = e.changedTouches[0].clientX;
-      const diff = endX - startX;
+    galleryMain.addEventListener('touchend', e => {
+      const diff = e.changedTouches[0].clientX - startX;
       if (Math.abs(diff) > 50) {
         if (diff > 0) setActiveImage((currentImageIndex - 1 + images.length) % images.length);
         else setActiveImage((currentImageIndex + 1) % images.length);
@@ -462,73 +606,122 @@ function renderProduct() {
     }, { passive: true });
   }
 
-  // Qty
-  const qtyInput = document.getElementById('qtyInput');
-  document.getElementById('qtyMinus')?.addEventListener('click', () => {
-    if (currentQty > 1) { currentQty--; qtyInput.value = currentQty; }
+  // Qty controls
+  const qtyInput = $('#qtyInput');
+  $('#qtyMinus')?.addEventListener('click', () => {
+    if (currentQty > 1) {
+      currentQty--;
+      if (qtyInput) qtyInput.value = currentQty;
+    }
   });
-  document.getElementById('qtyPlus')?.addEventListener('click', () => {
-    if (currentQty < product.stock) { currentQty++; qtyInput.value = currentQty; }
-    else showToast('وصلت للحد الأقصى', 'warning');
+  $('#qtyPlus')?.addEventListener('click', () => {
+    if (currentQty < product.stock) {
+      currentQty++;
+      if (qtyInput) qtyInput.value = currentQty;
+    } else {
+      showToast(`الحد الأقصى ${product.stock} قطعة`, 'warning');
+    }
   });
   qtyInput?.addEventListener('change', () => {
-    let v = parseInt(qtyInput.value) || 1;
-    v = Math.max(1, Math.min(product.stock, v));
+    let v = parseInt(qtyInput.value, 10) || 1;
+    v = Math.max(1, Math.min(Math.max(1, product.stock), v));
     currentQty = v;
     qtyInput.value = v;
   });
 
   // Add to cart
-  document.getElementById('addToCartBtn')?.addEventListener('click', () => {
-    addToCart(product, currentQty);
-    showToast(`تمت إضافة ${currentQty} للسلة ✓`, 'success');
-    updateCartBadge();
+  $('#addToCartBtn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+      await addToCart(product, currentQty);
+      showToast(`تمت إضافة ${currentQty} للسلة ✓`, 'success');
+      updateCartBadge();
+    } catch (err) {
+      showToast(err?.message || 'تعذر الإضافة للسلة', 'error');
+    } finally {
+      btn.disabled = product.stock <= 0;
+    }
   });
 
   // Buy now
-  document.getElementById('buyNowBtn')?.addEventListener('click', () => {
-    addToCart(product, currentQty);
-    updateCartBadge();
-    window.location.href = 'checkout.html';
+  $('#buyNowBtn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+      await addToCart(product, currentQty);
+      updateCartBadge();
+      window.location.href = 'checkout.html';
+    } catch (err) {
+      showToast(err?.message || 'تعذر إتمام الشراء', 'error');
+      btn.disabled = false;
+    }
   });
 
   // Sticky add
-  document.getElementById('stickyAddBtn')?.addEventListener('click', () => {
-    if (isOut) return;
-    addToCart(product, currentQty);
-    showToast(`تمت إضافة ${currentQty} للسلة ✓`, 'success');
-    updateCartBadge();
+  $('#stickyAddBtn')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    if (btn.disabled || product.stock <= 0) return;
+    btn.disabled = true;
+    try {
+      await addToCart(product, currentQty);
+      showToast(`تمت إضافة ${currentQty} للسلة ✓`, 'success');
+      updateCartBadge();
+    } catch (err) {
+      showToast(err?.message || 'تعذر الإضافة للسلة', 'error');
+    } finally {
+      btn.disabled = product.stock <= 0;
+    }
   });
 
   // Share
-  document.getElementById('shareBtn')?.addEventListener('click', shareProduct);
+  $('#shareBtn')?.addEventListener('click', shareProduct);
 }
 
+/* ============================================
+   GALLERY
+============================================ */
 function setActiveImage(idx) {
-  currentImageIndex = idx;
-  const mainImage = document.getElementById('mainImage');
-  const counter = document.getElementById('galleryCounter');
-  if (mainImage) {
-    mainImage.src = product.images?.[idx] || product.thumbnail || 'https://via.placeholder.com/600';
-  }
-  document.querySelectorAll('.gallery-thumb').forEach((t, i) => {
-    t.classList.toggle('active', i === idx);
-  });
-  if (counter) counter.textContent = `${idx + 1} / ${(product.images || [product.thumbnail]).length}`;
+  if (!product || !Array.isArray(productImages)) return;
+  const total = productImages.length;
+  if (!total) return;
+  const safeIdx = ((idx % total) + total) % total;
 
-  // Update URL without reload
-  const url = new URL(window.location);
-  if (idx > 0) url.searchParams.set('image', idx);
-  else url.searchParams.delete('image');
-  window.history.replaceState({}, '', url);
+  currentImageIndex = safeIdx;
+
+  const mainImage = $('#mainImage');
+  if (mainImage) mainImage.src = safeImg(productImages[safeIdx]);
+
+  $$('.gallery-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === safeIdx);
+  });
+
+  const counter = $('#galleryCounter');
+  if (counter) counter.textContent = `${safeIdx + 1} / ${total}`;
+
+  // Update URL
+  try {
+    const url = new URL(window.location.href);
+    if (safeIdx > 0) url.searchParams.set('image', safeIdx);
+    else url.searchParams.delete('image');
+    window.history.replaceState({}, '', url);
+  } catch { /* ignore */ }
 }
 
+/* ============================================
+   STICKY BAR
+============================================ */
 function updateStickyBar() {
   if (!product) return;
-  const stickyBar = document.getElementById('stickyBar');
-  const priceEl = document.getElementById('stickyPrice');
-  const oldEl = document.getElementById('stickyOldPrice');
-  const addBtn = document.getElementById('stickyAddBtn');
+  const bar = $('#stickyBar');
+  const priceEl = $('#stickyPrice');
+  const oldEl = $('#stickyOldPrice');
+  const addBtn = $('#stickyAddBtn');
+  if (!bar || !priceEl || !addBtn) return;
+
+  bar.style.display = '';
 
   if (product.stock <= 0) {
     addBtn.textContent = '✕ نفذت الكمية';
@@ -541,90 +734,138 @@ function updateStickyBar() {
   }
 
   priceEl.textContent = `${product.price.toLocaleString('ar-EG')} ج.م`;
-  if (product.oldPrice && product.oldPrice > product.price) {
-    oldEl.style.display = 'block';
-    oldEl.textContent = `${product.oldPrice.toLocaleString('ar-EG')} ج.م`;
-  } else {
-    oldEl.style.display = 'none';
+  if (oldEl) {
+    if (product.oldPrice > product.price) {
+      oldEl.style.display = 'block';
+      oldEl.textContent = `${product.oldPrice.toLocaleString('ar-EG')} ج.م`;
+    } else {
+      oldEl.style.display = 'none';
+    }
   }
 }
 
+/* ============================================
+   SHARE
+============================================ */
 async function shareProduct() {
-  const shareData = {
-    title: product.name,
+  if (!product) return;
+  const url = window.location.href;
+  const data = {
+    title: `${product.name} - LUXE Store`,
     text: `شوف ${product.name} على LUXE Store`,
-    url: window.location.href
+    url
   };
   try {
     if (navigator.share) {
-      await navigator.share(shareData);
+      await navigator.share(data);
     } else {
-      await navigator.clipboard.writeText(window.location.href);
-      showToast('تم نسخ الرابط ✓', 'success');
+      const ok = await copyText(url);
+      showToast(ok ? 'تم نسخ الرابط ✓' : 'تعذر نسخ الرابط', ok ? 'success' : 'error');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') {
-      showToast('تعذر المشاركة', 'error');
-    }
+    if (err?.name !== 'AbortError') showToast('تعذر المشاركة', 'error');
   }
 }
 
+/* ============================================
+   RELATED
+============================================ */
 async function loadRelated() {
+  if (!product) return;
+
   try {
-    const res = await api.products.getAll();
-    const related = (res.data || []).filter(p => p.id !== productId && p.category === product.category).slice(0, 4);
+    // استخدم فلتر السيرفر لو متاح — وإلا fallback للكل
+    let items = [];
+    try {
+      const res = await api.products.getAll({ category: product.category, limit: 8 });
+      items = Array.isArray(res?.data) ? res.data : [];
+    } catch {
+      const res = await api.products.getAll();
+      items = Array.isArray(res?.data) ? res.data : [];
+    }
+
+    const related = items
+      .filter(p => p && String(p.id) !== String(productId))
+      .filter(p => String(p.category || '') === product.category)
+      .slice(0, 4);
+
     if (related.length === 0) return;
 
-    document.getElementById('relatedSection').style.display = 'block';
-    document.getElementById('relatedGrid').innerHTML = related.map(p => {
-      const img = p.thumbnail || (p.images && p.images[0]) || 'https://via.placeholder.com/400';
-      const discount = p.oldPrice && p.oldPrice > p.price ? Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100) : 0;
-      const rating = p.rating || 0;
+    const section = $('#relatedSection');
+    const grid = $('#relatedGrid');
+    if (!section || !grid) return;
+
+    section.style.display = 'block';
+    grid.innerHTML = related.map(p => {
+      const name = esc(p.name || 'منتج');
+      const cat = esc(p.category || 'عام');
+      const img = esc(safeImg(p.thumbnail || (Array.isArray(p.images) && p.images[0]) || '', FALLBACK_SMALL));
+      const price = safeNum(p.price, 0);
+      const oldPrice = safeNum(p.oldPrice, 0);
+      const rating = Math.max(0, Math.min(5, safeNum(p.rating, 0)));
       const fullStars = Math.round(rating);
-      const isOut = p.stock <= 0;
+      const disc = oldPrice > price && oldPrice > 0
+        ? Math.round(((oldPrice - price) / oldPrice) * 100)
+        : 0;
+      const isOut = safeNum(p.stock, 0) <= 0;
+
       return `
         <div class="product-card">
-          <a href="product.html?id=${p.id}" style="display:block">
+          <a href="product.html?id=${encodeURIComponent(p.id)}" style="display:block">
             <div class="product-media">
-              <img src="${img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400/f4f2ed/c9a961?text=LUXE'">
+              <img src="${img}" alt="${name}" loading="lazy" onerror="this.onerror=null;this.src='${FALLBACK_SMALL}'">
               <div class="product-badges">
-                ${discount > 0 ? `<span class="badge-pill badge-discount">-${discount}%</span>` : ''}
+                ${disc > 0 ? `<span class="badge-pill badge-discount">-${disc}%</span>` : ''}
                 ${isOut ? `<span class="badge-pill badge-out">نفذ</span>` : ''}
               </div>
             </div>
             <div class="product-body">
-              <span class="product-cat">${p.category || 'عام'}</span>
-              <h3 class="product-title">${p.name}</h3>
+              <span class="product-cat">${cat}</span>
+              <h3 class="product-title">${name}</h3>
               <div class="product-rating">
                 <span class="stars">${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)}</span>
                 <span class="rating-count">${rating.toFixed(1)}</span>
               </div>
               <div class="product-footer">
-                <div class="price-main">${p.price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
+                <div class="price-main">${price.toLocaleString('ar-EG')}<span class="currency">ج.م</span></div>
               </div>
             </div>
           </a>
         </div>`;
     }).join('');
-  } catch (err) { console.error('Related error:', err); }
+  } catch (err) {
+    console.error('[loadRelated]', err);
+  }
 }
 
 /* ============================================
    HEADER SCROLL
 ============================================ */
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('mainHeader');
-  if (window.scrollY > 30) header.classList.add('scrolled');
-  else header.classList.remove('scrolled');
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    $('#mainHeader')?.classList.toggle('scrolled', window.scrollY > 30);
+    scrollTicking = false;
+  });
 }, { passive: true });
 
 /* ============================================
-   INIT
+   BOOTSTRAP
 ============================================ */
 renderUserArea();
 updateCartBadge();
 setupMobileNav();
 setupMobileSearch();
+
+// ضبط productImages بعد التحميل
+loadProduct().then(() => {
+  if (product?.images) {
+    productImages = product.images;
+    setActiveImage(currentImageIndex);
+  }
+});
 </script>
 
 </body>
