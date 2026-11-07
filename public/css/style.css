@@ -6029,7 +6029,80 @@ footer {
 }
 
 
+/* ===========================================
+   STICKY CHECKOUT BAR (MOBILE FIX)
+   =========================================== */
+.sticky-checkout-bar {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 12px 20px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  z-index: 9999 !important; /* فوق أي عنصر */
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.08);
+  /* دعم الآيفون والهواتف اللي فيها شريط سفلي */
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+}
 
+.sticky-checkout-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sticky-checkout-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.sticky-checkout-total {
+  font-family: 'Tajawal', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--gold-dark);
+}
+
+.sticky-checkout-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--ink) 0%, var(--ink-3) 100%);
+  color: var(--gold);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: .3s;
+  border: none;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.sticky-checkout-btn:hover {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: var(--ink);
+}
+
+/* إظهار الشريط على الموبايل بس */
+@media (max-width: 768px) {
+  .sticky-checkout-bar {
+    display: flex !important; /* يظهر */
+  }
+  body {
+    padding-bottom: 80px !important; /* مساحة عشان الشريط */
+  }
+}
+
+/* إخفاء الشريط على الكمبيوتر */
+@media (min-width: 769px) {
+  .sticky-checkout-bar {
+    display: none !important;
+  }
+}
 
 
 
