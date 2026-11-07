@@ -4,11 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#0a0e17">
+  <meta name="description" content="إتمام الطلب على LUXE Store — دفع مصاريف الشحن 250ج والمنتجات عند الاستلام.">
   <title>إتمام الطلب - LUXE Store</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/app-feel.js" defer></script>
 </head>
 <body>
 
@@ -88,7 +90,7 @@
 <!-- ============================================
      CHECKOUT
 ============================================ -->
-<div class="container" id="checkoutContainer">
+<div class="container" id="checkoutContainer" aria-live="polite">
   <div class="checkout-layout">
     <div class="checkout-main">
       <div class="skeleton" style="height:400px;border-radius:14px"></div>
@@ -146,52 +148,116 @@ import { getCart, getCartTotal, updateCartBadge, showToast, formatPrice } from '
 /* ============================================
    CONFIG
 ============================================ */
-const SHIPPING_COST = 200;
-const VODAFONE_CASH_NUMBER = '01001257486';
-const DRAFT_KEY = 'luxe_checkout_draft';
+const SHIPPING_COST         = 250; // ٢٥٠ ج.م
+const VODAFONE_CASH_NUMBER  = '01001257486';
+const DRAFT_KEY             = 'luxe_checkout_draft';
+const COUPON_KEY            = 'luxe_applied_coupon';
+const CART_KEY              = 'luxe_cart';
+const PHONE_RE              = /^01[0-9]{9}$/;
+const REF_RE                = /^[A-Za-z0-9]{6,30}$/;
+const FALLBACK_IMG          = 'https://via.placeholder.com/48/f4f2ed/c9a961?text=LUXE';
+
+/* ============================================
+   UTILS
+============================================ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+/** Escape HTML — يحمي من XSS */
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+/** صورة آمنة */
+function safeImg(url) {
+  if (!url || typeof url !== 'string') return FALLBACK_IMG;
+  const t = url.trim();
+  if (/^https?:\/\//i.test(t) || /^(\.{1,2}\/|\/)/.test(t)) return t;
+  return FALLBACK_IMG;
+}
+
+/** نسخ آمن مع fallback */
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fallthrough */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch { return false; }
+}
+
+/** debounce */
+function debounce(fn, ms = 300) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
 
 /* ============================================
    STATE
 ============================================ */
 let currentUser = null;
 let currentStep = 1;
+let isPlacingOrder = false;
+
 let checkoutData = {
   shippingAddress: {},
   paymentRefNumber: '',
   notes: ''
 };
 
-// قراءة الكوبون اللي جاي من السلة
 let appliedCoupon = null;
 try {
-  const savedCoupon = localStorage.getItem('luxe_applied_coupon');
-  if (savedCoupon) appliedCoupon = JSON.parse(savedCoupon);
-} catch (e) { /* ignore */ }
+  const saved = localStorage.getItem(COUPON_KEY);
+  if (saved) {
+    const c = JSON.parse(saved);
+    // تحقق من الشكل لتجنّب XSS/قيم فاسدة
+    if (c && typeof c.code === 'string' && Number.isFinite(Number(c.discountAmount))) {
+      appliedCoupon = { code: c.code, discountAmount: Math.max(0, Number(c.discountAmount)) };
+    }
+  }
+} catch { appliedCoupon = null; }
 
 /* ============================================
    USER AREA
 ============================================ */
 async function renderUserArea() {
-  const userArea = document.getElementById('userArea');
-  const mobileUserArea = document.getElementById('mobileUserArea');
-  const user = await getCurrentUser();
+  const userArea = $('#userArea');
+  const mobileUserArea = $('#mobileUserArea');
+  let user = null;
+  try { user = await getCurrentUser(); } catch { user = null; }
 
   if (user) {
     const displayName = user.displayName || user.email?.split('@')[0] || 'User';
-    const initial = displayName.charAt(0).toUpperCase();
+    const initial = esc(displayName.charAt(0).toUpperCase());
+    const safeName = esc(displayName);
 
     userArea.innerHTML = `
       <button class="user-chip" id="userChip" type="button" aria-label="حسابي">
-        <span>${displayName}</span>
+        <span>${safeName}</span>
         <div class="user-avatar">${initial}</div>
       </button>`;
 
-    document.getElementById('userChip').addEventListener('click', () => {
-      if (confirm('هل تريد تسجيل الخروج؟')) {
-        logout().then(() => {
-          showToast('تم تسجيل الخروج', 'info');
-          setTimeout(() => location.reload(), 800);
-        });
+    $('#userChip')?.addEventListener('click', async () => {
+      if (!confirm('هل تريد تسجيل الخروج؟')) return;
+      try {
+        await logout();
+        showToast('تم تسجيل الخروج', 'info');
+        setTimeout(() => location.replace('login.html'), 500);
+      } catch {
+        showToast('تعذر تسجيل الخروج', 'error');
       }
     });
 
@@ -200,13 +266,16 @@ async function renderUserArea() {
         <a href="profile.html" class="mobile-user-chip">
           <div class="user-avatar">${initial}</div>
           <div class="user-info">
-            <div class="user-name">${displayName}</div>
+            <div class="user-name">${safeName}</div>
             <div class="user-role">عرض الحساب</div>
           </div>
         </a>`;
     }
   } else {
-    userArea.innerHTML = `<a href="login.html" class="user-chip" style="padding:6px 16px"><span>دخول</span><div class="user-avatar">👤</div></a>`;
+    userArea.innerHTML = `
+      <a href="login.html" class="user-chip" style="padding:6px 16px">
+        <span>دخول</span><div class="user-avatar">👤</div>
+      </a>`;
     if (mobileUserArea) {
       mobileUserArea.innerHTML = `
         <a href="login.html" class="mobile-user-chip">
@@ -224,10 +293,11 @@ async function renderUserArea() {
    MOBILE NAV / SEARCH
 ============================================ */
 function setupMobileNav() {
-  const toggle = document.getElementById('mobileNavToggle');
-  const drawer = document.getElementById('mobileNavDrawer');
-  const overlay = document.getElementById('mobileNavOverlay');
-  const closeBtn = document.getElementById('mobileNavClose');
+  const toggle = $('#mobileNavToggle');
+  const drawer = $('#mobileNavDrawer');
+  const overlay = $('#mobileNavOverlay');
+  const closeBtn = $('#mobileNavClose');
+  if (!toggle || !drawer || !overlay) return;
 
   const open = () => {
     drawer.classList.add('open');
@@ -242,80 +312,84 @@ function setupMobileNav() {
     document.body.style.overflow = '';
   };
 
-  toggle?.addEventListener('click', open);
+  toggle.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
-  overlay?.addEventListener('click', close);
-  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
-  document.addEventListener('keydown', (e) => {
+  overlay.addEventListener('click', close);
+  $$('a', drawer).forEach(a => a.addEventListener('click', close));
+  document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) close();
   });
 }
 
 function setupMobileSearch() {
-  const btn = document.getElementById('mobileSearchBtn');
-  const overlay = document.getElementById('mobileSearchOverlay');
-  const closeBtn = document.getElementById('closeSearchBtn');
-  const input = document.getElementById('mobileSearchInput');
-  const desktopInput = document.getElementById('searchInput');
+  const btn = $('#mobileSearchBtn');
+  const overlay = $('#mobileSearchOverlay');
+  const closeBtn = $('#closeSearchBtn');
+  const input = $('#mobileSearchInput');
+  const desktopInput = $('#searchInput');
+  if (!overlay) return;
 
   btn?.addEventListener('click', () => {
     overlay.classList.add('active');
-    setTimeout(() => input.focus(), 100);
+    setTimeout(() => input?.focus(), 100);
   });
   closeBtn?.addEventListener('click', () => overlay.classList.remove('active'));
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('active');
+  });
 
-  const goSearch = (val) => {
-    if (val && val.trim()) window.location.href = `index.html?search=${encodeURIComponent(val.trim())}`;
+  const go = (v) => {
+    const q = (v || '').trim();
+    if (q) window.location.href = `index.html?search=${encodeURIComponent(q)}`;
   };
-  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
-  desktopInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSearch(e.target.value); });
+  input?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
+  desktopInput?.addEventListener('keydown', e => { if (e.key === 'Enter') go(e.target.value); });
 }
 
 /* ============================================
    DRAFT SAVE / LOAD
 ============================================ */
 function saveDraft() {
-  try {
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(checkoutData));
-  } catch (e) { /* ignore */ }
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(checkoutData)); } catch {}
 }
-
 function loadDraft() {
   try {
-    const saved = sessionStorage.getItem(DRAFT_KEY);
-    if (saved) {
-      const d = JSON.parse(saved);
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d && typeof d === 'object') {
       checkoutData = {
         ...checkoutData,
-        ...d,
-        shippingAddress: { ...checkoutData.shippingAddress, ...(d.shippingAddress || {}) }
+        paymentRefNumber: typeof d.paymentRefNumber === 'string' ? d.paymentRefNumber : '',
+        notes: typeof d.notes === 'string' ? d.notes : '',
+        shippingAddress: { ...(d.shippingAddress || {}) }
       };
     }
-  } catch (e) { /* ignore */ }
+  } catch {}
 }
-
 function clearDraft() {
-  try { sessionStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
 }
+const saveDraftDebounced = debounce(saveDraft, 400);
 
 /* ============================================
    INIT
 ============================================ */
 async function initCheckout() {
-  currentUser = await getCurrentUser();
+  try { currentUser = await getCurrentUser(); } catch { currentUser = null; }
 
   if (!currentUser) {
     showToast('لازم تسجل دخول الأول', 'warning');
     setTimeout(() => {
-      window.location.href = 'login.html?redirect=checkout.html';
+      window.location.replace('login.html?redirect=checkout.html');
     }, 1000);
     return;
   }
 
   const cart = getCart();
-  if (cart.length === 0) {
-    document.getElementById('subText').textContent = '';
-    document.getElementById('checkoutContainer').innerHTML = `
+  if (!Array.isArray(cart) || cart.length === 0) {
+    $('#subText').textContent = '';
+    $('#checkoutContainer').innerHTML = `
       <div class="empty-cart" style="margin:30px 0">
         <div class="emoji">🛒</div>
         <h2>السلة فاضية</h2>
@@ -327,17 +401,24 @@ async function initCheckout() {
 
   loadDraft();
 
+  // محاولة جلب بيانات المستخدم لتعبئة العنوان
   try {
     const meRes = await api.auth.me();
-    if (meRes.user) {
-      const u = meRes.user;
+    const u = meRes?.user || meRes?.data?.user || meRes?.data || null;
+    if (u) {
       checkoutData.shippingAddress = {
         ...checkoutData.shippingAddress,
-        name: checkoutData.shippingAddress.name || u.name || currentUser.displayName || '',
+        name:  checkoutData.shippingAddress.name  || u.name  || currentUser.displayName || '',
         phone: checkoutData.shippingAddress.phone || u.phone || ''
       };
     }
   } catch (err) {
+    // لو التوكن منتهي، وجّه للدخول
+    if (err?.status === 401 || err?.code === 'UNAUTHORIZED') {
+      showToast('انتهت الجلسة، سجل دخول من جديد', 'warning');
+      setTimeout(() => window.location.replace('login.html?redirect=checkout.html'), 800);
+      return;
+    }
     if (!checkoutData.shippingAddress.name) {
       checkoutData.shippingAddress.name = currentUser.displayName || '';
     }
@@ -350,40 +431,40 @@ async function initCheckout() {
    RENDER CHECKOUT
 ============================================ */
 function renderCheckout() {
-  document.getElementById('subText').textContent = `خطوة ${currentStep} من 3`;
+  $('#subText').textContent = `خطوة ${currentStep} من 3`;
 
-  const container = document.getElementById('checkoutContainer');
+  const container = $('#checkoutContainer');
   const cart = getCart();
   const subtotal = getCartTotal();
   const shipping = SHIPPING_COST;
-  
-  // حساب الخصم لو موجود
-  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  // الإجمالي بعد الخصم
-  const total = subtotal + shipping - discount;
+
+  // الخصم: نعرضه فقط، السيرفر هو المرجع النهائي
+  const discount = appliedCoupon ? Math.min(appliedCoupon.discountAmount, subtotal) : 0;
+  const total = Math.max(0, subtotal + shipping - discount);
 
   const stepsHTML = `
     <div class="steps-indicator">
-      <div class="step-dot ${currentStep === 1 ? 'active' : currentStep > 1 ? 'done' : ''}">
-        <div class="circle">${currentStep > 1 ? '✓' : '1'}</div>
-        <span>العنوان</span>
-      </div>
-      <div class="step-dot ${currentStep === 2 ? 'active' : currentStep > 2 ? 'done' : ''}">
-        <div class="circle">${currentStep > 2 ? '✓' : '2'}</div>
-        <span>دفع الشحن</span>
-      </div>
-      <div class="step-dot ${currentStep === 3 ? 'active' : ''}">
-        <div class="circle">3</div>
-        <span>المراجعة</span>
-      </div>
+      ${[1, 2, 3].map(n => {
+        const labels = ['العنوان', 'دفع الشحن', 'المراجعة'];
+        const isActive = currentStep === n;
+        const isDone = currentStep > n;
+        const cls = isActive ? 'active' : isDone ? 'done' : '';
+        const circle = isDone ? '✓' : String(n);
+        return `
+          <div class="step-dot ${cls}" ${isActive ? 'aria-current="step"' : ''}>
+            <div class="circle">${circle}</div>
+            <span>${labels[n - 1]}</span>
+          </div>`;
+      }).join('')}
     </div>`;
 
   let stepHTML = '';
   let stickyText = 'التالي ←';
 
-  // ============ STEP 1: Address ============
+  /* ---------- STEP 1: Address ---------- */
   if (currentStep === 1) {
-    const d = checkoutData.shippingAddress;
+    const d = checkoutData.shippingAddress || {};
+    const cities = ['القاهرة','الجيزة','الإسكندرية','المنصورة','أسيوط','المنيا','طنطا','بورسعيد','السويس','أسوان','الأقصر'];
     stepHTML = `
       <div class="step-content">
         <h2>📍 بيانات الشحن</h2>
@@ -391,12 +472,12 @@ function renderCheckout() {
           <div class="form-row-2">
             <div class="form-group" id="fg-name">
               <label>الاسم بالكامل <span class="req">*</span></label>
-              <input type="text" id="f-name" value="${d.name || ''}" placeholder="أدخل اسمك" autocomplete="name">
+              <input type="text" id="f-name" value="${esc(d.name || '')}" placeholder="أدخل اسمك" autocomplete="name" maxlength="80">
               <div class="form-error">الاسم مطلوب (3 أحرف على الأقل)</div>
             </div>
             <div class="form-group" id="fg-phone">
               <label>رقم الموبايل <span class="req">*</span></label>
-              <input type="tel" id="f-phone" value="${d.phone || ''}" placeholder="01xxxxxxxxx" inputmode="numeric" autocomplete="tel" maxlength="11">
+              <input type="tel" id="f-phone" value="${esc(d.phone || '')}" placeholder="01xxxxxxxxx" inputmode="numeric" autocomplete="tel" maxlength="11">
               <div class="form-error">رقم غير صحيح (11 رقم يبدأ بـ 01)</div>
             </div>
           </div>
@@ -406,37 +487,37 @@ function renderCheckout() {
               <label>المحافظة <span class="req">*</span></label>
               <select id="f-city">
                 <option value="">اختر المحافظة</option>
-                ${['القاهرة','الجيزة','الإسكندرية','المنصورة','أسيوط','المنيا','طنطا','بورسعيد','السويس','أسوان','الأقصر'].map(c => `<option value="${c}" ${d.city === c ? 'selected' : ''}>${c}</option>`).join('')}
+                ${cities.map(c => `<option value="${esc(c)}" ${d.city === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
               </select>
               <div class="form-error">اختر المحافظة</div>
             </div>
             <div class="form-group" id="fg-area">
               <label>المنطقة / الحي <span class="req">*</span></label>
-              <input type="text" id="f-area" value="${d.area || ''}" placeholder="مثال: مدينة نصر">
+              <input type="text" id="f-area" value="${esc(d.area || '')}" placeholder="مثال: مدينة نصر" maxlength="60">
               <div class="form-error">المنطقة مطلوبة</div>
             </div>
           </div>
 
           <div class="form-group" id="fg-street">
             <label>الشارع <span class="req">*</span></label>
-            <input type="text" id="f-street" value="${d.street || ''}" placeholder="اسم الشارع">
+            <input type="text" id="f-street" value="${esc(d.street || '')}" placeholder="اسم الشارع" maxlength="100">
             <div class="form-error">الشارع مطلوب</div>
           </div>
 
           <div class="form-row-2">
             <div class="form-group">
               <label>رقم المبنى</label>
-              <input type="text" id="f-building" value="${d.building || ''}" placeholder="مثال: 12">
+              <input type="text" id="f-building" value="${esc(d.building || '')}" placeholder="مثال: 12" maxlength="10">
             </div>
             <div class="form-group">
               <label>رقم الشقة / الطابق</label>
-              <input type="text" id="f-apartment" value="${d.apartment || ''}" placeholder="مثال: 3">
+              <input type="text" id="f-apartment" value="${esc(d.apartment || '')}" placeholder="مثال: 3" maxlength="10">
             </div>
           </div>
 
           <div class="form-group">
             <label>ملاحظات إضافية (اختياري)</label>
-            <textarea id="f-notes" placeholder="أي تفاصيل تساعد في التوصيل...">${checkoutData.notes || ''}</textarea>
+            <textarea id="f-notes" placeholder="أي تفاصيل تساعد في التوصيل..." maxlength="300">${esc(checkoutData.notes || '')}</textarea>
           </div>
         </div>
 
@@ -446,7 +527,7 @@ function renderCheckout() {
       </div>`;
   }
 
-  // ============ STEP 2: Payment ============
+  /* ---------- STEP 2: Payment ---------- */
   else if (currentStep === 2) {
     stickyText = 'التالي: المراجعة ←';
     stepHTML = `
@@ -456,7 +537,7 @@ function renderCheckout() {
         <div class="payment-warning">
           <div class="warn-title">⚠️ مهم جداً — اقرأ بعناية</div>
           <p>
-            لازم تحوّل <strong>${formatPrice(SHIPPING_COST)}</strong> (مصاريف الشحن) على فودافون كاش قبل تأكيد الطلب.<br><br>
+            لازم تحوّل <strong>${esc(formatPrice(SHIPPING_COST))}</strong> (مصاريف الشحن) على فودافون كاش قبل تأكيد الطلب.<br><br>
             <strong>سعر المنتجات هيتدفع عند الاستلام.</strong>
           </p>
         </div>
@@ -467,7 +548,7 @@ function renderCheckout() {
           <div class="payment-number-block">
             <div class="payment-method-label">📱 فودافون كاش</div>
             <div class="payment-number-row">
-              <div class="payment-number">${VODAFONE_CASH_NUMBER}</div>
+              <div class="payment-number">${esc(VODAFONE_CASH_NUMBER)}</div>
               <button class="copy-btn" id="copyNumberBtn" type="button" aria-label="نسخ الرقم">
                 📋 نسخ
               </button>
@@ -476,7 +557,7 @@ function renderCheckout() {
 
           <div class="payment-amount-box">
             <div class="payment-amount-label">المبلغ المطلوب تحويله:</div>
-            <div class="payment-amount">${formatPrice(SHIPPING_COST)}</div>
+            <div class="payment-amount">${esc(formatPrice(SHIPPING_COST))}</div>
           </div>
         </div>
 
@@ -484,8 +565,8 @@ function renderCheckout() {
           <strong>📝 خطوات التحويل:</strong>
           <ol>
             <li>افتح تطبيق فودافون كاش</li>
-            <li>اختار "تحويل" → أدخل الرقم <strong>${VODAFONE_CASH_NUMBER}</strong></li>
-            <li>أدخل المبلغ <strong>${formatPrice(SHIPPING_COST)}</strong></li>
+            <li>اختار "تحويل" → أدخل الرقم <strong>${esc(VODAFONE_CASH_NUMBER)}</strong></li>
+            <li>أدخل المبلغ <strong>${esc(formatPrice(SHIPPING_COST))}</strong></li>
             <li>بعد التحويل، هتوصلك رسالة SMS فيها رقم العملية</li>
             <li>اكتب رقم العملية في المكان ده تحت</li>
           </ol>
@@ -494,7 +575,7 @@ function renderCheckout() {
         <div class="checkout-form">
           <div class="form-group" id="fg-ref">
             <label>رقم عملية التحويل <span class="req">*</span></label>
-            <input type="text" id="f-ref" placeholder="مثال: 9876543210" value="${checkoutData.paymentRefNumber || ''}" maxlength="30" inputmode="numeric">
+            <input type="text" id="f-ref" placeholder="مثال: 9876543210" value="${esc(checkoutData.paymentRefNumber || '')}" maxlength="30" inputmode="text" autocomplete="off">
             <div class="form-error">رقم عملية التحويل مطلوب (من 6 لـ 30 حرف/رقم)</div>
           </div>
         </div>
@@ -512,10 +593,10 @@ function renderCheckout() {
       </div>`;
   }
 
-  // ============ STEP 3: Review ============
+  /* ---------- STEP 3: Review ---------- */
   else if (currentStep === 3) {
     stickyText = '🎉 تأكيد الطلب';
-    const d = checkoutData.shippingAddress;
+    const d = checkoutData.shippingAddress || {};
     stepHTML = `
       <div class="step-content">
         <h2>✓ مراجعة الطلب</h2>
@@ -526,10 +607,10 @@ function renderCheckout() {
             <button class="edit-btn" id="editAddress" type="button">تعديل</button>
           </h4>
           <p>
-            <strong>${d.name}</strong><br>
-            ${d.phone}<br>
-            ${d.street}${d.building ? `, مبنى ${d.building}` : ''}${d.apartment ? `, شقة ${d.apartment}` : ''}<br>
-            ${d.area}, ${d.city}
+            <strong>${esc(d.name || '')}</strong><br>
+            ${esc(d.phone || '')}<br>
+            ${esc(d.street || '')}${d.building ? `, مبنى ${esc(d.building)}` : ''}${d.apartment ? `, شقة ${esc(d.apartment)}` : ''}<br>
+            ${esc(d.area || '')}, ${esc(d.city || '')}
           </p>
         </div>
 
@@ -539,33 +620,38 @@ function renderCheckout() {
             <button class="edit-btn" id="editPayment" type="button">تعديل</button>
           </h4>
           <p>
-            رقم العملية: <strong class="mono-val">${checkoutData.paymentRefNumber}</strong><br>
-            <span class="success-text">✓ ${formatPrice(SHIPPING_COST)} — هيتأكد من الأدمن</span>
+            رقم العملية: <strong class="mono-val">${esc(checkoutData.paymentRefNumber || '')}</strong><br>
+            <span class="success-text">✓ ${esc(formatPrice(SHIPPING_COST))} — هيتأكد من الأدمن</span>
           </p>
         </div>
 
         <div class="review-items">
           <h4 class="review-items-title">📦 المنتجات (${cart.length})</h4>
-          ${cart.map(i => `
-            <div class="review-item-row">
-              <img src="${i.image || 'https://via.placeholder.com/48'}" alt="${i.name}">
-              <div class="info">
-                <h5>${i.name}</h5>
-                <span>${i.qty} × ${formatPrice(i.price)}</span>
-              </div>
-              <div class="price">${formatPrice(i.price * i.qty)}</div>
-            </div>
-          `).join('')}
+          ${cart.map(i => {
+            const name = esc(i.name || 'منتج');
+            const qty  = Number(i.qty) || 0;
+            const price = Number(i.price) || 0;
+            const img  = esc(safeImg(i.image));
+            return `
+              <div class="review-item-row">
+                <img src="${img}" alt="${name}" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+                <div class="info">
+                  <h5>${name}</h5>
+                  <span>${qty} × ${esc(formatPrice(price))}</span>
+                </div>
+                <div class="price">${esc(formatPrice(price * qty))}</div>
+              </div>`;
+          }).join('')}
         </div>
 
         <div class="payment-split-box">
           <div class="split-row">
             <span class="split-label">💳 مدفوع الآن (شحن)</span>
-            <strong class="split-val success">${formatPrice(SHIPPING_COST)}</strong>
+            <strong class="split-val success">${esc(formatPrice(SHIPPING_COST))}</strong>
           </div>
           <div class="split-row total">
             <span class="split-label">💰 متبقي (عند الاستلام)</span>
-            <strong class="split-val gold">${formatPrice(Math.max(0, subtotal - discount))}</strong>
+            <strong class="split-val gold">${esc(formatPrice(Math.max(0, subtotal - discount)))}</strong>
           </div>
         </div>
 
@@ -576,32 +662,34 @@ function renderCheckout() {
       </div>`;
   }
 
-  // Sidebar
+  /* ---------- SIDEBAR ---------- */
   const sidebarHTML = `
     <div class="checkout-summary">
       <h3>ملخص الطلب</h3>
-      ${cart.map(i => `
-        <div class="mini-item-row">
-          <img src="${i.image || 'https://via.placeholder.com/44'}" alt="${i.name}">
-          <div class="info">
-            <h5>${i.name}</h5>
-            <span>${i.qty} × ${formatPrice(i.price)}</span>
-          </div>
-          <div class="price">${formatPrice(i.price * i.qty)}</div>
-        </div>
-      `).join('')}
+      ${cart.map(i => {
+        const name = esc(i.name || 'منتج');
+        const qty  = Number(i.qty) || 0;
+        const price = Number(i.price) || 0;
+        const img  = esc(safeImg(i.image));
+        return `
+          <div class="mini-item-row">
+            <img src="${img}" alt="${name}" onerror="this.onerror=null;this.src='${FALLBACK_IMG}'">
+            <div class="info">
+              <h5>${name}</h5>
+              <span>${qty} × ${esc(formatPrice(price))}</span>
+            </div>
+            <div class="price">${esc(formatPrice(price * qty))}</div>
+          </div>`;
+      }).join('')}
       <div class="summary-divider">
-        <div class="summary-row"><span>سعر المنتجات</span><span class="val">${formatPrice(subtotal)}</span></div>
-        <div class="summary-row"><span>الشحن (مدفوع)</span><span class="val" style="color:var(--success)">${formatPrice(shipping)}</span></div>
-        
+        <div class="summary-row"><span>سعر المنتجات</span><span class="val">${esc(formatPrice(subtotal))}</span></div>
+        <div class="summary-row"><span>الشحن (مدفوع)</span><span class="val" style="color:var(--success)">${esc(formatPrice(shipping))}</span></div>
         ${discount > 0 ? `
           <div class="summary-row">
-            <span style="color:var(--success)">خصم (${appliedCoupon.code})</span>
-            <span class="val" style="color:var(--success);font-weight:800">- ${formatPrice(discount)}</span>
-          </div>
-        ` : ''}
-        
-        <div class="summary-row total"><span>الإجمالي</span><span class="val">${formatPrice(total)}</span></div>
+            <span style="color:var(--success)">خصم (${esc(appliedCoupon.code)})</span>
+            <span class="val" style="color:var(--success);font-weight:800">- ${esc(formatPrice(discount))}</span>
+          </div>` : ''}
+        <div class="summary-row total"><span>الإجمالي</span><span class="val">${esc(formatPrice(total))}</span></div>
       </div>
     </div>`;
 
@@ -611,9 +699,11 @@ function renderCheckout() {
       ${sidebarHTML}
     </div>`;
 
-  // Update sticky bar
-  document.getElementById('stickyTotal').textContent = formatPrice(total);
-  document.getElementById('stickyActionBtn').textContent = stickyText;
+  // Sticky
+  const stickyTotal = $('#stickyTotal');
+  const stickyBtn = $('#stickyActionBtn');
+  if (stickyTotal) stickyTotal.textContent = formatPrice(total);
+  if (stickyBtn) stickyBtn.textContent = stickyText;
 
   attachHandlers();
 }
@@ -622,67 +712,70 @@ function renderCheckout() {
    HANDLERS
 ============================================ */
 function attachHandlers() {
-  document.getElementById('nextBtn')?.addEventListener('click', goNext);
-  document.getElementById('backBtn')?.addEventListener('click', goBack);
+  $('#nextBtn')?.addEventListener('click', goNext);
+  $('#backBtn')?.addEventListener('click', goBack);
 
-  document.getElementById('stickyActionBtn')?.addEventListener('click', () => {
-    if (currentStep === 3) {
-      placeOrder();
-    } else {
-      goNext();
-    }
+  $('#stickyActionBtn')?.addEventListener('click', () => {
+    if (currentStep === 3) placeOrder();
+    else goNext();
   });
 
-  document.getElementById('editAddress')?.addEventListener('click', () => {
+  $('#editAddress')?.addEventListener('click', () => {
     currentStep = 1;
     renderCheckout();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
-  document.getElementById('editPayment')?.addEventListener('click', () => {
+  $('#editPayment')?.addEventListener('click', () => {
     currentStep = 2;
     renderCheckout();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  document.getElementById('placeOrderBtn')?.addEventListener('click', placeOrder);
+  $('#placeOrderBtn')?.addEventListener('click', placeOrder);
 
-  document.getElementById('copyNumberBtn')?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(VODAFONE_CASH_NUMBER);
-      showToast('تم نسخ الرقم ✓', 'success');
-    } catch (e) {
-      showToast('تعذر النسخ — انسخه يدويًا', 'warning');
-    }
+  $('#copyNumberBtn')?.addEventListener('click', async () => {
+    const ok = await copyText(VODAFONE_CASH_NUMBER);
+    showToast(ok ? 'تم نسخ الرقم ✓' : 'تعذر النسخ — انسخه يدويًا', ok ? 'success' : 'warning');
   });
 
   setupLiveValidation();
+  setupAutoSave();
 }
 
-function goNext() {
-  if (currentStep === 1) {
-    if (!validateAddress()) return;
-    saveAddress();
-    saveDraft();
-  }
-  if (currentStep === 2) {
-    if (!validatePayment()) return;
-    savePayment();
-    saveDraft();
-  }
-  currentStep++;
-  renderCheckout();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+function setupAutoSave() {
+  const bindings = {
+    'f-name':       v => v.length >= 3,
+    'f-phone':      v => PHONE_RE.test(v),
+    'f-city':       v => !!v,
+    'f-area':       v => v.length > 0,
+    'f-street':     v => v.length > 0,
+    'f-ref':        v => REF_RE.test(v)
+  };
+
+  Object.keys(bindings).forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      // حفظ تدريجي لبيانات الشحن/الدفع
+      if (currentStep === 1) {
+        checkoutData.shippingAddress = {
+          name:       $('#f-name')?.value.trim() || '',
+          phone:      $('#f-phone')?.value.trim() || '',
+          city:       $('#f-city')?.value || '',
+          area:       $('#f-area')?.value.trim() || '',
+          street:     $('#f-street')?.value.trim() || '',
+          building:   $('#f-building')?.value.trim() || '',
+          apartment:  $('#f-apartment')?.value.trim() || ''
+        };
+        checkoutData.notes = $('#f-notes')?.value.trim() || '';
+      } else if (currentStep === 2) {
+        checkoutData.paymentRefNumber = $('#f-ref')?.value.trim() || '';
+      }
+      saveDraftDebounced();
+    });
+  });
 }
 
-function goBack() {
-  currentStep--;
-  renderCheckout();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-/* ============================================
-   LIVE VALIDATION
-============================================ */
 function setupLiveValidation() {
   const bind = (id, fieldKey, validator) => {
     const el = document.getElementById(id);
@@ -690,22 +783,47 @@ function setupLiveValidation() {
     el.addEventListener('blur', () => {
       const fg = document.getElementById('fg-' + fieldKey);
       if (!fg) return;
-      if (el.value.trim() && !validator(el.value.trim())) {
-        fg.classList.add('error');
-      } else {
-        fg.classList.remove('error');
-      }
+      const v = el.value.trim();
+      if (v && !validator(v)) fg.classList.add('error');
+      else fg.classList.remove('error');
     });
     el.addEventListener('input', () => {
-      const fg = document.getElementById('fg-' + fieldKey);
-      fg?.classList.remove('error');
+      document.getElementById('fg-' + fieldKey)?.classList.remove('error');
     });
   };
-
-  bind('f-name', 'name', v => v.length >= 3);
-  bind('f-phone', 'phone', v => /^01[0-9]{9}$/.test(v));
-  bind('f-area', 'area', v => v.length > 0);
+  bind('f-name',   'name',   v => v.length >= 3);
+  bind('f-phone',  'phone',  v => PHONE_RE.test(v));
+  bind('f-area',   'area',   v => v.length > 0);
   bind('f-street', 'street', v => v.length > 0);
+  bind('f-ref',    'ref',    v => REF_RE.test(v));
+}
+
+/* ============================================
+   NAVIGATION
+============================================ */
+function goNext() {
+  if (currentStep === 1) {
+    if (!validateAddress()) return;
+    saveAddress();
+    saveDraft();
+  } else if (currentStep === 2) {
+    if (!validatePayment()) return;
+    savePayment();
+    saveDraft();
+  }
+  if (currentStep < 3) currentStep++;
+  renderCheckout();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  // حفظ التعديلات قبل الرجوع
+  if (currentStep === 1) { try { saveAddress(); saveDraft(); } catch {} }
+  if (currentStep === 2) { try { savePayment(); saveDraft(); } catch {} }
+
+  if (currentStep > 1) currentStep--;
+  renderCheckout();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ============================================
@@ -713,11 +831,11 @@ function setupLiveValidation() {
 ============================================ */
 function validateAddress() {
   const fields = {
-    name: document.getElementById('f-name')?.value.trim(),
-    phone: document.getElementById('f-phone')?.value.trim(),
-    city: document.getElementById('f-city')?.value,
-    area: document.getElementById('f-area')?.value.trim(),
-    street: document.getElementById('f-street')?.value.trim()
+    name:   $('#f-name')?.value.trim() || '',
+    phone:  $('#f-phone')?.value.trim() || '',
+    city:   $('#f-city')?.value || '',
+    area:   $('#f-area')?.value.trim() || '',
+    street: $('#f-street')?.value.trim() || ''
   };
 
   let valid = true;
@@ -725,11 +843,11 @@ function validateAddress() {
     document.getElementById('fg-' + k)?.classList.remove('error');
   });
 
-  if (!fields.name || fields.name.length < 3) { document.getElementById('fg-name')?.classList.add('error'); valid = false; }
-  if (!/^01[0-9]{9}$/.test(fields.phone || '')) { document.getElementById('fg-phone')?.classList.add('error'); valid = false; }
-  if (!fields.city) { document.getElementById('fg-city')?.classList.add('error'); valid = false; }
-  if (!fields.area) { document.getElementById('fg-area')?.classList.add('error'); valid = false; }
-  if (!fields.street) { document.getElementById('fg-street')?.classList.add('error'); valid = false; }
+  if (fields.name.length < 3)              { $('#fg-name')?.classList.add('error'); valid = false; }
+  if (!PHONE_RE.test(fields.phone))        { $('#fg-phone')?.classList.add('error'); valid = false; }
+  if (!fields.city)                        { $('#fg-city')?.classList.add('error'); valid = false; }
+  if (!fields.area)                        { $('#fg-area')?.classList.add('error'); valid = false; }
+  if (!fields.street)                      { $('#fg-street')?.classList.add('error'); valid = false; }
 
   if (!valid) showToast('من فضلك أكمل البيانات المطلوبة', 'error');
   return valid;
@@ -737,54 +855,72 @@ function validateAddress() {
 
 function saveAddress() {
   checkoutData.shippingAddress = {
-    name: document.getElementById('f-name').value.trim(),
-    phone: document.getElementById('f-phone').value.trim(),
-    city: document.getElementById('f-city').value,
-    area: document.getElementById('f-area').value.trim(),
-    street: document.getElementById('f-street').value.trim(),
-    building: document.getElementById('f-building')?.value.trim() || '',
-    apartment: document.getElementById('f-apartment')?.value.trim() || ''
+    name:       $('#f-name')?.value.trim() || '',
+    phone:      $('#f-phone')?.value.trim() || '',
+    city:       $('#f-city')?.value || '',
+    area:       $('#f-area')?.value.trim() || '',
+    street:     $('#f-street')?.value.trim() || '',
+    building:   $('#f-building')?.value.trim() || '',
+    apartment:  $('#f-apartment')?.value.trim() || ''
   };
-  checkoutData.notes = document.getElementById('f-notes')?.value.trim() || '';
+  checkoutData.notes = $('#f-notes')?.value.trim() || '';
 }
 
 function validatePayment() {
-  const ref = document.getElementById('f-ref')?.value.trim();
-  document.getElementById('fg-ref')?.classList.remove('error');
-  if (!ref || ref.length < 6) {
-    document.getElementById('fg-ref')?.classList.add('error');
-    showToast('رقم عملية التحويل مطلوب (6 أحرف على الأقل)', 'error');
+  const ref = $('#f-ref')?.value.trim() || '';
+  $('#fg-ref')?.classList.remove('error');
+  if (!REF_RE.test(ref)) {
+    $('#fg-ref')?.classList.add('error');
+    showToast('رقم عملية التحويل مطلوب (من 6 لـ 30 حرف/رقم)', 'error');
     return false;
   }
   return true;
 }
 
 function savePayment() {
-  checkoutData.paymentRefNumber = document.getElementById('f-ref').value.trim();
+  checkoutData.paymentRefNumber = $('#f-ref')?.value.trim() || '';
 }
 
 /* ============================================
    PLACE ORDER
 ============================================ */
-let isPlacingOrder = false;
-
 async function placeOrder() {
   if (isPlacingOrder) return;
+
+  // إعادة تحقق نهائي قبل الإرسال
+  if (!checkoutData.shippingAddress?.name || !checkoutData.paymentRefNumber) {
+    // نحاول حفظ من الحقول لو الخطوة الحالية هي المصدر
+    if (currentStep === 1) saveAddress();
+    if (currentStep === 2) savePayment();
+  }
+  const addr = checkoutData.shippingAddress || {};
+  if (!addr.name || addr.name.length < 3 ||
+      !PHONE_RE.test(addr.phone || '') ||
+      !addr.city || !addr.area || !addr.street) {
+    showToast('بيانات الشحن غير مكتملة، راجع الخطوة الأولى', 'error');
+    currentStep = 1;
+    renderCheckout();
+    return;
+  }
+  if (!REF_RE.test(checkoutData.paymentRefNumber || '')) {
+    showToast('رقم عملية التحويل غير صحيح', 'error');
+    currentStep = 2;
+    renderCheckout();
+    return;
+  }
+
   isPlacingOrder = true;
 
-  const btns = [
-    document.getElementById('placeOrderBtn'),
-    document.getElementById('stickyActionBtn')
-  ].filter(Boolean);
-
+  const btns = [$('#placeOrderBtn'), $('#stickyActionBtn')].filter(Boolean);
   btns.forEach(b => {
     b.disabled = true;
+    b.setAttribute('aria-busy', 'true');
     b.dataset.originalText = b.textContent;
     b.innerHTML = '<span class="loading-spinner"></span> جاري إرسال الطلب...';
   });
 
   const cart = getCart();
-  const items = cart.map(i => ({ productId: i.id, qty: i.qty }));
+  const items = cart.map(i => ({ productId: i.id, qty: Number(i.qty) || 0 }));
 
   try {
     const res = await api.orders.create({
@@ -793,23 +929,25 @@ async function placeOrder() {
       paymentMethod: 'vodafone_cash',
       paymentRefNumber: checkoutData.paymentRefNumber,
       notes: checkoutData.notes,
-      couponCode: appliedCoupon ? appliedCoupon.code : null // ✅ إرسال كود الخصم للسيرفر
+      couponCode: appliedCoupon ? appliedCoupon.code : null
     });
 
-    // Clear cart & draft & coupon
-    localStorage.removeItem('luxe_cart');
-    localStorage.removeItem('luxe_applied_coupon'); // مسح الكوبون بعد الاستخدام
+    // تنظيف فقط بعد نجاح السيرفر
+    try { localStorage.removeItem(CART_KEY); } catch {}
+    try { localStorage.removeItem(COUPON_KEY); } catch {}
     clearDraft();
     updateCartBadge();
 
-    showSuccessPage(res, cart);
+    const order = res?.data || res;
+    showSuccessPage(order, cart);
   } catch (err) {
-    console.error(err);
-    showToast(err.message || 'حدث خطأ في إرسال الطلب', 'error');
+    console.error('[placeOrder]', err);
+    showToast(err?.message || 'حدث خطأ في إرسال الطلب', 'error');
     isPlacingOrder = false;
     btns.forEach(b => {
       b.disabled = false;
-      b.textContent = b.dataset.originalText;
+      b.removeAttribute('aria-busy');
+      b.textContent = b.dataset.originalText || 'تأكيد الطلب';
     });
   }
 }
@@ -817,14 +955,20 @@ async function placeOrder() {
 /* ============================================
    SUCCESS PAGE
 ============================================ */
-function showSuccessPage(res, cart) {
-  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+function showSuccessPage(order, cart) {
+  const subtotal = cart.reduce((s, i) => s + (Number(i.price) || 0) * (Number(i.qty) || 0), 0);
+  const discount = appliedCoupon ? Math.min(appliedCoupon.discountAmount, subtotal) : 0;
   const amountToPayOnDelivery = Math.max(0, subtotal - discount);
 
-  document.getElementById('subText').textContent = '';
-  document.getElementById('stickySummaryBar').style.display = 'none';
-  document.getElementById('checkoutContainer').innerHTML = `
+  $('#subText').textContent = '';
+  const sticky = $('#stickySummaryBar');
+  if (sticky) sticky.style.display = 'none';
+
+  const orderNumber = esc(order?.orderNumber || '—');
+  const trackingId  = esc(order?.trackingId || '');
+  const refNumber   = esc(checkoutData.paymentRefNumber || '');
+
+  $('#checkoutContainer').innerHTML = `
     <div class="success-page">
       <div class="success-icon">✓</div>
       <h1>تم استلام طلبك! 🎉</h1>
@@ -833,23 +977,23 @@ function showSuccessPage(res, cart) {
       <div class="order-info-box">
         <div class="order-info-row">
           <span class="label">رقم الطلب</span>
-          <strong>${res.orderNumber}</strong>
+          <strong>${orderNumber}</strong>
         </div>
         <div class="order-info-row tracking">
           <span class="label">رقم التتبع</span>
-          <strong>${res.trackingId}</strong>
+          <strong>${trackingId || '—'}</strong>
         </div>
         <div class="order-info-row">
           <span class="label">💳 مدفوع (شحن)</span>
-          <strong style="color:var(--success)">${formatPrice(SHIPPING_COST)}</strong>
+          <strong style="color:var(--success)">${esc(formatPrice(SHIPPING_COST))}</strong>
         </div>
         <div class="order-info-row">
           <span class="label">💰 متبقي (عند الاستلام)</span>
-          <strong>${formatPrice(amountToPayOnDelivery)}</strong>
+          <strong>${esc(formatPrice(amountToPayOnDelivery))}</strong>
         </div>
         <div class="order-info-row">
           <span class="label">رقم عملية التحويل</span>
-          <strong class="mono-val">${checkoutData.paymentRefNumber}</strong>
+          <strong class="mono-val">${refNumber}</strong>
         </div>
       </div>
 
@@ -859,35 +1003,55 @@ function showSuccessPage(res, cart) {
       </div>
 
       <div class="success-actions">
-        <button class="btn-track" type="button" onclick="window.location.href='tracking.html?track=${res.trackingId}'">📦 تتبع الطلب</button>
-        <button class="btn-home" type="button" onclick="window.location.href='orders.html'">📋 طلباتي</button>
-        <button class="btn-home" type="button" onclick="window.location.href='index.html'">🏠 الرئيسية</button>
+        <button class="btn-track" id="goTrack" type="button">📦 تتبع الطلب</button>
+        <button class="btn-home" id="goOrders" type="button">📋 طلباتي</button>
+        <button class="btn-home" id="goHome" type="button">🏠 الرئيسية</button>
       </div>
     </div>`;
+
+  // ربط الأزرار بأمان (بدل onclick inline)
+  $('#goTrack')?.addEventListener('click', () => {
+    const id = order?.trackingId ? encodeURIComponent(order.trackingId) : '';
+    window.location.href = id ? `tracking.html?track=${id}` : 'tracking.html';
+  });
+  $('#goOrders')?.addEventListener('click', () => { window.location.href = 'orders.html'; });
+  $('#goHome')?.addEventListener('click', () => { window.location.href = 'index.html'; });
 }
 
 /* ============================================
    HEADER SCROLL
 ============================================ */
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('mainHeader');
-  if (window.scrollY > 30) header.classList.add('scrolled');
-  else header.classList.remove('scrolled');
+  if (scrollTicking) return;
+  scrollTicking = true;
+  requestAnimationFrame(() => {
+    $('#mainHeader')?.classList.toggle('scrolled', window.scrollY > 30);
+    scrollTicking = false;
+  });
 }, { passive: true });
 
 /* ============================================
-   INIT
+   STICKY BAR (RESPONSIVE)
+============================================ */
+function setupStickyBar() {
+  const bar = $('#stickySummaryBar');
+  if (!bar) return;
+  const mq = window.matchMedia('(max-width: 768px)');
+  const sync = () => { bar.style.display = mq.matches ? 'flex' : 'none'; };
+  mq.addEventListener?.('change', sync);
+  sync();
+}
+
+/* ============================================
+   BOOTSTRAP
 ============================================ */
 renderUserArea();
 updateCartBadge();
-initCheckout();
 setupMobileNav();
 setupMobileSearch();
-
-// Show sticky bar on mobile
-if (window.matchMedia('(max-width: 768px)').matches) {
-  document.getElementById('stickySummaryBar').style.display = 'flex';
-}
+setupStickyBar();
+initCheckout();
 </script>
 
 </body>
